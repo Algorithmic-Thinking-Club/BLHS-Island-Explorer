@@ -236,21 +236,38 @@ class TheShapeOfAGrape(unittest.TestCase):
             Unwritten().as_plain()
         self.assertIn("Unwritten", str(caught.exception))
 
-    def test_a_forgotten_yield_is_caught_before_the_body_runs(self):
+    def test_a_forgotten_yield_is_caught_and_named(self):
         import grape
-        ran = []
-
         grape._forget()
 
         @grape.on_start
         def forgot():
-            ran.append(True)
             return 5
 
         with self.assertRaises(TypeError) as caught:
             pump.run("start")
         self.assertIn("yield", str(caught.exception))
-        self.assertEqual(ran, [], "the body ran before anybody said it had no yield")
+        self.assertIn("forgot", str(caught.exception))
+
+    def test_a_handler_behind_your_own_decorator_is_not_accused(self):
+        # THE ONE THAT CAUGHT US. inspect.isgeneratorfunction says False about a
+        # wrapper that returns a generator, so checking the function instead of
+        # the call told a member with two decorators that their yield was missing,
+        # and named the wrapper rather than their own function.
+        import grape
+        grape._forget()
+
+        def logged(fn):
+            def wrapper():
+                return fn()
+            return wrapper
+
+        @grape.on_start
+        @logged
+        def go():
+            yield {"kind": "log", "event": "ran"}
+
+        self.assertEqual(pump.kinds(pump.run("start")), ["log"])
 
 
 if __name__ == "__main__":

@@ -22,6 +22,8 @@ import os
 import re
 import unittest
 
+from tools import manifest
+
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = os.environ.get("BLHS_GAME") or os.path.join(os.path.dirname(HERE), "AdventureGame")
 ENGINE_PY = os.path.join(GAME, "src", "vine", "py")
@@ -65,6 +67,54 @@ class TheCopyAgrees(unittest.TestCase):
             if word in self.engine:
                 with self.subTest(word=word):
                     self.assertEqual(self.ours[word], self.engine[word])
+
+
+class TheFormatRulesAgree(unittest.TestCase):
+    """The two checkers hold the same lists, or a member gets caught by one only.
+
+    `tools/manifest.py` and the engine's `grape-source.ts` implement one package
+    format twice, on purpose: a member gets the answer on their own laptop in a
+    second instead of in a browser a minute later. That trade is only worth
+    anything while the two agree, and within a day of being written the reserved
+    name lists had drifted by four names. `test.py` failed here and loaded there;
+    `inspect.py` and `driver.py` passed here and were refused there.
+
+    So the constants are compared rather than trusted.
+    """
+
+    SOURCE = os.path.join(ENGINE_PY, "grape-source.ts")
+
+    def setUp(self):
+        if not os.path.isfile(self.SOURCE):
+            self.skipTest("no game checkout at %s" % self.SOURCE)
+        with open(self.SOURCE, encoding="utf-8") as f:
+            self.ts = f.read()
+
+    def strings(self, block):
+        """every 'quoted' name inside a named const's braces or brackets"""
+        m = re.search(r"(?:const|export const)\s+%s\s*=\s*(?:new Set\()?\[(.*?)\]" % block,
+                      self.ts, re.S)
+        self.assertIsNotNone(m, "no %s in grape-source.ts" % block)
+        return sorted(re.findall(r"'([^']+)'", m.group(1)))
+
+    def number(self, name):
+        m = re.search(r"(?:const|export const)\s+%s\s*=\s*([\d_ *]+)" % name, self.ts)
+        self.assertIsNotNone(m, "no %s in grape-source.ts" % name)
+        return eval(m.group(1).replace("_", ""))       # noqa: S307 - our own source
+
+    def test_the_reserved_names_are_the_same_list(self):
+        self.assertEqual(self.strings("TAKEN"), sorted(manifest.TAKEN))
+
+    def test_the_engine_owned_names_are_the_same_list(self):
+        self.assertEqual(self.strings("ENGINE_OWNED"), sorted(manifest.ENGINE_OWNED))
+
+    def test_the_seasons_are_the_same_list(self):
+        self.assertEqual(self.strings("SEASONS"), sorted(manifest.SEASONS))
+
+    def test_the_numbers_are_the_same_numbers(self):
+        self.assertEqual(self.number("FORMAT"), manifest.FORMAT)
+        self.assertEqual(self.number("TEXT_MAX"), manifest.TEXT_MAX)
+        self.assertEqual(self.number("MAX_MODULES"), manifest.MAX_MODULES)
 
 
 class GrapeIsTheSameFile(unittest.TestCase):

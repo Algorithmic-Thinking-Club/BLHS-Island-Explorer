@@ -63,9 +63,16 @@ Measured while writing this, against `@micropython/micropython-webassembly-pyscr
   island B imports island A's file, the test suite goes green, and the engine
   refuses it. `tests/pump.py:43-72` is the fixed version and the shape to copy.
 - `inspect` **does exist** in this build, including `isgenerator` and
-  `isgeneratorfunction`. The comment at `driver.py:36` saying it does not is
-  wrong. `type(x).__name__` still works and needs no import, so there is no
-  reason to change the check, only the comment.
+  `isgeneratorfunction`, so the old comment in `driver.py` saying it does not was
+  wrong. It is also the wrong tool: measured, `isgeneratorfunction` answers False
+  for a bound method AND for a **closure**, and a closure is what every decorator
+  returns, so convicting on a False told a member whose handler was wrapped in
+  their own decorator that it had no yield in it. What this build does have is a
+  type name: a `def` containing a yield is type `generator` before it is ever
+  called, a plain one is `function`, a closure is `closure` either way. So
+  `function` is the only case that can be convicted without running anything.
+  `scripts/mp-guard-spike.mjs` in the game repo is the measurement, and CPython
+  has no equivalent, which is why `tests/pump.py` here judges the call instead.
 - `str.isalnum` and `str.isidentifier` do **not** exist. Anchor-name validation
   has to happen on the TypeScript side.
 
@@ -87,9 +94,10 @@ no-store`, walks up from port 5280 to find a free one, hands out only `.py` and
 serving this repo's skeleton.
 
 `tools/manifest.py` is the validation, written as the thing that refuses and
-names the field. The engine should run the same rules on what it fetched, and
-until it does, the README here says plainly that nothing on the engine side
-checks anything. The ones that matter most:
+names the field, and `grape-source.ts` now runs the same rules on what it
+fetched. The two lists that decide those rules had drifted by four names within a
+day, so `tests/test_vine_matches_the_engine.py` compares them directly rather
+than trusting them. The ones that matter most:
 
 - a `format` that is not a whole number equal to 1 is refused **by number**.
   Note `True == 1` in Python, so the check needs a type guard, and this repo's

@@ -16,10 +16,11 @@ Every complaint names the field. A checker that says "invalid manifest" has told
 you nothing; one that says `modules` lists questions.py, which is not in this
 folder has told you what to do next.
 
-NOTHING ON THE ENGINE SIDE CHECKS ANY OF THIS YET, so this is the only check
-there is. That is a reason to trust it less rather than more: passing here means
-the format is right, and it cannot mean the game will load your island, because
-today nothing in the game reads an island.json at all. NEEDS.md item 3 is the ask.
+The game runs these same rules on what it fetched, in
+AdventureGame/src/vine/py/grape-source.ts, so failing here means failing there.
+Two of them are only checkable on this side, because over HTTP there is no folder
+to look in: a .py file on disk that nobody listed, and a name in `modules` whose
+capitals do not match the file. Both are the kind that only break in the game.
 """
 import json
 import os
@@ -28,11 +29,16 @@ import sys
 
 # lower case, digits, single hyphens. The same shape the roster's ids are in,
 # and safe as a folder name, a URL segment and a filename on every machine.
-SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+#
+# MATCHED WITH fullmatch AND NEVER match. Python's `$` also matches just before a
+# trailing newline, so `"robotics\n"` passed this and was then refused by the
+# game, whose JavaScript `$` does not. That is the worst direction for a rule to
+# be wrong in: the local checker says yes and the thing that matters says no.
+SLUG = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 
 # what `import questions` can actually spell. A dot, a space or a capital in a
 # filename passes every other check here and then cannot be imported at all.
-STEM = re.compile(r"^[a-z_][a-z0-9_]*$")
+STEM = re.compile(r"[a-z_][a-z0-9_]*")
 
 # THE FORMAT VERSION. It is not decoration. Two repositories ship on different
 # days, and the day the format changes this number is how a member finds out
@@ -47,6 +53,10 @@ SEASONS = ("Fall", "Winter", "Spring")
 # or a roster row without pushing anything off the edge.
 TEXT_MAX = 80
 
+# an island is a handful of small text files, and the game fetches all of them at
+# once. The same number is in grape-source.ts.
+MAX_MODULES = 24
+
 # the engine writes its own copy of both of these into the runtime before your
 # island is imported. A member shipping one would shadow the real thing with a
 # stale copy and spend an afternoon on it.
@@ -55,10 +65,10 @@ ENGINE_OWNED = ("vine.py", "grape.py")
 # names Python already uses. An island shipping random.py does not get a warning,
 # it replaces the real one for everything running in that runtime.
 TAKEN = (
-    "json", "random", "time", "sys", "os", "re", "math", "struct", "collections",
-    "io", "gc", "array", "select", "errno", "binascii", "hashlib", "heapq",
-    "string", "types", "builtins", "abc", "copy", "enum", "functools", "itertools",
-    "socket", "ssl", "uasyncio", "asyncio", "test", "types",
+    "abc", "array", "asyncio", "binascii", "builtins", "collections", "copy",
+    "enum", "errno", "functools", "gc", "grape", "hashlib", "heapq", "inspect",
+    "io", "itertools", "json", "math", "os", "random", "re", "select", "socket",
+    "ssl", "string", "struct", "sys", "test", "time", "types", "uasyncio", "vine",
 )
 
 
@@ -66,7 +76,7 @@ def faults(folder):
     """Every reason this folder is not a loadable island. Empty means it is one."""
     out = []
     name = os.path.basename(os.path.normpath(folder))
-    if not SLUG.match(name):
+    if not SLUG.fullmatch(name):
         out.append("the folder name %r is not a slug: lower case, digits and single hyphens" % name)
 
     path = os.path.join(folder, "island.json")
@@ -97,7 +107,7 @@ def faults(folder):
         out.append("`format` is %r; this repo speaks format %d" % (m["format"], FORMAT))
 
     for key in ("programme", "map"):
-        if not isinstance(m[key], str) or not SLUG.match(m[key]):
+        if not isinstance(m[key], str) or not SLUG.fullmatch(m[key]):
             out.append("`%s` is %r, which is not a slug" % (key, m[key]))
     # THE KEY SPACES STAY DISJOINT. A programme is a thing you do; a map is a
     # painting. The roster refuses an id that is both, so an island that ships
@@ -128,7 +138,7 @@ def _text_faults(m):
             out.append("`%s` has a line break or a control character in it, and it is "
                        "rendered as one line" % key)
         elif len(value) > TEXT_MAX:
-            out.append("`%s` is %d characters; keep it under %d so it fits where it "
+            out.append("`%s` is %d characters; keep it to %d so it fits where it "
                        "is drawn" % (key, len(value), TEXT_MAX))
     return out
 
@@ -138,25 +148,30 @@ def _module_faults(folder, m):
     mods = m["modules"]
     if not isinstance(mods, list) or not mods:
         return ["`modules` has to list every .py file the engine should fetch"]
+    if len(mods) > MAX_MODULES:
+        return ["`modules` lists %d files. An island is a handful, and every one of "
+                "them is fetched at once, so the limit is %d." % (len(mods), MAX_MODULES)]
 
     on_disk = os.listdir(folder)
     lowered = {f.lower(): f for f in on_disk}
 
     for name in mods:
-        if not isinstance(name, str) or not name.lower().endswith(".py"):
-            out.append("`modules` has %r in it, which is not a .py filename" % (name,))
+        if not isinstance(name, str) or not name.endswith(".py"):
+            out.append("`modules` has %r in it, which is not a .py filename. The "
+                       "extension is lower case, because that is what you type after "
+                       "`import`" % (name,))
             continue
         if "/" in name or "\\" in name:
             out.append("`modules` has %r in it; a module is a filename, and an island "
                        "is one flat folder" % name)
             continue
-        if name in ENGINE_OWNED:
+        if name.lower() in ENGINE_OWNED:
             out.append("`modules` lists %s, which the game provides. Yours would be "
                        "ignored at best and shadow the real one at worst" % name)
             continue
 
         stem = name[:-3]
-        if not STEM.match(stem):
+        if not STEM.fullmatch(stem):
             out.append("`modules` has %s in it. A module name is lower case letters, "
                        "digits and underscores, because the file name is what you type "
                        "after `import`" % name)
@@ -174,11 +189,12 @@ def _module_faults(folder, m):
             else:
                 out.append("`modules` lists %s, which is not in this folder" % name)
 
-    if len({n.lower() for n in mods if isinstance(n, str)}) != len(mods):
+    names = [n for n in mods if isinstance(n, str)]
+    if len({n.lower() for n in names}) != len(names):
         out.append("`modules` lists the same file twice")
 
     entry = m["entry"]
-    if entry not in mods:
+    if not isinstance(entry, str) or entry not in mods:
         out.append("`entry` is %r, which is not one of the modules" % (entry,))
 
     # A FILE NOBODY LISTED IS A FILE THAT IS NEVER FETCHED. The island imports

@@ -67,8 +67,9 @@ third visit, and it can answer a door.
 `@on_start` runs once when the island loads. `@on_talk("name")` runs when the
 player presses E on the anchor with that name in MAPVIS.
 
-The engine calls your handlers today, and you can watch it: `?scene=grape` loads
-your island and puts a button on screen for every anchor it registered. What is
+The engine calls your handlers today, and you can watch it:
+`?scene=grape&from=<your serve.py url>` loads your island and puts a button on
+screen for every anchor it registered. What is
 still missing is the last hop, on a real painted map: `PmapScene` does not yet
 ask a loaded island whether it owns the anchor the player pressed E on, so the
 buttons in that harness are standing in for that one press. `NEEDS.md` item 11.
@@ -100,8 +101,9 @@ In `island.json`:
   different from each other and different from everyone else's.
 - `title` and `owner`: yours.
 
-In `island.py`, five strings still say `skeleton`, and changing the manifest
-without changing these is the first mistake everybody makes:
+In `island.py`, five strings have to change, and three of them say `skeleton`.
+Changing the manifest without changing these is the first mistake everybody
+makes:
 
 - **`award(programme="skeleton", ...)`.** This one decides whether a student's
   work lands on the right row of their transcript, and it has to match

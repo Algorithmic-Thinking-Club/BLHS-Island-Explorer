@@ -92,17 +92,22 @@ def run(handler, answer=None):
             "no handler called %r. This island registered: %s"
             % (handler, ", ".join(handlers()) or "nothing"))
 
-    # CHECKED BEFORE IT IS CALLED. A handler with no `yield` anywhere in it is an
-    # ordinary function, and calling it to find that out runs the whole body
-    # first, which for a member means every side effect happens and then they are
-    # told nothing ran.
-    if not inspect.isgeneratorfunction(fn):
+    # JUDGED ON WHAT THE CALL RETURNS, and not on inspect.isgeneratorfunction,
+    # which is the obvious answer and convicts the innocent. A handler you wrapped
+    # in a decorator of your own is a plain wrapper that RETURNS a generator, so
+    # isgeneratorfunction says False about a handler whose yield is right there,
+    # and nothing can tell that apart from a forgotten one without calling it.
+    #
+    # The cost is that a handler which really did forget runs its body once before
+    # you are told. The engine avoids that, because MicroPython gives a generator
+    # function its own type name before it is ever called and CPython does not.
+    body = fn()
+    if not inspect.isgenerator(body):
         raise TypeError(
             "%s() has no yield in it, so nothing would ever reach the engine. "
             "Put `yield` in front of the things that take time."
             % getattr(fn, "__name__", handler))
 
-    body = fn()
     seen = []
     reply = None
     for _ in range(MAX_STEPS):
