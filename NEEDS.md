@@ -4,13 +4,17 @@ Written 2026-08-29, while this repo was built. Everything here is an ask on
 `AdventureGame`, not work that belongs in this repo. Each one says what is
 missing, what it blocks, and where it lands.
 
-The first four block the gate: **a member's island loading off a branch and
-running a handler through the real dialogue box.** Nothing in this repo can
-prove itself in the game until they exist.
+**Items 1, 2, 3, 4 and 13 are DONE, 2026-08-29.** The skeleton island now loads
+out of this repo over HTTP, through `serve.py`, and runs `@on_talk("greeter")`
+in the real dialogue box, in both arms, with a crash in one handler leaving the
+island's other handlers working. They are kept below rather than deleted,
+because each one records what was measured to get there and the next person to
+touch that code should not have to measure it again. What is still open starts
+at item 5.
 
 ---
 
-## 1. `grape.py` has no home in the engine
+## 1. `grape.py` has no home in the engine — DONE
 
 The decorators (`on_start`, `on_talk`), the handler registry and `Scored` live
 in this repo, at the root, because `src/vine/py/vine.py` belongs to the engine
@@ -25,7 +29,7 @@ registry the engine reads. Until then no handler in this repo can ever be called
 **Lands in:** `src/vine/py/grape.py`, written to the runtime in
 `grape.worker.ts` beside `vine.py`.
 
-## 2. The protocol cannot call into a grape
+## 2. The protocol cannot call into a grape — DONE
 
 `src/vine/py/protocol.ts` is `run | resume` outward and
 `intent | print | done | crash` back. The engine can answer a grape and cannot
@@ -65,7 +69,7 @@ Measured while writing this, against `@micropython/micropython-webassembly-pyscr
 - `str.isalnum` and `str.isidentifier` do **not** exist. Anchor-name validation
   has to happen on the TypeScript side.
 
-## 3. The loader fetches one file, from the app's own origin, and validates nothing
+## 3. The loader fetches one file, from the app's own origin, and validates nothing — DONE
 
 `GrapeProof.tsx:57-73` gates a `?py=` parameter and fetches a single
 `/grapes/<file>.py` from the app's own origin. There is no reader for an
@@ -104,7 +108,7 @@ tries to run a page of HTML as an island. That is why `serve.py` walks the port
 range, and it is an argument for the loader refusing a response whose content
 type is not JSON or plain text.
 
-## 4. Nothing on the wire has a deadline or a version
+## 4. Nothing on the wire has a deadline or a version — DONE
 
 Two different clocks, and they are not the same clock:
 
@@ -122,7 +126,7 @@ repositories ship on different days.
 
 ---
 
-## Smaller, and each one is a real defect
+## Still open. Smaller, and each one is a real defect
 
 ## 5. A grape cannot tell which arm it is in
 
@@ -219,7 +223,7 @@ Cheapest fix: export an anchor list per map out of MAPVIS into this repo as data
 and have `tools/manifest.py` warn when an `@on_talk` name is not in the file for
 the declared map. Until then the README says the list comes from Ash.
 
-## 13. The forgotten-yield check runs the member's body first
+## 13. The forgotten-yield check runs the member's body first — DONE
 
 `driver.py:34` calls `getattr(__import__(module), entry)()` and then checks
 `type(_gen).__name__ != "generator"`. For a handler with no `yield` in it that

@@ -18,8 +18,10 @@ runs. You write the what; the game owns the when.
 Nothing calls meet_the_greeter in this file, or in yours. The player walks up to
 the anchor named "greeter" and presses E, and the engine calls it.
 
-LIKE vine.py, THE GAME SHIPS ITS OWN COPY OF THIS FILE and that copy wins at
-runtime. Yours is here so your editor and your tests can see the names.
+THE GAME WRITES THIS FILE INTO THE PYTHON RUNTIME before it imports an island,
+so this copy is the one that runs. The copy in the members' repo is the same
+file, kept there so an editor and an offline test can see the names, and a test
+in that repo fails the moment the two differ.
 """
 
 # filled by the decorators as your island is imported, read by the engine the

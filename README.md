@@ -6,10 +6,9 @@ You own a folder. Nobody edits it but you, and you never open the engine. What
 you write is real Python running inside the real game, next to everybody else's.
 
 **This repo is local-only right now.** There is no GitHub remote yet, because Ash
-names it and creates it. Until he does, the `git push` and pull request steps at
-the bottom have nowhere to go, and the loader that fetches your island into the
-game is still being built. `NEEDS.md` lists exactly what is missing. What works
-today is writing an island and testing it.
+names it and creates it, so the `git push` and pull request steps at the bottom
+have nowhere to go. Everything else works: the game loads an island out of this
+folder and runs it. `NEEDS.md` lists what is still missing.
 
 ---
 
@@ -68,11 +67,11 @@ third visit, and it can answer a door.
 `@on_start` runs once when the island loads. `@on_talk("name")` runs when the
 player presses E on the anchor with that name in MAPVIS.
 
-**The engine cannot do this yet.** Nothing in the game asks a loaded island
-whether it owns an anchor, so pressing E today does nothing at all. That is
-`NEEDS.md` items 1, 2 and 11, and it is the largest single thing between this
-repo and a member seeing their island. Write your handlers anyway: the shape is
-settled, and `python -m unittest` calls them exactly the way the engine will.
+The engine calls your handlers today, and you can watch it: `?scene=grape` loads
+your island and puts a button on screen for every anchor it registered. What is
+still missing is the last hop, on a real painted map: `PmapScene` does not yet
+ask a loaded island whether it owns the anchor the player pressed E on, so the
+buttons in that harness are standing in for that one press. `NEEDS.md` item 11.
 
 ---
 
@@ -136,10 +135,10 @@ They check different things and you want both:
   arguments to sweep the repo.
 - `python -m unittest` imports every island and drives your handlers.
 
-**Nothing on the engine side checks any of this yet**, so these two are the only
-checks there are. Passing means the format is right and your logic does what you
-think. It cannot mean the game will load your island, because today nothing in
-the game reads an `island.json` at all.
+The game runs the same manifest rules on what it fetched, so failing here means
+failing there. It does not work the other way round: passing means the format is
+right and your logic does what you think, and the only thing that can tell you
+your island is any good is playing it.
 
 `tests/pump.py` is what runs your island without the game. It sends the answers
 your test decides on and hands back everything your island asked for, so you can
@@ -157,13 +156,19 @@ green test and a broken island are perfectly compatible.
 python serve.py
 ```
 
-It prints a URL for each island and hands the files to anything that asks. Once
-the loader lands you paste that URL into the game as `?scene=grape&from=<url>`
-and your island loads off your own disk: edit, reload, different island, nothing
-committed and nothing pushed.
+It prints a URL for each island. Paste it into the game after `?scene=grape&from=`:
 
-The loader is not built yet, so today `serve.py` hands out files and nothing is
-asking for them. `NEEDS.md` item 3 is the ask.
+```
+http://localhost:5173/?scene=grape&from=http://localhost:5280/islands/my-island/
+```
+
+Your island loads off your own disk. Edit a file, reload the page, different
+island. Nothing is committed and nothing is pushed, and only your machine can
+reach it. Add `&arm=plain` to see what the other half of the class sees.
+
+The port the game is on is whatever `npm run dev` printed, and `serve.py` prints
+its own. If the game shows a page of HTML where your island should be, something
+else is on the port you used, and the error will say so.
 
 ---
 

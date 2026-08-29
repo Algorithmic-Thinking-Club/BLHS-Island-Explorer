@@ -1,17 +1,20 @@
-"""The vendored vine.py has not drifted from the engine's.
+"""The vendored vine.py and grape.py have not drifted from the engine's.
 
-`vine.py` at the root of this repo is a copy. The real one lives in the game and
-gets written into the runtime over the top of it, so at runtime the engine always
-wins. That sounds safe and it is not: a member writing `say(text, portrait=...)`
-against a copy the engine does not have gets a green test here and a TypeError in
-the game, on a line that looks correct.
+Both files at the root of this repo are copies. The real ones live in the game
+and get written into the runtime over the top of them, so at runtime the engine
+always wins. That sounds safe and it is not: a member writing
+`say(text, portrait=...)` against a copy the engine does not have gets a green
+test here and a TypeError in the game, on a line that looks correct.
 
 That already happened once, on `say`, in the first commit of this repo.
 
-So this reads the engine's file when it is on the same machine and compares the
-signature of every word we ship. On a member's laptop the game repo is not there,
-and the test says so out loud rather than passing quietly, because a skip nobody
-sees is the same as no test.
+So this reads the engine's files when they are on the same machine. `grape.py`
+has to be byte for byte the same file, because there is one of it and no reason
+for two. `vine.py` is a subset by design, nine of the engine's fifteen words, so
+what is compared there is every signature we ship.
+
+On a member's laptop the game repo is not there, and the test says so out loud
+rather than passing quietly, because a skip nobody sees is the same as no test.
 
 Point it somewhere else with BLHS_GAME if your checkout is not next door.
 """
@@ -21,7 +24,9 @@ import unittest
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = os.environ.get("BLHS_GAME") or os.path.join(os.path.dirname(HERE), "AdventureGame")
-ENGINE_VINE = os.path.join(GAME, "src", "vine", "py", "vine.py")
+ENGINE_PY = os.path.join(GAME, "src", "vine", "py")
+ENGINE_VINE = os.path.join(ENGINE_PY, "vine.py")
+ENGINE_GRAPE = os.path.join(ENGINE_PY, "grape.py")
 
 # every word this repo hands members. The engine has more; those are not ours to
 # have an opinion about, and a member's first copy does not use one.
@@ -60,6 +65,26 @@ class TheCopyAgrees(unittest.TestCase):
             if word in self.engine:
                 with self.subTest(word=word):
                     self.assertEqual(self.ours[word], self.engine[word])
+
+
+class GrapeIsTheSameFile(unittest.TestCase):
+    """Not a subset and not a signature match. The same bytes.
+
+    vine.py is deliberately nine of fifteen words. grape.py has no reason to
+    differ at all, so the cheapest correct check is the strictest one, and it
+    fails on a comment as readily as on a rule.
+    """
+
+    def test_byte_for_byte(self):
+        if not os.path.isfile(ENGINE_GRAPE):
+            self.skipTest(
+                "no game checkout at %s. Expected on a member's machine, not on "
+                "Ash's. Set BLHS_GAME if yours is somewhere else." % ENGINE_GRAPE)
+        with open(ENGINE_GRAPE, encoding="utf-8") as f:
+            theirs = f.read()
+        with open(os.path.join(HERE, "grape.py"), encoding="utf-8") as f:
+            ours = f.read()
+        self.assertEqual(ours, theirs, "grape.py has drifted from the engine's copy")
 
 
 if __name__ == "__main__":
