@@ -59,8 +59,16 @@ class TheIslandLoads(unittest.TestCase):
         self.assertEqual(pump.handlers(), ["start", "talk:greeter"])
 
     def test_says_who_it_finished_for(self):
+        # read out of the manifest by the island itself, so this cannot drift
         award = pump.only(walk("game", [0, 1, 0]), "award")[0]
         self.assertEqual(award["programme"], self.manifest["programme"])
+
+    def test_reads_its_own_manifest(self):
+        import grape
+        self.assertEqual(grape.manifest()["programme"], self.manifest["programme"])
+        # a copy: editing what you got back cannot change what the engine thinks
+        grape.manifest()["programme"] = "not-yours"
+        self.assertEqual(grape.manifest()["programme"], self.manifest["programme"])
 
 
 class TheWordsAreFenced(unittest.TestCase):
@@ -110,13 +118,12 @@ class TheGameArm(unittest.TestCase):
         self.assertTrue(all("who" in s for s in pump.only(walk("game", [0, 1, 0]), "say")))
 
     def test_remembers_the_visit(self):
-        manifest = pump.load("skeleton")
         flags = [i["flag"] for i in pump.only(walk("game", [0, 1, 0]), "set_flag")]
-        self.assertEqual(len(flags), 1)
-        # flags are one flat list shared with every other island, so a flag
-        # without the island's own name on it is a flag two members can collide
-        # on. Derived from the manifest, so renaming the island moves the test.
-        self.assertTrue(flags[0].startswith(manifest["programme"].replace("-", "_")), flags)
+        self.assertEqual(flags, ["met_greeter"])
+        # AND IT IS WRITTEN BARE. The engine puts the island's programme id in
+        # front of it on the way into the save, so an island never writes its own
+        # prefix and two members cannot collide however they name theirs. What
+        # lands in the save here is "skeleton:met_greeter".
 
 
 class ThePlainArm(unittest.TestCase):

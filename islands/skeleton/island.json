@@ -6,5 +6,20 @@
   "season": "Fall",
   "owner": "atc",
   "entry": "island.py",
-  "modules": ["island.py", "questions.py"]
+  "modules": ["island.py", "questions.py"],
+  "content": {
+    "what": {
+      "text": "A template island. It is not a real thing at Bonney Lake High School and it is not pretending to be one.",
+      "source": "unknown"
+    },
+    "when": {
+      "text": "Never. Replace this with when your thing actually meets.",
+      "source": "unknown"
+    },
+    "how_to_join": {
+      "text": "Copy this folder. Replace every one of these facts with a sourced one about your own thing.",
+      "source": "unknown"
+    },
+    "blurb": "the island you copy first"
+  }
 }

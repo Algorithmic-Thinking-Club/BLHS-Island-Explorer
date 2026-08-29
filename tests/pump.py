@@ -70,6 +70,9 @@ def load(island):
     _loaded = tuple(_module_name(n) for n in manifest["modules"])
 
     grape._forget()
+    # before the import, exactly as the engine does it, so a module-level
+    # manifest() call works here and not only inside a handler
+    grape._describe(manifest)
     __import__(_module_name(manifest["entry"]))
     return manifest
 

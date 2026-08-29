@@ -101,24 +101,19 @@ In `island.json`:
   different from each other and different from everyone else's.
 - `title` and `owner`: yours.
 
-In `island.py`, five strings have to change, and three of them say `skeleton`.
-Changing the manifest without changing these is the first mistake everybody
-makes:
+In `island.py`, three strings:
 
-- **`award(programme="skeleton", ...)`.** This one decides whether a student's
-  work lands on the right row of their transcript, and it has to match
-  `programme` in your `island.json`. The island cannot read its own manifest yet
-  (`NEEDS.md` item 14), so the id is written in two places and it is on you to
-  keep them together. `test_says_who_it_finished_for` fails when they drift, and
-  the failure names both strings.
 - `GREETER_ANCHOR`, which has to match an anchor Ash placed in MAPVIS for your
-  map. **Ash has the list.** Nothing in this repo can tell you which anchors your
-  map has, and that gap is `NEEDS.md` item 12.
+  map. If a handler claims a name your map does not have, the game says so by
+  name in the console the moment your island loads, and lists the anchors it
+  does have.
 - `GREETER`, which is what the player reads on the plaque.
-- the island name in `log(...)`.
-- the flag in `set_flag(...)`. Flags are one flat list shared with every island
-  in the game, so yours starts with your programme id or it collides with
-  somebody else's.
+- the flag in `set_flag(...)`, which is whatever you want to remember.
+
+Your programme id is NOT one of them. The island reads it out of your own
+`island.json` with `manifest()["programme"]`, so it is written once. Two copies
+of one id drift, and when they do a student's grade lands on somebody else's
+row.
 
 ## Run it
 
@@ -206,9 +201,9 @@ uses like `random.py` or `json.py`.
 
 ## The words
 
-`vine.py` has nine. They are the ones the vine's own content already asks for,
-and `say` and `choose` are the two that have been watched running from Python
-inside the game.
+`vine.py` has fifteen, which is everything the engine understands. These nine are
+what the skeleton uses, and they are the ones that have been watched working from
+Python inside the game:
 
 | word | what it does |
 |---|---|
@@ -217,19 +212,25 @@ inside the game.
 | `open(ui)` | one of the game's panels |
 | `play(beat)` | a scored activity the engine builds, comes back as the grade |
 | `get(path)` | ask the run about itself |
-| `set_flag(flag)` | remember one thing forever. Start it with your programme id: flags are one flat list shared with every island. |
+| `set_flag(flag)` | remember one thing forever. The engine puts your programme id in front of it, so yours cannot collide with anybody else's. |
 | `award(programme=, grade=)` | the row your island earned. `grade` is 0 to 4.0. |
 | `log(event, data=)` | one line on the record |
 | `guide_to(anchor)` | the arrow, along ground that can be walked |
 
-The engine understands more than nine. The rest are attached to parts of the game
-being built right now, so an island copied from this repo does not use one yet.
-Ask before you reach for one, and read the top of `vine.py`.
+The other six move the world: `walk_to`, `look_at`, `show`, `fx`, `enter` and
+`cutscene`. They all need a map, so none of them does anything in a test and some
+of them landed recently enough that nobody has watched a member use one. Read the
+top of `vine.py`, and if one refuses, the refusal will say why on your own line.
 
-Three of them come back as something that is not a value. `choose` comes back as
-`-1` when nobody answered at all. `play` comes back as `None` when the activity
-was never finished. `get` comes back as `None` for everything when there is no
-saved run. None of those is a zero and none of them is an index.
+`python tools/sync.py` pulls both `vine.py` and `grape.py` from the engine. You
+should not need it: the copies here are current when you clone. Whoever changed
+the engine runs it.
+
+Two of them come back as something that is not a value. `choose` comes back as
+`-1` when nobody answered at all, and `play` comes back as `None` when the player
+closed the activity without finishing it. Neither is a zero and neither is an
+index. A `play` that could not run at all does not come back: it is refused, and
+the refusal is raised on your own line.
 
 ## The scored thing renders twice
 

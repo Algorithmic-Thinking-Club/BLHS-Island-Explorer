@@ -70,6 +70,12 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         "owner": "atc",
         "entry": "island.py",
         "modules": ["island.py"],
+        "content": {
+            "what": {"text": "A thing that does not exist.", "source": "unknown"},
+            "when": {"text": "Never.", "source": "unknown"},
+            "how_to_join": {"text": "You cannot.", "source": "unknown"},
+            "blurb": "a fixture for tests",
+        },
     }
     GONE = object()          # sentinel: leave this field out entirely
 
@@ -133,6 +139,33 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         self.touch("island.py", folder=shouted)
         problems = self.write(folder=shouted)
         self.assertTrue(any("folder name" in p for p in problems), problems)
+
+    def test_the_content_section_is_required(self):
+        # P18. The half a builder skips, so it gets skipped out loud.
+        self.touch("island.py")
+        self.assertIn("`content`", self.only(self.write(content=self.GONE)))
+
+    def test_a_fact_with_no_source_is_refused_and_unknown_is_not(self):
+        self.touch("island.py")
+        bare = dict(self.GOOD["content"])
+        bare["what"] = {"text": "BLHS opened in 2005."}
+        self.assertIn("content.what.source", self.only(self.write(content=bare)))
+        # "unknown" is a decision a member made, and it passes
+        said = dict(self.GOOD["content"])
+        said["what"] = {"text": "Nobody has published this.", "source": "unknown"}
+        self.assertEqual(self.write(content=said), [])
+
+    def test_a_blurb_that_is_a_paragraph(self):
+        self.touch("island.py")
+        long = dict(self.GOOD["content"])
+        long["blurb"] = "one two three four five six seven eight"
+        self.assertIn("content.blurb", self.only(self.write(content=long)))
+
+    def test_a_meeting_time_nobody_sourced(self):
+        self.touch("island.py")
+        meets = dict(self.GOOD["content"])
+        meets["meets"] = [{"day": "Tuesday", "time": "2:10", "room": "200 Flex"}]
+        self.assertIn("meets[0].source", self.only(self.write(content=meets)))
 
     def test_a_missing_field_is_named(self):
         self.touch("island.py")
@@ -267,7 +300,13 @@ class TwoIslandsInOneRepo(unittest.TestCase):
         with open(os.path.join(folder, "island.json"), "w", encoding="utf-8") as f:
             json.dump({"format": 1, "programme": programme, "map": map_id,
                        "title": name, "owner": "atc", "entry": "island.py",
-                       "modules": ["island.py"]}, f)
+                       "modules": ["island.py"],
+                       "content": {
+                           "what": {"text": "x", "source": "unknown"},
+                           "when": {"text": "x", "source": "unknown"},
+                           "how_to_join": {"text": "x", "source": "unknown"},
+                           "blurb": "a b c d",
+                       }}, f)
         return folder
 
     def test_two_islands_that_do_not_clash(self):

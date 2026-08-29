@@ -1,37 +1,29 @@
-"""The words your island can say. THE GAME REPLACES THIS FILE.
+"""What a member's island imports.
 
-Read that line again, because it is the only confusing thing in this repo. When
-your island runs inside the game, the engine writes its own copy of vine.py into
-the Python runtime and that copy is the one you get. This file exists for two
-reasons and neither of them is the game:
+Every function in here builds a dict and does nothing else. Putting `yield` in
+front of one is what makes it happen, because the thing that performs it is the
+engine, on the other side of the worker.
 
-  1. your editor can see the names, so `from vine import say` is not underlined
-  2. `python -m unittest` can run your island's logic with no browser open
+One rule, and it is the whole rule: A WORD ONLY HAPPENS IF YOU YIELD IT. Some of
+them come back the instant the engine has done them and some wait for the player
+to click, and you yield both the same way. A call with no `yield` in front builds
+a dict, throws it away, and the engine never hears about it.
 
-If this file and the engine's ever disagree, the engine is right. Nothing you
-write here changes what the game does, and the loader refuses to load a file
-called vine.py out of an island folder, so you cannot ship your own by accident.
+The names and the spelling come from src/vine/intents.ts. `say` builds
+{"kind": "say"} because that is the kind the engine already performs, and
+nothing between here and there translates anything. There are fifteen words and
+this file has all fifteen: for a year it had two, so thirteen things the engine
+could already do were unreachable from a member's island.
 
-WHAT IS HERE AND WHY IT IS ONLY NINE WORDS. The engine understands fifteen. Nine
-of them have been watched working end to end, and those are the nine here. The
-other six are real and the engine will answer them, but they are attached to
-parts of the game that are still being built this week, so an island copied from
-this repo does not use one yet. Ask before you reach for one (see NEEDS.md).
-
-    say  choose  open  play  get  set_flag  award  log  guide_to
-
-ONE RULE, AND IT IS THE WHOLE RULE: A WORD ONLY HAPPENS IF YOU YIELD IT. Every
-function below builds a dict and does absolutely nothing else. The engine is on
-the other side of a worker, and `yield` is how the dict gets to it.
-
-    yield say("Hello.")        the line appears, and you wait for the click
-    say("Hello.")              a dict is built, dropped, and nobody ever sees it
-
-EVERY PLACE IS AN ANCHOR NAME, NEVER AN X AND A Y. Anchors are made in MAPVIS
-and the name is kept separate from the label the player reads, so renaming a
-sign cannot break your code. A coordinate would break the day the table moved.
+EVERY PLACE IS AN ANCHOR NAME, NEVER AN X AND A Y. MAPVIS is the only thing that
+can make an anchor, it keeps the name separate from the label so renaming a door
+for the player cannot break your code, and a coordinate would break the moment
+Ash moved the table you were pointing at. A name the map does not carry is
+refused, and the refusal is raised on YOUR line.
 """
 
+
+# ---- talking ---------------------------------------------------------------
 
 def say(text, who=None):
     """One line in the dialogue box. Comes back when the player clicks on."""
@@ -44,84 +36,119 @@ def say(text, who=None):
 
 
 def choose(options, prompt=None):
-    """Buttons over the box. Comes back as the index the player picked.
-
-    Comes back as -1, never as an index, when there was no answer at all: an
-    empty options list, or the player leaving while the question was up. Check
-    for -1 before you index into your own list, or you will read the last item.
-    """
+    """Buttons over the box. Comes back as the index the player picked."""
     intent = {"kind": "choose", "options": options}
     if prompt is not None:
         intent["prompt"] = prompt
     return intent
 
 
-def open(ui):
-    """Open one of the game's panels: planner, handbook, chart, wardrobe, settings.
+# ---- moving him, and moving the camera -------------------------------------
 
-    Yes, this shadows Python's built-in open() if you import it by name. Islands
-    do not read files, so nothing here misses it, and the word is `open` because
-    that is the word the engine already answers to. One spelling is worth more
-    than one builtin you cannot use in here anyway.
-    """
+def guide_to(anchor):
+    """Draw the arrow to an anchor. Comes back at once; he still walks himself."""
+    return {"kind": "guide_to", "anchor": anchor}
+
+
+def walk_to(anchor):
+    """Take the controls and walk him there. Comes back when he arrives."""
+    return {"kind": "walk_to", "anchor": anchor}
+
+
+def look_at(anchor, ms=None):
+    """Point the camera at an anchor. `look_at(None)` gives it back to him."""
+    # None IS the message here, so unlike every other optional it is sent rather
+    # than left out: an absent anchor would read as "no argument", and letting
+    # the camera go is a thing an island asks for on purpose
+    intent = {"kind": "look_at", "anchor": anchor}
+    if ms is not None:
+        intent["ms"] = ms
+    return intent
+
+
+# ---- the world ---------------------------------------------------------------
+
+def show(anchor, visible=True):
+    """Make the thing at an anchor appear or disappear."""
+    return {"kind": "show", "anchor": anchor, "visible": visible}
+
+
+def fx(name, anchor=None, data=None):
+    """Play a one-shot effect, at an anchor or wherever the effect decides."""
+    intent = {"kind": "fx", "name": name}
+    if anchor is not None:
+        intent["anchor"] = anchor
+    if data is not None:
+        intent["data"] = data
+    return intent
+
+
+def enter(map, at=None):
+    """Go to another map. `at` is the anchor there to arrive on."""
+    # without `at` every door into a room drops the player on that room's one
+    # global spawn, however far that is from the door they walked through
+    intent = {"kind": "enter", "map": map}
+    if at is not None:
+        intent["at"] = at
+    return intent
+
+
+def cutscene(script):
+    """Play an authored cutscene. Comes back when it is over."""
+    return {"kind": "cutscene", "script": script}
+
+
+# ---- the panels a player sits down with -------------------------------------
+
+def open(ui):
+    """Open one panel: planner, handbook, chart, wardrobe or settings."""
+    # this shadows the builtin `open` if you import it by name, and that costs
+    # nothing: there is no filesystem inside the worker to open a file on. The
+    # name matches the engine's word, and one spelling is worth more than one
+    # builtin nobody can use here.
     return {"kind": "open", "ui": ui}
 
 
+# ---- doing something that gets a score --------------------------------------
+
 def play(beat, as_plain=None):
-    """Run a scored activity the engine builds, and come back with the grade.
-
-    Comes back as None, not as a zero, in three different situations: the player
-    closed it without finishing, nothing was mounted to run it, or the name is
-    not one the engine knows. None is not a score. Say something about it.
-
-    LEAVE as_plain ALONE unless you mean it. Left out, the engine renders the arm
-    this player was assigned when they joined, which is what keeps the two halves
-    of the class looking at the same content.
-    """
+    """Run a scored activity. Comes back as the score, or None if it was left."""
+    # LEAVE as_plain ALONE unless you mean it. Left out, the engine renders the
+    # arm this player was assigned at join, which is what keeps the study's two
+    # arms looking at the same content. Passing True forces the plain rendering
+    # for everybody, which is a real thing to want for a moment that should read
+    # the same either way. You cannot force the game rendering, because that
+    # would let one island opt the control arm out of being a control.
     intent = {"kind": "play", "beat": beat}
     if as_plain is not None:
         intent["as_plain"] = as_plain
     return intent
 
 
+# ---- the run ------------------------------------------------------------------
+
 def get(path):
-    """Ask the run about itself. A closed list, and this is all of it:
+    """Read one thing about the run. Comes back as the value.
 
-        year  gpa  tokens  cords  flags  islands  handle  mode  graduated
-
-    `mode` is "game" or "plain" and is how your island knows which half of the
-    class it is talking to.
-
-    ANY OF THEM CAN COME BACK None when there is no saved run yet, which is what
-    a bare test harness looks like. Do not do arithmetic on one without checking.
+    year, gpa, tokens, cords, flags, islands, handle, mode, graduated.
     """
     return {"kind": "get", "path": path}
 
 
 def set_flag(flag):
-    """Remember one thing about this player for the rest of the run.
-
-    Your island's whole memory. Flags are shared with every other island today,
-    so put your island's name in front of yours: "skeleton_met_greeter".
-    """
+    """Remember that something happened, for the rest of the run."""
     return {"kind": "set_flag", "flag": flag}
 
 
 def award(programme=None, grade=None, tags=None, fact=None, sticker=None, badge=None):
-    """Write the row your island earned onto the player's record.
+    """Write the row your island earned onto the transcript.
 
-    `programme` names the roster entry this finishes, and from that one word the
-    engine already knows the title, the credit, the cord tags, the rank track and
-    where the row goes on the transcript. An island says what it finished; it
-    does not get to say what that is worth.
-
-    `grade` is on the 0 to 4.0 scale, the same one the rest of the transcript is
-    on. A grade with no programme still lands, as an anonymous row. A programme
-    with no grade is how you say you finished something that is not graded.
+    `programme` is the roster id this grade finishes, and it is the one that
+    matters: from it the engine knows the title, the credit, the kind, the cord
+    tags and the rank track. Say what you finished; what it is worth is not
+    yours to decide.
     """
     intent = {"kind": "award"}
-    # guarded on None and never on truthiness: `if value:` would read a grade of
-    # zero as absent, and a student who scored nothing would get no row at all
     for key, value in (("programme", programme), ("grade", grade), ("tags", tags),
                        ("fact", fact), ("sticker", sticker), ("badge", badge)):
         if value is not None:
@@ -130,17 +157,8 @@ def award(programme=None, grade=None, tags=None, fact=None, sticker=None, badge=
 
 
 def log(event, data=None):
-    """Add one typed event to the record. You add to it; you do not write it."""
+    """Add a line to the record. You add to it; you do not write it."""
     intent = {"kind": "log", "event": event}
     if data is not None:
         intent["data"] = data
     return intent
-
-
-def guide_to(anchor):
-    """Draw the arrow to a place, along ground that can actually be walked.
-
-    Comes back at once. The arrow stays up and the player still has the controls,
-    because being shown where to go is not the same as being taken there.
-    """
-    return {"kind": "guide_to", "anchor": anchor}

@@ -20,7 +20,7 @@ WHAT TO NOTICE WHILE YOU READ IT:
   - the two arms of the study ask the same questions in the same order out of
     the same list. What differs is who is talking. Keep it that way.
 """
-from grape import on_start, on_talk
+from grape import manifest, on_start, on_talk
 from vine import award, choose, get, log, say, set_flag
 
 from questions import WhatAGrapeIs
@@ -35,7 +35,7 @@ GREETER = "the greeter"
 @on_start
 def opened():
     """The engine calls this the moment the island loads, before anything else."""
-    yield log("island_opened", {"island": "skeleton"})
+    yield log("island_opened", {"island": manifest()["programme"]})
 
 
 @on_talk(GREETER_ANCHOR)
@@ -55,10 +55,14 @@ def meet_the_greeter():
 
     # ONE ROW ON THE RECORD. `programme` names the roster entry this finishes,
     # and from that one word the engine knows the title, the credit and the cord
-    # tags. "skeleton" is deliberately not on the roster, so the engine will say
-    # so out loud in the console: that message is the first thing you fix.
-    yield award(programme="skeleton", grade=quiz.grade(right))
-    yield set_flag("skeleton_met_greeter")
+    # tags. READ OUT OF YOUR OWN island.json rather than typed again here: two
+    # copies of one id drift, and when they do a student's grade lands on
+    # somebody else's row.
+    yield award(programme=manifest()["programme"], grade=quiz.grade(right))
+    # your island's own corner of the flag list. The engine puts your programme
+    # id in front of it, so this really is "skeleton:met_greeter" in the save and
+    # nobody else's island can collide with it or read it.
+    yield set_flag("met_greeter")
 
 
 def in_character(quiz):

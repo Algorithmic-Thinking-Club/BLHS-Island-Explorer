@@ -45,9 +45,19 @@ STEM = re.compile(r"[a-z_][a-z0-9_]*")
 # their island needs an edit instead of watching it fail strangely.
 FORMAT = 1
 
-REQUIRED = ("format", "programme", "map", "title", "owner", "entry", "modules")
+REQUIRED = ("format", "programme", "map", "title", "owner", "entry", "modules", "content")
 OPTIONAL = ("season",)
 SEASONS = ("Fall", "Winter", "Spring")
+
+# P18. What a student needs to know to walk into this thing on a Tuesday, which
+# is not the same as what makes a good island and is the half a builder skips.
+FACTS = ("what", "when", "how_to_join")
+CONTENT_OPTIONAL = ("blurb", "sticker", "meets")
+# a blurb is a line in a list, not a paragraph
+BLURB_WORDS = (4, 6)
+# the explicit marker. An absent source is a member who did not think about it;
+# this is a member who did, and the game can render the difference.
+UNKNOWN = "unknown"
 
 # the string a person reads. One line, and short enough to sit in a dialogue box
 # or a roster row without pushing anything off the edge.
@@ -123,6 +133,57 @@ def faults(folder):
                    "island is not seasonal" % (m["season"], ", ".join(SEASONS)))
 
     out.extend(_module_faults(folder, m))
+    out.extend(_content_faults(m["content"]))
+    return out
+
+
+def _content_faults(c):
+    """The section that is about a real school, and where each fact came from."""
+    if not isinstance(c, dict):
+        return ["`content` has to be an object: what, when, how_to_join and a blurb"]
+    out = []
+
+    for key in c:
+        if key not in FACTS and key not in CONTENT_OPTIONAL:
+            out.append("`content.%s` is not a field this format has" % key)
+
+    for key in FACTS:
+        f = c.get(key)
+        if not isinstance(f, dict):
+            out.append("`content.%s` is missing. It is {\"text\": \"...\", \"source\": \"...\"}" % key)
+            continue
+        if not isinstance(f.get("text"), str) or not f["text"].strip():
+            out.append("`content.%s.text` is empty" % key)
+        # THE WHOLE POINT OF THE SECTION. A sentence about BLHS with nothing
+        # behind it is a sentence the game tells a student as though it were true.
+        if not isinstance(f.get("source"), str) or not f["source"].strip():
+            out.append("`content.%s.source` is missing. Cite where the fact came from, "
+                       "or put \"%s\", which means you checked and nobody has "
+                       "published it" % (key, UNKNOWN))
+
+    blurb = c.get("blurb")
+    if not isinstance(blurb, str) or not blurb.strip():
+        out.append("`content.blurb` is missing. Four to six words, for a list.")
+    else:
+        words = len(blurb.split())
+        if words < BLURB_WORDS[0] or words > BLURB_WORDS[1]:
+            out.append("`content.blurb` is %d words; it goes in a list, so %d to %d"
+                       % (words, BLURB_WORDS[0], BLURB_WORDS[1]))
+
+    if "sticker" in c and (not isinstance(c["sticker"], str) or not SLUG.fullmatch(c["sticker"])):
+        out.append("`content.sticker` is %r, which is not a slug" % (c.get("sticker"),))
+
+    if "meets" in c:
+        if not isinstance(c["meets"], list):
+            out.append("`content.meets` is a list of {day, time, room, source}")
+        else:
+            for i, meet in enumerate(c["meets"]):
+                for k in ("day", "time", "room", "source"):
+                    v = meet.get(k) if isinstance(meet, dict) else None
+                    if not isinstance(v, str) or not v.strip():
+                        out.append("`content.meets[%d].%s` is missing. A meeting time "
+                                   "nobody sourced is a student standing outside the "
+                                   "wrong room." % (i, k))
     return out
 
 

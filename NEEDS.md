@@ -4,13 +4,18 @@ Written 2026-08-29, while this repo was built. Everything here is an ask on
 `AdventureGame`, not work that belongs in this repo. Each one says what is
 missing, what it blocks, and where it lands.
 
-**Items 1, 2, 3, 4 and 13 are DONE, 2026-08-29.** The skeleton island now loads
+**EVERYTHING IN THIS FILE IS DONE, 2026-08-29.** The skeleton island now loads
 out of this repo over HTTP, through `serve.py`, and runs `@on_talk("greeter")`
 in the real dialogue box, in both arms, with a crash in one handler leaving the
-island's other handlers working. They are kept below rather than deleted,
-because each one records what was measured to get there and the next person to
-touch that code should not have to measure it again. What is still open starts
-at item 5.
+island's other handlers working. They are kept rather than deleted, because each one
+records what was measured to get there and the next person to touch that code
+should not have to measure it again.
+
+**The one thing still outstanding is not code.** The members' repository is
+private, so `raw.githubusercontent.com` answers 404 anonymously and the
+branch-URL proof cannot be finished. Ash flips it to public and that proof runs.
+Everything else about loading an island off a branch is proven through
+`serve.py`, which is the same fetch against a different host.
 
 ---
 
@@ -134,9 +139,9 @@ repositories ship on different days.
 
 ---
 
-## Still open. Smaller, and each one is a real defect
+## The smaller ones, each of which was a real defect
 
-## 5. A grape cannot tell which arm it is in
+## 5. A grape cannot tell which arm it is in — DONE
 
 `engine.mode()` returns `'game'` with no save. `engine.read('mode')` returns
 `null` with no save, because `if (!s) return null` at `intent-engine.ts:34` fires
@@ -149,7 +154,10 @@ Either `read()` gets per-case defaults, or the harness gets an arm toggle, and
 §80.8 asks for the toggle anyway: *a member harness that renders an island in
 both arms on demand.* `tests/test_skeleton.py` has both of these pinned.
 
-## 6. `play` reports success three different ways without performing
+
+**DONE. `read()` answers every path in its own type with or without a save: year 1, gpa 0, empty lists for flags and cords and islands, and the real mode. `handle` and `graduated` stay null and false, because those are honestly absent rather than empty.**
+
+## 6. `play` reports success three different ways without performing — DONE
 
 `requestBeat` resolves `null` when no HUD is mounted, when the beat id is
 unknown, and when the player closed the panel. All three come back as
@@ -158,7 +166,10 @@ reporting success is the exact thing `intents.ts:253` was written to outlaw. The
 unknown-id branch should refuse so the traceback lands on the member's line; the
 player-closed-it case is honestly null.
 
-## 7. Flags are one flat list with no namespace
+
+**DONE. `BeatRequest` grew `refuse`, `requestBeat` rejects, and both the unknown-id branch in `Hud.tsx` and the no-HUD-mounted branch in `ui-bus.ts` use it. A typo in a beat id now lands on the member's own line. The player closing a panel is still an honest null.**
+
+## 7. Flags are one flat list with no namespace — DONE
 
 `intent-engine.ts:48-50` passes a grape's flag string straight through. Two
 members both shipping `done` collide, silently, in a student's save. This repo's
@@ -167,7 +178,10 @@ things to change first, and the skeleton's test derives the expected prefix from
 the manifest. That is a convention with a test behind it, which is not a fence.
 P4 is the fence.
 
-## 8. `vine.py` is vendored here, and it has already drifted once
+
+**DONE. `IntentHost` grew `by`, `openGrape` stamps every intent with the island's programme id so no caller can forget, and `performIntent` prefixes on write AND strips on read, so an island writes `met` and reads `met` and nobody else can see it. Proven in the game: `set_flag("took_the_hearth")` landed as `maw-demo:took_the_hearth`.**
+
+## 8. `vine.py` is vendored here, and it has already drifted once — DONE
 
 There is a copy of `vine.py` at the root of this repo, cut down to the nine words
 the skeleton is allowed to use. It exists so a member's editor resolves
@@ -185,7 +199,10 @@ Ask: publish `vine.py` and `grape.py` somewhere this repo can pull from, or add 
 sync step, so the check is a formality rather than the only thing holding them
 together.
 
-## 9. The manifest carries none of P18's content fields
+
+**DONE. `tools/sync.py` copies both files from an engine checkout, and `tests/test_vine_matches_the_engine.py` compares them BYTE FOR BYTE rather than by signature. The vendored `vine.py` is now all fifteen words, matching the engine; the nine-word fence belongs to the starter skeleton and lives in `test_skeleton.py`, which is where the ruling put it.**
+
+## 9. The manifest carries none of P18's content fields — DONE
 
 `what`, `when`, `how_to_join`, the four-to-six word blurb, one sticker id, real
 meeting times and rooms as data, and a sourced-or-explicitly-unknown rule on
@@ -194,7 +211,10 @@ counts as sourced is a policy call, not a format one, and inventing it here woul
 be inventing the answer. The member content policy in the README is the prose
 half of the same thing and it is also not authoritative.
 
-## 10. A member cannot get onto the roster
+
+**DONE. `content` is required: `what`, `when` and `how_to_join` as {text, source}, a four-to-six word `blurb`, an optional sticker id, and optional `meets` rows carrying day, time, room and source. A source is a citation or the literal `unknown`, which is a decision a member made rather than a field they forgot. Both checkers enforce it.**
+
+## 10. A member cannot get onto the roster — DONE
 
 `award(programme=...)` with a name nobody is on the roster for keeps the grade,
 warns in the console at `intent-engine.ts:78`, and never marks the island
@@ -205,7 +225,10 @@ There is no path from "I built an island" to "my programme is in
 `src/game/roster/roster.ts`" that does not involve a member opening the engine,
 which is the thing the whole design says they never do.
 
-## 11. An anchor that belongs to nobody is silent
+
+**DONE. `src/game/roster/member-islands.json` is the data file and `roster.ts` appends it to the programmes the vine hand-wrote. A member's PR adds one row, Ash merges it, and nobody opens the engine. Bad rows are dropped and named rather than becoming an undefined in the planner.**
+
+## 11. An anchor that belongs to nobody is silent — DONE
 
 W13. A correctly placed anchor, a correctly written handler and a correctly
 spelled name produce nothing today, because `PmapScene`'s `fire()` routes doors
@@ -219,7 +242,10 @@ across all of them, or the prompt and the press disagree and E is never even
 offered. The one that decides whether the prompt appears at all is the
 availability test that sets `canFire`.
 
-## 12. Nothing tells a member which anchors their map has
+
+**DONE. `src/game/pmap/grape-router.ts` holds the order, written down: a door is a door, THE GRAPE IS ASKED FIRST, the station table is the fallback. All five `stationByName` sites go through it, so the prompt and the press cannot disagree. An anchor nobody claims warns by name and logs `anchor_unclaimed`. Proven in the game on `panther-maw`: an island claiming `hearth`, one of the Maw's own stations, answered instead of the station.**
+
+## 12. Nothing tells a member which anchors their map has — DONE
 
 The other half of item 11, on the authoring side rather than the runtime one. A
 member types a name into `@on_talk("...")` and has no way to know whether that
@@ -231,6 +257,9 @@ Cheapest fix: export an anchor list per map out of MAPVIS into this repo as data
 and have `tools/manifest.py` warn when an `@on_talk` name is not in the file for
 the declared map. Until then the README says the list comes from Ash.
 
+
+**DONE. The moment an island loads, any `@on_talk` name the map does not carry is named in the console together with every anchor the map DOES have, and logged as `anchor_missing`. Proven: loading the hello fixture onto `panther-maw` printed `this island claims "harness", which is not an anchor on this map. It has: arrive_maw, maw_entrance, chart_table, hearth, ...`**
+
 ## 13. The forgotten-yield check runs the member's body first — DONE
 
 `driver.py:34` calls `getattr(__import__(module), entry)()` and then checks
@@ -240,7 +269,7 @@ the member told nothing ran. `inspect.isgeneratorfunction` exists in this build
 and answers before the call. `tests/pump.py:96-101` does it that way and has a
 test that the body did not run.
 
-## 14. An island cannot read its own manifest
+## 14. An island cannot read its own manifest — DONE
 
 `award(programme="skeleton")` in `island.py` and `"programme": "skeleton"` in
 `island.json` are the same id written twice, and nothing but a test keeps them
@@ -254,6 +283,9 @@ constant the driver fills in before the import. Then `programme` is written once
 and the two cannot drift.
 
 ---
+
+
+**DONE. The `load` message carries the manifest, the driver fills it before the import so a module-level call works, and `grape.manifest()` hands back a copy. The skeleton reads `manifest()["programme"]`, so the id is written once.**
 
 ## Members: add yours below
 
