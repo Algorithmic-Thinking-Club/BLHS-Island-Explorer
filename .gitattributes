@@ -1,0 +1,4 @@
+# One line ending everywhere. The game fetches these files over HTTP and writes
+# them straight into a Python runtime, so what git checks out is what runs.
+* text=auto eol=lf
+*.png binary

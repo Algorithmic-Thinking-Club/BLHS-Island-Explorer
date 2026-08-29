@@ -33,15 +33,13 @@ sign cannot break your code. A coordinate would break the day the table moved.
 """
 
 
-def say(text, who=None, portrait=None):
+def say(text, who=None):
     """One line in the dialogue box. Comes back when the player clicks on."""
     intent = {"kind": "say", "text": text}
     # a key left out entirely rather than sent as None: the engine's `who` is
     # optional, and an explicit null is a different thing from an absent name
     if who is not None:
         intent["who"] = who
-    if portrait is not None:
-        intent["portrait"] = portrait
     return intent
 
 

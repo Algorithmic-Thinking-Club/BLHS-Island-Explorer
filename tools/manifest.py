@@ -4,17 +4,22 @@ An island is a folder with an island.json in it. This file is what "a folder
 with an island.json in it" actually means, and it is here rather than in a
 document because a document does not stop anybody.
 
-Run it on everything in the repo:
+Check your own island:
+
+    python tools/manifest.py islands/my-island
+
+Check everything in the repo:
 
     python tools/manifest.py
 
-Every complaint names the field. A loader that says "invalid manifest" has told
-you nothing; a loader that says `modules` lists questions.py, which is not in
-this folder has told you what to do next.
+Every complaint names the field. A checker that says "invalid manifest" has told
+you nothing; one that says `modules` lists questions.py, which is not in this
+folder has told you what to do next.
 
-The engine runs the same rules on the other side, when it fetches your island
-off your branch. Failing here means failing there, which is the point: find it
-on your own machine in a second instead of in the game in a minute.
+NOTHING ON THE ENGINE SIDE CHECKS ANY OF THIS YET, so this is the only check
+there is. That is a reason to trust it less rather than more: passing here means
+the format is right, and it cannot mean the game will load your island, because
+today nothing in the game reads an island.json at all. NEEDS.md item 3 is the ask.
 """
 import json
 import os
@@ -25,6 +30,10 @@ import sys
 # and safe as a folder name, a URL segment and a filename on every machine.
 SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
+# what `import questions` can actually spell. A dot, a space or a capital in a
+# filename passes every other check here and then cannot be imported at all.
+STEM = re.compile(r"^[a-z_][a-z0-9_]*$")
+
 # THE FORMAT VERSION. It is not decoration. Two repositories ship on different
 # days, and the day the format changes this number is how a member finds out
 # their island needs an edit instead of watching it fail strangely.
@@ -34,10 +43,23 @@ REQUIRED = ("format", "programme", "map", "title", "owner", "entry", "modules")
 OPTIONAL = ("season",)
 SEASONS = ("Fall", "Winter", "Spring")
 
+# the string a person reads. One line, and short enough to sit in a dialogue box
+# or a roster row without pushing anything off the edge.
+TEXT_MAX = 80
+
 # the engine writes its own copy of both of these into the runtime before your
 # island is imported. A member shipping one would shadow the real thing with a
 # stale copy and spend an afternoon on it.
 ENGINE_OWNED = ("vine.py", "grape.py")
+
+# names Python already uses. An island shipping random.py does not get a warning,
+# it replaces the real one for everything running in that runtime.
+TAKEN = (
+    "json", "random", "time", "sys", "os", "re", "math", "struct", "collections",
+    "io", "gc", "array", "select", "errno", "binascii", "hashlib", "heapq",
+    "string", "types", "builtins", "abc", "copy", "enum", "functools", "itertools",
+    "socket", "ssl", "uasyncio", "asyncio", "test", "types",
+)
 
 
 def faults(folder):
@@ -51,13 +73,9 @@ def faults(folder):
     if not os.path.isfile(path):
         return out + ["there is no island.json here, so nothing knows this is an island"]
 
-    try:
-        with open(path, encoding="utf-8") as f:
-            m = json.load(f)
-    except ValueError as e:
-        return out + ["island.json is not valid JSON: %s" % e]
-    if not isinstance(m, dict):
-        return out + ["island.json has to be an object, not a %s" % type(m).__name__]
+    m = _read(path)
+    if isinstance(m, str):
+        return out + [m]
 
     for key in REQUIRED:
         if key not in m:
@@ -70,7 +88,12 @@ def faults(folder):
         # the shape is still wrong buries the one line that matters
         return out
 
-    if m["format"] != FORMAT:
+    # `is not int` and not `!= FORMAT`, because in Python True == 1, so a
+    # `"format": true` typo would sail through the one check that exists to stop
+    # a mis-versioned island, and then fail on the engine's `format === 1`
+    if isinstance(m["format"], bool) or not isinstance(m["format"], int):
+        out.append("`format` is %r, which is not a whole number" % (m["format"],))
+    elif m["format"] != FORMAT:
         out.append("`format` is %r; this repo speaks format %d" % (m["format"], FORMAT))
 
     for key in ("programme", "map"):
@@ -83,9 +106,7 @@ def faults(folder):
         out.append("`programme` and `map` are both %r; they are different key spaces "
                    "and the roster refuses an id that is in both" % m["map"])
 
-    for key in ("title", "owner"):
-        if not isinstance(m[key], str) or not m[key].strip():
-            out.append("`%s` is empty, and somebody has to be able to read it" % key)
+    out.extend(_text_faults(m))
 
     if "season" in m and m["season"] not in SEASONS:
         out.append("`season` is %r; it has to be one of %s, or left out when your "
@@ -95,39 +116,98 @@ def faults(folder):
     return out
 
 
+def _text_faults(m):
+    out = []
+    for key in ("title", "owner"):
+        value = m[key]
+        if not isinstance(value, str) or not value.strip():
+            out.append("`%s` is empty, and somebody has to be able to read it" % key)
+        elif "\n" in value or "\r" in value or "\x00" in value:
+            # `title` lands in a dialogue box and on a roster row with nothing
+            # between the manifest and the render
+            out.append("`%s` has a line break or a control character in it, and it is "
+                       "rendered as one line" % key)
+        elif len(value) > TEXT_MAX:
+            out.append("`%s` is %d characters; keep it under %d so it fits where it "
+                       "is drawn" % (key, len(value), TEXT_MAX))
+    return out
+
+
 def _module_faults(folder, m):
     out = []
     mods = m["modules"]
     if not isinstance(mods, list) or not mods:
         return ["`modules` has to list every .py file the engine should fetch"]
 
+    on_disk = os.listdir(folder)
+    lowered = {f.lower(): f for f in on_disk}
+
     for name in mods:
-        if not isinstance(name, str) or not name.endswith(".py"):
-            out.append("`modules` has %r in it, which is not a .py filename" % name)
-        elif "/" in name or "\\" in name:
+        if not isinstance(name, str) or not name.lower().endswith(".py"):
+            out.append("`modules` has %r in it, which is not a .py filename" % (name,))
+            continue
+        if "/" in name or "\\" in name:
             out.append("`modules` has %r in it; a module is a filename, and an island "
                        "is one flat folder" % name)
-        elif name in ENGINE_OWNED:
+            continue
+        if name in ENGINE_OWNED:
             out.append("`modules` lists %s, which the game provides. Yours would be "
                        "ignored at best and shadow the real one at worst" % name)
-        elif not os.path.isfile(os.path.join(folder, name)):
-            out.append("`modules` lists %s, which is not in this folder" % name)
-    if len(set(mods)) != len(mods):
+            continue
+
+        stem = name[:-3]
+        if not STEM.match(stem):
+            out.append("`modules` has %s in it. A module name is lower case letters, "
+                       "digits and underscores, because the file name is what you type "
+                       "after `import`" % name)
+            continue
+        if stem in TAKEN:
+            out.append("`modules` lists %s, which is a name Python already uses. Yours "
+                       "would replace the real one for everything running beside it" % name)
+        if name not in on_disk:
+            real = lowered.get(name.lower())
+            if real:
+                # works on Windows, 404s on raw.githubusercontent.com, which is
+                # where the engine fetches it from
+                out.append("`modules` says %s and the file is %s. The game fetches over "
+                           "HTTP and that is case-sensitive" % (name, real))
+            else:
+                out.append("`modules` lists %s, which is not in this folder" % name)
+
+    if len({n.lower() for n in mods if isinstance(n, str)}) != len(mods):
         out.append("`modules` lists the same file twice")
 
     entry = m["entry"]
     if entry not in mods:
-        out.append("`entry` is %r, which is not one of the modules" % entry)
+        out.append("`entry` is %r, which is not one of the modules" % (entry,))
 
     # A FILE NOBODY LISTED IS A FILE THAT IS NEVER FETCHED. The island imports
     # it, the import fails inside the game and nowhere else, and the traceback
     # points at a line that is correct. Cheapest possible thing to catch here.
-    on_disk = sorted(f for f in os.listdir(folder) if f.endswith(".py"))
-    for f in on_disk:
-        if f not in mods:
+    for f in sorted(on_disk):
+        full = os.path.join(folder, f)
+        if os.path.isdir(full):
+            if f != "__pycache__":
+                out.append("%s/ is a folder. An island is one flat folder, and the game "
+                           "only ever fetches the files named in `modules`" % f)
+        elif f.lower().endswith(".py") and f not in mods:
             out.append("%s is in this folder but not in `modules`, so the game never "
                        "fetches it and the import fails only inside the game" % f)
     return out
+
+
+def _read(path):
+    """The manifest, or one sentence saying why there isn't one."""
+    try:
+        # utf-8-sig reads a file with or without the byte order mark that every
+        # Windows editor is happy to add and that json.load will not accept
+        with open(path, encoding="utf-8-sig") as f:
+            m = json.load(f)
+    except ValueError as e:
+        return "island.json is not valid JSON: %s" % e
+    if not isinstance(m, dict):
+        return "island.json has to be an object, not a %s" % type(m).__name__
+    return m
 
 
 def islands(repo=None):
@@ -140,24 +220,35 @@ def islands(repo=None):
 
 
 def collisions(repo=None):
-    """Two islands claiming the same programme or the same map."""
+    """Two islands claiming the same id.
+
+    ONE key space, not one per field. The roster refuses an id that is both a
+    programme and a map, so two islands where one's programme is the other's map
+    are as broken as two islands with the same programme.
+    """
     out = []
-    for key in ("programme", "map"):
-        seen = {}
-        for folder in islands(repo):
-            path = os.path.join(folder, "island.json")
-            if not os.path.isfile(path):
+    seen = {}
+    for folder in islands(repo):
+        path = os.path.join(folder, "island.json")
+        if not os.path.isfile(path):
+            continue
+        m = _read(path)
+        # a manifest faults() has already refused; complaining twice about the
+        # same folder helps nobody, and reading its fields would raise
+        if isinstance(m, str):
+            continue
+        name = os.path.basename(folder)
+        for key in ("programme", "map"):
+            value = m.get(key)
+            if not isinstance(value, str):
                 continue
-            with open(path, encoding="utf-8") as f:
-                try:
-                    value = json.load(f).get(key)
-                except ValueError:
-                    continue
             if value in seen:
-                out.append("%s and %s both claim the %s %r"
-                           % (seen[value], os.path.basename(folder), key, value))
-            elif value is not None:
-                seen[value] = os.path.basename(folder)
+                who, what = seen[value]
+                if who != name or what != key:
+                    out.append("%s claims the %s %r and %s claims the %s %r; they are "
+                               "one key space" % (name, key, value, who, what, value))
+            else:
+                seen[value] = (name, key)
     return out
 
 
@@ -165,11 +256,16 @@ def _repo():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def main():
+def main(argv=()):
+    folders = [os.path.abspath(a) for a in argv] or islands()
+    if not folders:
+        print("no islands yet")
+        return 0
+
     bad = 0
-    for folder in islands():
+    for folder in folders:
         problems = faults(folder)
-        name = os.path.basename(folder)
+        name = os.path.basename(os.path.normpath(folder))
         if problems:
             bad += 1
             print("%s" % name)
@@ -177,11 +273,15 @@ def main():
                 print("    %s" % p)
         else:
             print("%s  ok" % name)
-    for c in collisions():
-        bad += 1
-        print(c)
+
+    # only when sweeping the whole repo: one member should not be told about
+    # another member's id clash while they are checking their own folder
+    if not argv:
+        for c in collisions():
+            bad += 1
+            print(c)
     return 1 if bad else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

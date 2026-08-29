@@ -61,8 +61,17 @@ class Handler(SimpleHTTPRequestHandler):
 
     def send_head(self):
         path = self.path.split("?")[0].split("#")[0]
+        # THE URL THIS PROGRAM PRINTS IS THE FOLDER, because that is what the
+        # loader is handed and it appends the filename itself. A member pastes
+        # that line into a browser to check the server is alive, which is the
+        # first thing anybody does, so the folder answers with the manifest
+        # rather than with a refusal that names their own file types back at them.
+        if path.startswith("/islands/") and path.endswith("/"):
+            self.path = path + "island.json"
+            path = self.path
         if not path.endswith(SERVABLE):
-            self.send_error(404, "this server only hands out %s" % " and ".join(SERVABLE))
+            self.send_error(404, "this server only hands out %s, and it does not list "
+                                 "directories" % " and ".join(SERVABLE))
             return None
         return super().send_head()
 

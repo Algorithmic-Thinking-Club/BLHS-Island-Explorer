@@ -1,6 +1,6 @@
 # What this repo needs from the engine
 
-Written 2026-08-29 by the members-repo session. Everything here is an ask on
+Written 2026-08-29, while this repo was built. Everything here is an ask on
 `AdventureGame`, not work that belongs in this repo. Each one says what is
 missing, what it blocks, and where it lands.
 
@@ -32,7 +32,7 @@ registry the engine reads. Until then no handler in this repo can ever be called
 call one. Three messages are missing:
 
 - `load`, carrying **a map of filenames to source** rather than one name and one
-  string, so a multi-file island arrives whole. `runGrape.ts` currently strips
+  string, so a multi-file island arrives whole. `runGrape.ts:97` currently strips
   directories off a single name.
 - `ready`, coming back with the handler keys the import registered. The engine
   needs the list and not just the fact, because that list is what lets an anchor
@@ -53,19 +53,24 @@ Measured while writing this, against `@micropython/micropython-webassembly-pyscr
   `File "islands/skeleton/questions.py", line 2, in q`.
 - `yield from` works, carries a return value out, and a refusal thrown in with
   `generator.throw` lands at the yield inside the inner generator.
-- `sys.modules` has to be purged for **every** module the island ships. Dropping
-  only the entry means editing a sibling and re-running silently reuses the old
-  one.
-- `inspect` **does exist** in this build, including `isgenerator`. The comment at
-  `driver.py:36` saying it does not is wrong. `type(x).__name__` still works and
-  needs no import, so there is no reason to change the check, only the comment.
+- `sys.modules` has to be purged for **every** module the island ships, and
+  **every module the previously loaded island shipped**. This repo's own harness
+  had that bug: leave the last island's modules or its folder reachable and
+  island B imports island A's file, the test suite goes green, and the engine
+  refuses it. `tests/pump.py:43-72` is the fixed version and the shape to copy.
+- `inspect` **does exist** in this build, including `isgenerator` and
+  `isgeneratorfunction`. The comment at `driver.py:36` saying it does not is
+  wrong. `type(x).__name__` still works and needs no import, so there is no
+  reason to change the check, only the comment.
 - `str.isalnum` and `str.isidentifier` do **not** exist. Anchor-name validation
   has to happen on the TypeScript side.
 
-## 3. The loader fetches one file, from the app's own origin
+## 3. The loader fetches one file, from the app's own origin, and validates nothing
 
-`GrapeProof.tsx` fetches `/grapes/<file>.py`. A member's island is a manifest
-plus its modules at a base URL, which is either a branch:
+`GrapeProof.tsx:57-73` gates a `?py=` parameter and fetches a single
+`/grapes/<file>.py` from the app's own origin. There is no reader for an
+`island.json` anywhere in `src/`. A member's island is a manifest plus its
+modules at a base URL, which is either a branch:
 
 ```
 https://raw.githubusercontent.com/<owner>/blhs-islands/<branch>/islands/<id>/
@@ -73,21 +78,31 @@ https://raw.githubusercontent.com/<owner>/blhs-islands/<branch>/islands/<id>/
 
 or their own machine while they work, which is what `serve.py` in this repo
 exists for. It sends `Access-Control-Allow-Origin: *` and `Cache-Control:
-no-store`, walks up from port 5280 to find a free one, and hands out only `.py`
-and `.json`. Verified serving this repo's skeleton.
+no-store`, walks up from port 5280 to find a free one, hands out only `.py` and
+`.json`, and answers a folder URL with that folder's `island.json`. Verified
+serving this repo's skeleton.
 
 `tools/manifest.py` is the validation, written as the thing that refuses and
-names the field. The engine should run the same rules on what it fetched. The
-two that matter most: a `format` number it does not know is refused by number,
-and a module named `vine.py` or `grape.py` is refused, because a member's copy
-would shadow the engine's on `sys.path`.
+names the field. The engine should run the same rules on what it fetched, and
+until it does, the README here says plainly that nothing on the engine side
+checks anything. The ones that matter most:
+
+- a `format` that is not a whole number equal to 1 is refused **by number**.
+  Note `True == 1` in Python, so the check needs a type guard, and this repo's
+  first version did not have one.
+- a module named `vine.py` or `grape.py` is refused, because a member's copy
+  would shadow the engine's on `sys.path`.
+- a module named `random.py`, `json.py` or anything else Python already has is
+  refused, because it replaces the real one for everything in that runtime.
+- an island is one flat folder: no subdirectories, and every `.py` on disk is in
+  `modules`.
 
 **A port note worth keeping.** Port 5275 was already taken by a node dev server
 on this machine while I was testing, and a static server that fails to bind does
 not fail loudly: the game fetches, gets somebody else's `index.html` back, and
 tries to run a page of HTML as an island. That is why `serve.py` walks the port
-range, and it is an argument for the loader refusing a response that is not
-`.py` or JSON.
+range, and it is an argument for the loader refusing a response whose content
+type is not JSON or plain text.
 
 ## 4. Nothing on the wire has a deadline or a version
 
@@ -133,22 +148,30 @@ player-closed-it case is honestly null.
 
 ## 7. Flags are one flat list with no namespace
 
-`intent-engine.ts` passes a grape's flag string straight through. Two members
-both shipping `done` collide, silently, in a student's save. This repo's README
-tells members to prefix by hand and the skeleton's test checks that it did, which
-is a convention, not a fence. P4 is the fence.
+`intent-engine.ts:48-50` passes a grape's flag string straight through. Two
+members both shipping `done` collide, silently, in a student's save. This repo's
+README tells members to prefix by hand, in the word table and in the list of
+things to change first, and the skeleton's test derives the expected prefix from
+the manifest. That is a convention with a test behind it, which is not a fence.
+P4 is the fence.
 
-## 8. `vine.py` is vendored here and will drift
+## 8. `vine.py` is vendored here, and it has already drifted once
 
 There is a copy of `vine.py` at the root of this repo, cut down to the nine words
 the skeleton is allowed to use. It exists so a member's editor resolves
-`from vine import say` and so `python -m unittest` runs with no browser. The
-engine overwrites it at runtime, so the drift cannot reach a player, but it can
-absolutely waste a member's afternoon.
+`from vine import say` and so `python -m unittest` runs with no browser.
 
-Ask: publish `vine.py` and `grape.py` somewhere this repo can pull them from, or
-add a sync step. Right now the only thing keeping them together is that somebody
-remembers.
+**The drift can reach a player and it already started.** This repo's first commit
+gave `say` a `portrait=` argument the engine's `say(text, who=None)` does not
+have. A member writing `say(..., portrait="x")` would have got a green test here
+and a `TypeError` in the game, on a line that looks correct. Fixed, and
+`tests/test_vine_matches_the_engine.py` now compares every signature against
+`../AdventureGame/src/vine/py/vine.py` when a checkout is next door and skips
+loudly when it is not.
+
+Ask: publish `vine.py` and `grape.py` somewhere this repo can pull from, or add a
+sync step, so the check is a formality rather than the only thing holding them
+together.
 
 ## 9. The manifest carries none of P18's content fields
 
@@ -162,9 +185,9 @@ half of the same thing and it is also not authoritative.
 ## 10. A member cannot get onto the roster
 
 `award(programme=...)` with a name nobody is on the roster for keeps the grade,
-warns in the console, and never marks the island finished. The skeleton ships
-`programme: "skeleton"` deliberately unrostered so a member sees that warning on
-day one, because it is the first thing they must fix.
+warns in the console at `intent-engine.ts:78`, and never marks the island
+finished. The skeleton ships `programme: "skeleton"` deliberately unrostered so a
+member sees that warning on day one, because it is the first thing they must fix.
 
 There is no path from "I built an island" to "my programme is in
 `src/game/roster/roster.ts`" that does not involve a member opening the engine,
@@ -179,8 +202,44 @@ eight-entry array, and a miss returns silently. Silence is indistinguishable fro
 a typo in the member's own file.
 
 The hook is narrow: dispatch is name-based and behind one function. There are
-five `stationByName` call sites and a grape router has to be consistent across
-all five, or the prompt and the press disagree and E is never even offered.
+**five** `stationByName` call sites and a grape router has to be consistent
+across all of them, or the prompt and the press disagree and E is never even
+offered. The one that decides whether the prompt appears at all is the
+availability test that sets `canFire`.
+
+## 12. Nothing tells a member which anchors their map has
+
+The other half of item 11, on the authoring side rather than the runtime one. A
+member types a name into `@on_talk("...")` and has no way to know whether that
+anchor exists, and `tools/manifest.py` will happily accept a `map` id for a
+painting nobody has made. So a typo and a correct name look identical before the
+game runs and identical after it, which is two invisible failures stacked.
+
+Cheapest fix: export an anchor list per map out of MAPVIS into this repo as data,
+and have `tools/manifest.py` warn when an `@on_talk` name is not in the file for
+the declared map. Until then the README says the list comes from Ash.
+
+## 13. The forgotten-yield check runs the member's body first
+
+`driver.py:34` calls `getattr(__import__(module), entry)()` and then checks
+`type(_gen).__name__ != "generator"`. For a handler with no `yield` in it that
+call runs the entire function body, so every side effect happens and only then is
+the member told nothing ran. `inspect.isgeneratorfunction` exists in this build
+and answers before the call. `tests/pump.py:96-101` does it that way and has a
+test that the body did not run.
+
+## 14. An island cannot read its own manifest
+
+`award(programme="skeleton")` in `island.py` and `"programme": "skeleton"` in
+`island.json` are the same id written twice, and nothing but a test keeps them
+together. Measured by walking the README's own path: a member who changes the
+manifest and not the code ships an island whose grade lands on somebody else's
+row, or on no row at all.
+
+The manifest is already fetched by the loader, so handing it to the island costs
+one `globals.set` in the worker. Something like a `manifest()` word, or a module
+constant the driver fills in before the import. Then `programme` is written once
+and the two cannot drift.
 
 ---
 
