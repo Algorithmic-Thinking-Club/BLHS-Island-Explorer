@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "programme": "skeleton",
+  "map": "skeleton-shore",
+  "title": "The Skeleton",
+  "season": "Fall",
+  "owner": "atc",
+  "entry": "island.py",
+  "modules": ["island.py", "questions.py"]
+}
