@@ -5,10 +5,10 @@ Every island in the BLHS adventure game, written in Python, one folder each.
 You own a folder. Nobody edits it but you, and you never open the engine. What
 you write is real Python running inside the real game, next to everybody else's.
 
-**This repo is local-only right now.** There is no GitHub remote yet, because Ash
-names it and creates it, so the `git push` and pull request steps at the bottom
-have nowhere to go. Everything else works: the game loads an island out of this
-folder and runs it. `NEEDS.md` lists what is still missing.
+It lives at
+[Algorithmic-Thinking-Club/BLHS-Island-Explorer](https://github.com/Algorithmic-Thinking-Club/BLHS-Island-Explorer).
+The game loads an island straight off a branch of it, so pushing is how somebody
+else sees your work.
 
 ---
 
@@ -163,6 +163,15 @@ Your island loads off your own disk. Edit a file, reload the page, different
 island. Nothing is committed and nothing is pushed, and only your machine can
 reach it. Add `&arm=plain` to see what the other half of the class sees.
 
+**And once you have pushed, anybody can open your branch**, which is how you show
+somebody your island without them cloning anything:
+
+```
+?scene=grape&gh=Algorithmic-Thinking-Club/BLHS-Island-Explorer@my-island:islands/my-island
+```
+
+That reads the branch, not `main`, so what they see is what you pushed.
+
 The port the game is on is whatever `npm run dev` printed, and `serve.py` prints
 its own. If the game shows a page of HTML where your island should be, something
 else is on the port you used, and the error will say so.
@@ -276,7 +285,31 @@ Then open a pull request. **Ash reads every island before it reaches a student**
 and what he is reading for is the `award`: whether the programme is on the roster
 and whether the grade a student can get is the grade they earned.
 
-The push and the pull request do not work yet. There is no remote.
+## Getting on the roster
+
+Until your island has a row in `islands.json` at the root of THIS repo, the game
+cannot see it. `python tools/manifest.py` tells you so, and it is not an error:
+build for as long as you like before anybody merges anything.
+
+The row is your programme as the rest of the game sees it:
+
+```json
+{
+  "programme": "tide-pool", "map": "tide-pool-shore", "folder": "my-island",
+  "name": "Tide Pool Club", "place": "atc-room", "kind": "club",
+  "tags": [], "playable": true,
+  "blurb": "Thursdays, and everybody gets wet.",
+  "host": "Ms. Berwick",
+  "source": "blhs.sumnersd.org/activities/clubs-activities, read 2026-09-04"
+}
+```
+
+`programme` and `map` have to match your `island.json`, and the checker says so
+when they do not. `source` is where the blurb and the host came from, and there
+is no version of this without one.
+
+You add the row here. Ash merges it and carries it into the engine with
+`tools/sync.py`. **You never open the engine**, which is the whole point.
 
 ## When you need something that is not here
 

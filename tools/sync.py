@@ -27,7 +27,15 @@ import shutil
 import sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FILES = ("vine.py", "grape.py")
+
+# the engine's, copied here so an editor and an offline test can see the names
+FROM_ENGINE = (("vine.py", "vine.py"), ("grape.py", "grape.py"))
+# and the one that goes the other way. `islands.json` is the roster row a
+# member's pull request adds, and it is edited HERE, in the repository a member
+# actually opens. The engine reads its own copy at boot rather than asking GitHub
+# for a roster on a school network, so the row has to cross, and this is the
+# crossing. Ash runs it when he merges.
+TO_ENGINE = (("islands.json", "src/game/roster/member-islands.json"),)
 
 
 def engine_dir(argv):
@@ -36,33 +44,38 @@ def engine_dir(argv):
     return os.environ.get("BLHS_GAME") or os.path.join(os.path.dirname(HERE), "AdventureGame")
 
 
+def copy(src, dst, label, arrow):
+    """One file across, and one line saying whether it moved. Returns 1 if it did."""
+    if not os.path.isfile(src):
+        print("%-13s %s  the source is not there: %s" % (label, arrow, src))
+        return 1
+    with open(src, "rb") as f:
+        new = f.read()
+    old = open(dst, "rb").read() if os.path.isfile(dst) else None
+    if new == old:
+        print("%-13s %s  already the same" % (label, arrow))
+        return 0
+    shutil.copyfile(src, dst)
+    print("%-13s %s  updated" % (label, arrow))
+    return 1
+
+
 def main(argv=()):
     game = engine_dir(list(argv))
-    src = os.path.join(game, "src", "vine", "py")
-    if not os.path.isdir(src):
-        print("no engine at %s" % src)
+    if not os.path.isdir(os.path.join(game, "src", "vine", "py")):
+        print("no engine at %s" % game)
         print()
         print("This only runs on a machine with both repositories. If you are a")
         print("member, you do not need it: the copies in this repo are current.")
         return 1
 
     changed = 0
-    for name in FILES:
-        theirs = os.path.join(src, name)
-        ours = os.path.join(HERE, name)
-        if not os.path.isfile(theirs):
-            print("%-9s the engine does not have this file" % name)
-            changed += 1
-            continue
-        with open(theirs, "rb") as f:
-            new = f.read()
-        old = open(ours, "rb").read() if os.path.isfile(ours) else None
-        if new == old:
-            print("%-9s already the same" % name)
-            continue
-        shutil.copyfile(theirs, ours)
-        print("%-9s updated" % name)
-        changed += 1
+    for ours_name, theirs_rel in FROM_ENGINE:
+        changed += copy(os.path.join(game, "src", "vine", "py", theirs_rel),
+                        os.path.join(HERE, ours_name), ours_name, "<-")
+    for ours_name, theirs_rel in TO_ENGINE:
+        changed += copy(os.path.join(HERE, ours_name),
+                        os.path.join(game, *theirs_rel.split("/")), ours_name, "->")
 
     if changed:
         print()

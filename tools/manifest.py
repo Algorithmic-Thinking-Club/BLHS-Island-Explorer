@@ -287,6 +287,77 @@ def _read(path):
     return m
 
 
+def registry_faults(repo=None):
+    """islands.json against the folders that actually exist.
+
+    THE ROW IS HOW AN ISLAND REACHES THE ROSTER. A member's pull request adds one
+    here, Ash merges it, and `tools/sync.py` carries it into the engine. A row
+    that names a folder nobody wrote, or a folder with no row, is an island the
+    game either cannot find or does not know about, and both are silent.
+    """
+    root = repo or _repo()
+    path = os.path.join(root, "islands.json")
+    if not os.path.isfile(path):
+        return ["there is no islands.json, so no island can reach the roster"]
+
+    doc = _read(path)
+    if isinstance(doc, str):
+        return [doc.replace("island.json", "islands.json")]
+    rows = doc.get("islands")
+    if not isinstance(rows, list):
+        return ["`islands` in islands.json has to be a list of rows"]
+
+    out = []
+    folders = {os.path.basename(f) for f in islands(root)}
+    claimed = set()
+    for i, row in enumerate(rows):
+        where = (row or {}).get("programme") or "row %d" % (i + 1)
+        if not isinstance(row, dict):
+            out.append("%s is not an object" % where)
+            continue
+        for key in ("programme", "map", "folder", "name", "place", "blurb", "source"):
+            if not isinstance(row.get(key), str) or not row[key].strip():
+                out.append("%s: `%s` is missing" % (where, key))
+        if row.get("kind") not in ("sport", "club"):
+            out.append("%s: `kind` is sport or club" % where)
+        if not isinstance(row.get("playable"), bool):
+            out.append("%s: `playable` is true or false" % where)
+        if not isinstance(row.get("tags"), list):
+            out.append("%s: `tags` is a list, empty if none" % where)
+        folder = row.get("folder")
+        if isinstance(folder, str):
+            claimed.add(folder)
+            if folder not in folders:
+                out.append("%s: names the folder %r, which is not in islands/"
+                           % (where, folder))
+            else:
+                # the row and the manifest are two statements about one island
+                m = _read(os.path.join(root, "islands", folder, "island.json"))
+                if isinstance(m, dict):
+                    for key in ("programme", "map"):
+                        if m.get(key) != row.get(key):
+                            out.append("%s: `%s` is %r here and %r in %s/island.json"
+                                       % (where, key, row.get(key), m.get(key), folder))
+
+    return out
+
+
+def unregistered(repo=None):
+    """Folders with no row yet. Not broken: not shipped.
+
+    An island with no row is one the game cannot see, which is the right state
+    for the skeleton and for yours until you are ready. It is said out loud
+    because the difference between "not registered" and "registered wrong" is
+    invisible from inside the game, and it is NOT a failure, because a member
+    should be able to build for a week before anybody merges anything.
+    """
+    root = repo or _repo()
+    doc = _read(os.path.join(root, "islands.json"))
+    rows = doc.get("islands") if isinstance(doc, dict) else []
+    claimed = {r.get("folder") for r in rows if isinstance(r, dict)}
+    return [os.path.basename(f) for f in islands(root) if os.path.basename(f) not in claimed]
+
+
 def islands(repo=None):
     """Every island folder in the repo, in order."""
     root = os.path.join(repo or _repo(), "islands")
@@ -357,6 +428,11 @@ def main(argv=()):
         for c in collisions():
             bad += 1
             print(c)
+        for c in registry_faults():
+            bad += 1
+            print(c)
+        for name in unregistered():
+            print("%s  no row in islands.json yet, so the game cannot see it" % name)
     return 1 if bad else 0
 
 

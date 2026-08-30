@@ -35,6 +35,9 @@ ENGINE_PY = os.path.join(GAME, "src", "vine", "py")
 
 # every file this repo vendors out of the engine
 VENDORED = ("vine.py", "grape.py")
+# and the one that goes the other way: the roster rows a member's PR adds here,
+# which tools/sync.py carries into the engine when Ash merges
+CROSSES = (("islands.json", os.path.join("src", "game", "roster", "member-islands.json")),)
 
 
 class TheCopiesAreTheSameFiles(unittest.TestCase):
@@ -53,6 +56,37 @@ class TheCopiesAreTheSameFiles(unittest.TestCase):
                 self.assertEqual(
                     ours, engine,
                     "%s has drifted from the engine's copy. Run: python tools/sync.py" % name)
+
+
+class TheRosterRowsCrossed(unittest.TestCase):
+    """islands.json here and member-islands.json in the engine are one file.
+
+    A member's pull request adds a row HERE, because this is the repository a
+    member opens. The engine reads its own copy at boot rather than asking GitHub
+    for a roster on a school network with a bad afternoon, so the row has to
+    cross, and `python tools/sync.py` is the crossing. An unsynced merge is an
+    island the member can see and the game cannot.
+    """
+
+    def test_the_engine_has_the_same_rows(self):
+        for ours_name, theirs_rel in CROSSES:
+            theirs = os.path.join(GAME, theirs_rel)
+            if not os.path.isfile(theirs):
+                self.skipTest("no game checkout at %s" % GAME)
+            with self.subTest(file=ours_name):
+                with open(theirs, encoding="utf-8") as f:
+                    engine = f.read()
+                with open(os.path.join(HERE, ours_name), encoding="utf-8") as f:
+                    ours = f.read()
+                self.assertEqual(
+                    ours, engine,
+                    "%s has not been carried into the engine. Run: python tools/sync.py"
+                    % ours_name)
+
+
+class TheRegistryMatchesTheFolders(unittest.TestCase):
+    def test_every_row_names_a_folder_that_exists(self):
+        self.assertEqual(manifest.registry_faults(), [])
 
 
 class TheFormatRulesAgree(unittest.TestCase):

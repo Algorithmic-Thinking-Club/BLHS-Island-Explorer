@@ -11,11 +11,12 @@ island's other handlers working. They are kept rather than deleted, because each
 records what was measured to get there and the next person to touch that code
 should not have to measure it again.
 
-**The one thing still outstanding is not code.** The members' repository is
-private, so `raw.githubusercontent.com` answers 404 anonymously and the
-branch-URL proof cannot be finished. Ash flips it to public and that proof runs.
-Everything else about loading an island off a branch is proven through
-`serve.py`, which is the same fetch against a different host.
+**And the branch-URL proof is done, 2026-08-29.** The skeleton loaded straight
+off `raw.githubusercontent.com/Algorithmic-Thinking-Club/BLHS-Island-Explorer/<branch>/islands/skeleton/`
+and ran `@on_talk("greeter")` in the real dialogue box. Proven against a branch
+rather than only against `main`: the branch carried a line `main` does not have,
+the game drew that line, and `main` drew its own. The branch was deleted
+afterwards, so nothing in this repo is a leftover from a proof.
 
 ---
 
