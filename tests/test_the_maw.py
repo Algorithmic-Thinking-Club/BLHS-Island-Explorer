@@ -38,8 +38,14 @@ def _engine_words():
         return set(re.findall(r'"kind": "([a-z_]+)"', f.read()))
 
 
-def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", picks=(), score=3.4):
-    """An engine that answers the questions this island actually asks."""
+def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", picks=(), score=3.4,
+              refuse=()):
+    """An engine that answers the questions this island actually asks.
+
+    `refuse` names words this pretend engine cannot perform. A real refusal is
+    RAISED at the yield that asked for it, which is what `pump.run` does with a
+    thrown value, so this is the shape a member's island really meets.
+    """
     queue = list(picks)
     state = {
         "flags": list(flags),
@@ -50,6 +56,8 @@ def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", pic
     }
 
     def answer(intent):
+        if intent["kind"] in refuse:
+            raise pump.Refused('%s: this map cannot do that' % intent["kind"])
         if intent["kind"] == "get":
             return state[intent["path"]]
         if intent["kind"] == "choose":
@@ -60,13 +68,16 @@ def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", pic
     return answer
 
 
-def cord(name, earned=False, progress=0.0, detail="0 of 5"):
+def cord(name, earned=False, progress=0.0, detail="0 of 5", at_graduation=False):
     """One row shaped the way `get("cord_board")` really hands them over."""
-    return {
+    row = {
         "id": name.lower().replace(" ", "-"), "name": name, "colors": "gold",
         "rule": "the school's own words", "source": "docs/blhs/awards.md",
         "published": True, "earned": earned, "progress": progress, "detail": detail,
     }
+    if at_graduation:
+        row["settlesAtGraduation"] = True
+    return row
 
 
 class TheIslandLoads(unittest.TestCase):
@@ -201,6 +212,18 @@ class TheFoundingEvent(unittest.TestCase):
         for line in pump.only(self.seen, "say"):
             self.assertEqual(line.get("portrait"), "principal")
 
+    def test_a_room_with_nobody_at_the_desk_still_gets_its_founding(self):
+        # THE OFFLINE COPY OF THIS ROOM BINDS NO PLACEMENTS. `actor_face` is a hard
+        # refusal there, and a refusal is raised at the line that asked, so before
+        # the guard it took the cutscene and the flag with it and the founding
+        # replayed on every visit forever.
+        seen = pump.run("talk:principal_desk",
+                        answering(flags=["maw:seen"], refuse=("actor_face",)))
+        self.assertEqual([i["script"] for i in pump.only(seen, "cutscene")], ["maw-founding"])
+        self.assertEqual([i["flag"] for i in pump.only(seen, "set_flag")], ["maw:founding"])
+        # and it says which word could not perform, rather than swallowing it
+        self.assertIn("actor_face_refused", [i["event"] for i in pump.only(seen, "log")])
+
     def test_a_second_visit_is_one_line_and_no_scene(self):
         again = pump.run("talk:principal_desk", answering(flags=["maw:seen", "maw:founding"]))
         self.assertEqual(pump.kinds(again), ["get", "say"])
@@ -264,6 +287,21 @@ class TheCounselor(unittest.TestCase):
         seen = pump.run("talk:counselor", answering(board=board, picks=[1]))
         self.assertEqual(len(pump.only(seen, "say")), 4)
 
+    def test_the_two_graduation_cords_do_not_take_both_slots(self):
+        # THE ONE THAT BROKE HER. Both GPA bands move on the very first grade and
+        # keep moving for four years, so sorted by progress alone they are the
+        # only two cords she would ever name, in any year, on any run.
+        board = [
+            cord("Highest Honors", progress=0.93, detail="GPA 3.50 of 3.76", at_graduation=True),
+            cord("High Honors", progress=1.0, detail="GPA 3.50 of 3.5", at_graduation=True),
+            cord("AP Honors", progress=0.6, detail="3 of 5 AP classes passed"),
+        ]
+        said = [i["text"] for i in
+                pump.only(pump.run("talk:counselor", answering(board=board, picks=[1])), "say")]
+        self.assertEqual(len(said), 2)
+        self.assertEqual(len([t for t in said if t.startswith("G") or "GPA" in t]), 1)
+        self.assertTrue(any("AP Honors" in t for t in said), said)
+
     def test_the_nearest_cord_is_named_first(self):
         board = [cord("Far", progress=0.1, detail="1 of 5"),
                  cord("Near", progress=0.9, detail="4 of 5")]
@@ -295,6 +333,15 @@ class TheWall(unittest.TestCase):
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [False])
         self.assertIn("Empty hooks", pump.only(seen, "say")[0]["text"])
 
+    def test_it_speaks_before_it_touches_the_picture(self):
+        # `show` refuses hard on a map whose trophy_wall is not bound to a
+        # placement, and a refusal takes the rest of the handler with it. Said
+        # first, a room drawn without a shelf still gets its sentence.
+        for trophies in ({"stickers": [], "badges": []}, {"stickers": ["a"], "badges": []}):
+            with self.subTest(trophies=trophies):
+                kinds = pump.kinds(pump.run("talk:trophy_wall", answering(trophies=trophies)))
+                self.assertLess(kinds.index("say"), kinds.index("show"))
+
     def test_it_counts_stickers_and_badges_together(self):
         seen = pump.run("talk:trophy_wall", answering(
             trophies={"stickers": ["a", "b"], "badges": ["c"]}))
@@ -319,6 +366,12 @@ class ThePanels(unittest.TestCase):
     def test_the_chart_table_opens_the_planner(self):
         seen = pump.run("talk:chart_table", answering())
         self.assertEqual([i["ui"] for i in pump.only(seen, "open")], ["planner"])
+
+    def test_it_does_not_log_an_event_the_panel_already_logs(self):
+        # `Planner.tsx` fires `planner_opened` when it mounts. A second one here
+        # doubled every count of how often a student opened the year sheet.
+        seen = pump.run("talk:chart_table", answering())
+        self.assertEqual([i["event"] for i in pump.only(seen, "log")], [])
 
     def test_the_outfitter_opens_the_wardrobe(self):
         seen = pump.run("talk:outfitter", answering())

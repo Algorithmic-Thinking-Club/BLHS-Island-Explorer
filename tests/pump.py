@@ -33,6 +33,20 @@ import grape  # noqa: E402  (after the path fix above, on purpose)
 # that a loop which keeps yielding stops the test instead of the machine.
 MAX_STEPS = 10_000
 
+
+class Refused(Exception):
+    """Raise this from your `answer` to make the engine refuse that word.
+
+    The engine cannot always do what an island asks: a name the map does not
+    carry, a shot nobody framed, a panel with nothing mounted to open it. It says
+    so by RAISING at your own yield rather than returning a value you could
+    ignore, so an island that does not catch it stops there.
+
+    Raising this from `answer` reproduces that exactly, which lets a test ask the
+    question that matters: when this word refuses, does the rest of the beat
+    still happen, and does anything say why.
+    """
+
 # what the last load() brought in, so this one can take it back out again
 _loaded = ()
 
@@ -88,6 +102,15 @@ def run(handler, answer=None):
     `answer` is called with each intent and returns what the engine would have
     sent back: the index for a choose, the value for a get, None for the rest.
     Leave it out and everything is answered with None.
+
+    AND IT CAN REFUSE. Raise `pump.Refused("why")` out of `answer` and this
+    throws it back into your island at the exact yield that asked for it, which
+    is what the real engine does (`driver.py` calls `_gen.throw` on a refusal).
+    That path used to be untestable here, and it is the one your island meets
+    most often: a word aimed at an anchor a map does not carry, a shot nobody
+    named, a panel nothing is mounted to open. Unless you catch it, it takes the
+    rest of your handler with it, and that is worth finding in a test rather than
+    on a Chromebook in a classroom.
     """
     fn = grape._handlers.get(handler)
     if fn is None:
@@ -113,13 +136,23 @@ def run(handler, answer=None):
 
     seen = []
     reply = None
+    raise_in = None
     for _ in range(MAX_STEPS):
         try:
-            intent = body.send(reply)
+            intent = body.throw(raise_in) if raise_in else body.send(reply)
         except StopIteration:
             return seen
+        raise_in = None
         seen.append(intent)
-        reply = answer(intent) if answer else None
+        if not answer:
+            continue
+        try:
+            reply = answer(intent)
+        except Refused as no:
+            # the shape the engine really uses: a RuntimeError carrying the
+            # engine's own sentence, raised at the line that yielded
+            reply = None
+            raise_in = RuntimeError(str(no))
 
     raise RuntimeError("%s yielded %d times without finishing" % (handler, MAX_STEPS))
 

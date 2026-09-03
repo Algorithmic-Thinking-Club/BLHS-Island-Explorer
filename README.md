@@ -237,11 +237,26 @@ They all need a map, so none of them does anything in a test. Read the top of
 `vine.py`, and if one refuses, the refusal will say why on your own line, with a
 list of the names that map really does carry.
 
-**`islands/panther-maw/` is the worked example for all sixteen.** It is the
-game's own home base, written in this same python against these same words, and
-it is here to be read rather than copied: it is the machine, not your first file.
-`tests/test_the_maw.py` beside it is what testing an island of that size looks
-like. The one you copy to start is the skeleton, and after that the ATC island.
+**`islands/panther-maw/` is the worked example for a room-sized island.** It is
+the game's own home base, written in this same python against these same words,
+and it is here to be read rather than copied: it is the machine, not your first
+file. `tests/test_the_maw.py` beside it is what testing an island of that size
+looks like. The one you copy to start is the skeleton, and after that the ATC
+island.
+
+It does not use all twenty-five. It uses twelve: `say` with a face on it,
+`choose`, `get`, `open`, `play`, `set_flag`, `log`, `show`, `look_at`,
+`actor_face`, `cutscene` and `wait`. What it shows that a short island cannot is
+the SHAPE: seven handlers on one map, content in one file and control flow in
+another, and one scene long enough to live in its own file and be pulled in with
+`yield from`.
+
+The other thirteen are in `vine.py` with what each one does. For `route`,
+`framing`, `pose`, `guide_to`, `wait_for` and `sound` inside one running scene,
+read the beach opening in the engine at `public/grapes/castaway/island.py`. The
+Maw does not use those because the room it is written for carries no drawn paths
+and no named camera shots yet, and a word aimed at a name the map does not have
+is refused on the line that asked for it.
 
 `python tools/sync.py` pulls `vine.py`, `grape.py` and the vine's own islands
 from the engine. You should not need it: the copies here are current when you
