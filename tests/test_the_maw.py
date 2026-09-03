@@ -184,7 +184,27 @@ class WalkingIn(unittest.TestCase):
 
     def test_and_never_again(self):
         later = pump.run("start", answering(flags=["maw:seen"]))
-        self.assertEqual(pump.kinds(later), ["get"])
+        self.assertEqual(pump.only(later, "say"), [])
+
+    def test_the_wall_tells_the_truth_before_anybody_presses_it(self):
+        # THE ONE THE GATE COULD NOT SEE. A placement is drawn from the first
+        # frame, and the drawn shelf is a case with things on it, so a first year
+        # with nothing earned used to walk in to a full trophy case and watch it
+        # vanish when they pressed E. Arrival syncs it, on every load.
+        for flags in ((), ("maw:seen",)):
+            with self.subTest(flags=flags):
+                empty = pump.run("start", answering(flags=flags))
+                self.assertEqual([i["visible"] for i in pump.only(empty, "show")], [False])
+                full = pump.run("start", answering(
+                    flags=flags, trophies={"stickers": ["a"], "badges": []}))
+                self.assertEqual([i["visible"] for i in pump.only(full, "show")], [True])
+
+    def test_a_room_with_no_shelf_still_gets_its_arrival_lines(self):
+        # `show` is a hard refusal on the offline copy of this room, and before
+        # the guard it would have taken the two arrival lines with it.
+        seen = pump.run("start", answering(refuse=("show",)))
+        self.assertEqual(pump.kinds(seen).count("say"), 2)
+        self.assertIn("show_refused", [i["event"] for i in pump.only(seen, "log")])
 
 
 class TheFoundingEvent(unittest.TestCase):
