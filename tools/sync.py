@@ -37,6 +37,18 @@ FROM_ENGINE = (("vine.py", "vine.py"), ("grape.py", "grape.py"))
 # crossing. Ash runs it when he merges.
 TO_ENGINE = (("islands.json", "src/game/roster/member-islands.json"),)
 
+# THE ISLANDS THE VINE ITSELF WROTE, whole folders rather than single files.
+#
+# The Panther's Maw is the game's own home base and it is written in the same
+# python a member writes, against the same words, so it is the ADVANCED example
+# somebody reads to understand the machine. It has to be in this repository for
+# that. It also has to SHIP, and the game fetches a bound island out of its own
+# `public/grapes/<folder>/`, so the real one lives over there and this is a copy.
+#
+# The engine's is the master, exactly as it is for vine.py, and for the same
+# reason: editing the copy in this repo changes nothing a player sees.
+FROM_ENGINE_FOLDERS = (("panther-maw", "public/grapes/panther-maw"),)
+
 
 def engine_dir(argv):
     if argv:
@@ -60,6 +72,40 @@ def copy(src, dst, label, arrow):
     return 1
 
 
+def copy_folder(src, dst, label):
+    """A whole island across. Returns 1 if anything moved.
+
+    Every file that is in the source, and every file that is in the destination
+    and NOT in the source goes. A stale module left behind is worse than a
+    missing one: `tools/manifest.py` refuses a `.py` on disk that the manifest
+    does not list, so a file this forgot to delete would fail the checker in this
+    repo over a file nobody here wrote.
+    """
+    if not os.path.isdir(src):
+        print("%-13s <-  the source is not there: %s" % (label, src))
+        return 1
+    if not os.path.isdir(dst):
+        os.makedirs(dst)
+    moved = 0
+    want = sorted(n for n in os.listdir(src) if os.path.isfile(os.path.join(src, n)))
+    for name in want:
+        s, d = os.path.join(src, name), os.path.join(dst, name)
+        new = open(s, "rb").read()
+        old = open(d, "rb").read() if os.path.isfile(d) else None
+        if new != old:
+            shutil.copyfile(s, d)
+            moved += 1
+    for name in sorted(os.listdir(dst)):
+        if name in want or name == "__pycache__":
+            continue
+        path = os.path.join(dst, name)
+        if os.path.isfile(path):
+            os.remove(path)
+            moved += 1
+    print("%-13s <-  %s" % (label, "updated" if moved else "already the same"))
+    return 1 if moved else 0
+
+
 def main(argv=()):
     game = engine_dir(list(argv))
     if not os.path.isdir(os.path.join(game, "src", "vine", "py")):
@@ -76,12 +122,15 @@ def main(argv=()):
     for ours_name, theirs_rel in TO_ENGINE:
         changed += copy(os.path.join(HERE, ours_name),
                         os.path.join(game, *theirs_rel.split("/")), ours_name, "->")
+    for folder, theirs_rel in FROM_ENGINE_FOLDERS:
+        changed += copy_folder(os.path.join(game, *theirs_rel.split("/")),
+                               os.path.join(HERE, "islands", folder), folder)
 
     if changed:
         print()
-        print("Run `python -m unittest` before you commit: vine.py is deliberately")
-        print("nine of the engine's fifteen words, so a copy of the whole file will")
-        print("fail the test that says which nine this repo hands members.")
+        print("Run `python -m unittest` before you commit. The tests here compare")
+        print("both copies of every one of these byte for byte, so a half-finished")
+        print("sync fails loudly instead of sitting there looking done.")
     return 0
 
 

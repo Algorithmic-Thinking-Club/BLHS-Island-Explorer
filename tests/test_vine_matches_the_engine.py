@@ -39,6 +39,16 @@ VENDORED = ("vine.py", "grape.py")
 # which tools/sync.py carries into the engine when Ash merges
 CROSSES = (("islands.json", os.path.join("src", "game", "roster", "member-islands.json")),)
 
+# THE ISLANDS THE VINE WROTE, whole folders, and the engine's copy is the master.
+#
+# The Panther's Maw is the game's own home base written in the same python a
+# member writes. It ships out of the engine's `public/grapes/`, because that is
+# where a bound island is fetched from, and it is HERE because it is the advanced
+# example somebody reads to understand the machine. Two copies of a four file
+# island drift faster than two copies of one file, and a drifted copy here is a
+# member learning from a version of the room that is not the one they play.
+VENDORED_ISLANDS = (("panther-maw", os.path.join("public", "grapes", "panther-maw")),)
+
 
 class TheCopiesAreTheSameFiles(unittest.TestCase):
     def test_byte_for_byte(self):
@@ -56,6 +66,41 @@ class TheCopiesAreTheSameFiles(unittest.TestCase):
                 self.assertEqual(
                     ours, engine,
                     "%s has drifted from the engine's copy. Run: python tools/sync.py" % name)
+
+
+class TheVinesOwnIslandsAreTheSameFolders(unittest.TestCase):
+    """Every file, both ways, so neither a stale edit nor a stray module hides.
+
+    Comparing the files the engine has is only half of it. A module left behind
+    HERE after the engine deleted it is a `.py` on disk that no manifest lists,
+    which `tools/manifest.py` refuses, and the member reading the error wrote
+    none of it.
+    """
+
+    def test_every_file_is_the_same_file(self):
+        for folder, theirs_rel in VENDORED_ISLANDS:
+            theirs = os.path.join(GAME, theirs_rel)
+            if not os.path.isdir(theirs):
+                self.skipTest("no game checkout at %s" % theirs)
+            ours = os.path.join(HERE, "islands", folder)
+            engine_files = sorted(n for n in os.listdir(theirs)
+                                  if os.path.isfile(os.path.join(theirs, n)))
+            our_files = sorted(n for n in os.listdir(ours)
+                               if os.path.isfile(os.path.join(ours, n)))
+            self.assertEqual(
+                our_files, engine_files,
+                "islands/%s does not hold the same files as the engine's. "
+                "Run: python tools/sync.py" % folder)
+            for name in engine_files:
+                with self.subTest(island=folder, file=name):
+                    with open(os.path.join(theirs, name), encoding="utf-8") as f:
+                        engine = f.read()
+                    with open(os.path.join(ours, name), encoding="utf-8") as f:
+                        mine = f.read()
+                    self.assertEqual(
+                        mine, engine,
+                        "islands/%s/%s has drifted from the engine's copy. "
+                        "Run: python tools/sync.py" % (folder, name))
 
 
 class TheRosterRowsCrossed(unittest.TestCase):

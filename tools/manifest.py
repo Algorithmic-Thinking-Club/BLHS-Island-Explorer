@@ -72,6 +72,14 @@ MAX_MODULES = 24
 # stale copy and spend an afternoon on it.
 ENGINE_OWNED = ("vine.py", "grape.py")
 
+# THE ISLANDS THE VINE ITSELF WROTE, which are in this repo to be READ.
+#
+# `islands/panther-maw/` is the game's own home base, written in the same python
+# a member writes, and it ships out of the engine rather than out of a row in
+# `islands.json`. It is not unregistered and it is not yours: `tools/sync.py`
+# keeps it level with the engine's copy and a test fails when it drifts.
+VINE_OWNED = ("panther-maw",)
+
 # names Python already uses. An island shipping random.py does not get a warning,
 # it replaces the real one for everything running in that runtime.
 TAKEN = (
@@ -355,6 +363,16 @@ def unregistered(repo=None):
     doc = _read(os.path.join(root, "islands.json"))
     rows = doc.get("islands") if isinstance(doc, dict) else []
     claimed = {r.get("folder") for r in rows if isinstance(r, dict)}
+    # AND THE VINE'S OWN ISLANDS ARE NOT UNREGISTERED. They are registered
+    # somewhere a member's pull request does not reach: `vine-islands.ts` in the
+    # engine, a table of maps the game itself owns. It is a second table because
+    # a row in the member roster is a PROGRAMME, and the Panther's Maw is not one.
+    # A row for it would have appeared on the year sheet as a season token a
+    # student could spend on the room they were standing in.
+    #
+    # Saying "the game cannot see it" about the Maw would be false, and the only
+    # thing this line is worth is that it is true.
+    claimed |= set(VINE_OWNED)
     return [os.path.basename(f) for f in islands(root) if os.path.basename(f) not in claimed]
 
 

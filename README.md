@@ -210,9 +210,9 @@ uses like `random.py` or `json.py`.
 
 ## The words
 
-`vine.py` has fifteen, which is everything the engine understands. These nine are
-what the skeleton uses, and they are the ones that have been watched working from
-Python inside the game:
+`vine.py` has twenty-five, which is everything the engine understands. These nine
+are what the skeleton uses, and they are the ones that have been watched working
+from Python inside the game:
 
 | word | what it does |
 |---|---|
@@ -226,14 +226,26 @@ Python inside the game:
 | `log(event, data=)` | one line on the record |
 | `guide_to(anchor)` | the arrow, along ground that can be walked |
 
-The other six move the world: `walk_to`, `look_at`, `show`, `fx`, `enter` and
-`cutscene`. They all need a map, so none of them does anything in a test and some
-of them landed recently enough that nobody has watched a member use one. Read the
-top of `vine.py`, and if one refuses, the refusal will say why on your own line.
+The other sixteen move the world and direct a scene. Six of them have been there
+a while: `walk_to`, `look_at`, `show`, `fx`, `enter` and `cutscene`. Ten more are
+for DIRECTING rather than walking through: `pose` and `wait` and `wait_for` and
+`sound`, `route` and `framing` for a line or a shot somebody drew on the map in
+MAPVIS, and `actor_move`, `actor_face`, `actor_look` and `actor_release` for
+driving somebody who is already standing there.
 
-`python tools/sync.py` pulls both `vine.py` and `grape.py` from the engine. You
-should not need it: the copies here are current when you clone. Whoever changed
-the engine runs it.
+They all need a map, so none of them does anything in a test. Read the top of
+`vine.py`, and if one refuses, the refusal will say why on your own line, with a
+list of the names that map really does carry.
+
+**`islands/panther-maw/` is the worked example for all sixteen.** It is the
+game's own home base, written in this same python against these same words, and
+it is here to be read rather than copied: it is the machine, not your first file.
+`tests/test_the_maw.py` beside it is what testing an island of that size looks
+like. The one you copy to start is the skeleton, and after that the ATC island.
+
+`python tools/sync.py` pulls `vine.py`, `grape.py` and the vine's own islands
+from the engine. You should not need it: the copies here are current when you
+clone. Whoever changed the engine runs it.
 
 Two of them come back as something that is not a value. `choose` comes back as
 `-1` when nobody answered at all, and `play` comes back as `None` when the player
