@@ -24,7 +24,7 @@ speeches. Ash played it and ruled it constant dialogue that nobody reads
 tour is in this repository's history if anybody wants to read what a camera
 tour looks like in these words.
 """
-from vine import actor_move, actor_release, log, open, say, set_flag, wait
+from vine import actor_move, actor_release, log, open, say, set_flag, wait  # noqa: A004 (open is the engine's word)
 
 from lines import FACE, PRINCIPAL, WELCOME
 
@@ -100,16 +100,28 @@ def come_over():
         return False
 
 
-def go_back():
-    """Give him back to himself, walking to his desk first so he does not snap there.
+def let_go():
+    """He is his own again, under the cards, and he stays where he came to.
 
-    Letting a body go starts its own life up again from wherever the clock has
-    got to, which for a man who breathes at a desk is the desk. Released where
-    he stands he would be there in one frame. Walked back first, the snap is a
-    step, and it happens under the cards.
+    HE DOES NOT WALK HOME, AND THAT IS A MISSING WORD, NOT A CHOICE. Three
+    shapes were tried in a browser and measured. Walked back UNDER the cards:
+    nothing on the map moves while a panel is up, so the walk waited and then
+    ran for five seconds after the cards closed with this handler still open,
+    and an open handler drops every press in the room. Walked back BEFORE the
+    cards, to his own anchor: `actor_move` goes to an anchor's stand point, and
+    a bound anchor's stand point travels with the body, so "walk to your own
+    desk" walked him twelve pixels to his own stand offset and stopped. Every
+    name bound to him moves with him, the room carries no unbound point at
+    the desk, and a name the room does not carry is refused on this line. So
+    there is no way to say "back to where you started" today; one point
+    anchor at the desk in MAPVIS, or one engine word, would give it.
+
+    Until then he stays by the door, where he came to meet the student, and
+    is back at his desk the next time the room loads. Letting him go here,
+    under the cards, means this handler is over the moment the cards are up
+    and the room answers presses the moment they close.
     """
     try:
-        yield actor_move(PRINCIPAL, PRINCIPAL)
         yield actor_release(PRINCIPAL)
     except Exception as refused:
         yield log("actor_release_refused", {"actor": PRINCIPAL, "why": str(refused)})
@@ -140,6 +152,7 @@ def founding_event(walk=True):
     yield set_flag(CHART)
     yield set_flag(HANDBOOK)
     yield set_flag(VIGNETTE)
+
     yield wait(TABLE_LIT_MS)
 
     # ---- and the cards ---------------------------------------------------------
@@ -151,6 +164,6 @@ def founding_event(walk=True):
     yield open("planner")
     yield log("founding_seen", {"where": MEET if walk else PRINCIPAL, "walked": came})
 
-    # under the cards, he goes back to his desk
+    # under the cards, he is his own again, and this handler is over
     if walk and came:
-        yield from go_back()
+        yield from let_go()

@@ -282,11 +282,18 @@ class TheFoundingEvent(unittest.TestCase):
         # and an arrow raised here would sit on the table over the fire
         self.assertEqual(pump.only(self.seen, "guide_to"), [])
 
-    def test_he_goes_back_to_his_desk_and_is_let_go_under_the_cards(self):
+    def test_he_is_let_go_under_the_cards_and_not_walked_back(self):
+        # measured in a browser, twice. Walked back UNDER the cards, the walk
+        # waited (nothing moves under a panel) and then ran for five seconds
+        # with this handler still open, and an open handler drops every press
+        # in the room. Walked back BEFORE the cards to his own anchor, he moved
+        # twelve pixels: a bound anchor's stand point travels with the body, so
+        # no name on this room means "home". Released under the cards, the
+        # handler is over the moment they are up. founding.py has the whole of it.
         kinds = pump.kinds(self.seen)
         self.assertLess(kinds.index("open"), kinds.index("actor_release"))
-        back = [i for i in pump.only(self.seen, "actor_move")][-1]
-        self.assertEqual(back["to"], "principal_desk")
+        self.assertEqual(kinds[-1], "actor_release")
+        self.assertEqual([i["to"] for i in pump.only(self.seen, "actor_move")], ["arrive_maw"])
 
     def test_a_room_with_nobody_at_the_desk_still_gets_its_founding(self):
         # THE OFFLINE COPY OF THIS ROOM BINDS NO PLACEMENTS. `actor_move` is a hard
