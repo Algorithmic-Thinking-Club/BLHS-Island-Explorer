@@ -47,7 +47,11 @@ CROSSES = (("islands.json", os.path.join("src", "game", "roster", "member-island
 # example somebody reads to understand the machine. Two copies of a four file
 # island drift faster than two copies of one file, and a drifted copy here is a
 # member learning from a version of the room that is not the one they play.
-VENDORED_ISLANDS = (("panther-maw", os.path.join("public", "grapes", "panther-maw")),)
+VENDORED_ISLANDS = (
+    ("panther-maw", os.path.join("public", "grapes", "panther-maw")),
+    ("castaway", os.path.join("public", "grapes", "castaway")),
+    ("the-hub", os.path.join("public", "grapes", "the-hub")),
+)
 
 
 class TheCopiesAreTheSameFiles(unittest.TestCase):

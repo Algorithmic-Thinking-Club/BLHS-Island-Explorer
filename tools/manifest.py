@@ -84,7 +84,7 @@ ENGINE_OWNED = ("vine.py", "grape.py")
 #
 # Until 2026-09-05 the comment here said the engine kept these level through
 # `tools/sync.py`. The arrow has turned: this repo is the master now.
-VINE_OWNED = ("panther-maw", "castaway")
+VINE_OWNED = ("panther-maw", "castaway", "the-hub")
 
 # names Python already uses. An island shipping random.py does not get a warning,
 # it replaces the real one for everything running in that runtime.

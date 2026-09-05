@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "programme": "hub-arrival",
+  "map": "hub",
+  "title": "The Hub",
+  "owner": "the vine",
+  "entry": "island.py",
+  "modules": ["island.py", "lines.py"],
+  "content": {
+    "what": {
+      "text": "The central island: the ship sails itself in, three people on the way up from the dock say one line each, and the third points at the tunnel into the mountain.",
+      "source": "docs/ops/BRIEF-YEAR-ONE.md beats 2 and 3, and docs/ops/ARC-MANIFEST.md for the names"
+    },
+    "when": {
+      "text": "Right after the beach, for about ninety seconds, and every time a student walks back out of the mountain.",
+      "source": "docs/ops/BRIEF-YEAR-ONE.md"
+    },
+    "how_to_join": {
+      "text": "You do not join it. Every run lands here.",
+      "source": "unknown"
+    },
+    "blurb": "the crossing, the dock, the tunnel"
+  }
+}
