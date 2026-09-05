@@ -214,7 +214,7 @@ class TheFoundingEvent(unittest.TestCase):
 
     def test_it_writes_the_bare_flag_the_engine_sequences_off(self):
         flags = [i["flag"] for i in pump.only(self.seen, "set_flag")]
-        self.assertEqual(flags, ["maw:founding"])
+        self.assertEqual(flags, ["maw:founding", "chart:granted", "handbook:granted"])
 
     def test_it_plays_the_authored_cutscene(self):
         self.assertEqual([i["script"] for i in pump.only(self.seen, "cutscene")],
@@ -240,7 +240,8 @@ class TheFoundingEvent(unittest.TestCase):
         seen = pump.run("talk:principal_desk",
                         answering(flags=["maw:seen"], refuse=("actor_face",)))
         self.assertEqual([i["script"] for i in pump.only(seen, "cutscene")], ["maw-founding"])
-        self.assertEqual([i["flag"] for i in pump.only(seen, "set_flag")], ["maw:founding"])
+        self.assertEqual([i["flag"] for i in pump.only(seen, "set_flag")],
+                         ["maw:founding", "chart:granted", "handbook:granted"])
         # and it says which word could not perform, rather than swallowing it
         self.assertIn("actor_face_refused", [i["event"] for i in pump.only(seen, "log")])
 
@@ -293,7 +294,7 @@ class TheCounselor(unittest.TestCase):
         seen = pump.run("talk:counselor", answering(picks=[1]))
         said = [i["text"] for i in pump.only(seen, "say")]
         self.assertEqual(len(said), 1)
-        self.assertIn("Nothing on your cape", said[0])
+        self.assertIn("No cord started yet", said[0])
 
     def test_she_says_the_engines_own_detail_string_and_not_her_own_arithmetic(self):
         board = [cord("AP Honors", progress=0.6, detail="3 of 5 AP classes passed")]
@@ -330,7 +331,7 @@ class TheCounselor(unittest.TestCase):
 
     def test_a_cord_at_exactly_zero_is_not_close_to_anything(self):
         seen = pump.run("talk:counselor", answering(board=[cord("Untouched")], picks=[1]))
-        self.assertIn("Nothing on your cape", pump.only(seen, "say")[0]["text"])
+        self.assertIn("No cord started yet", pump.only(seen, "say")[0]["text"])
 
     def test_the_board_opens_only_when_it_is_asked_for(self):
         yes = pump.run("talk:counselor", answering(picks=[0]))
@@ -351,7 +352,7 @@ class TheWall(unittest.TestCase):
     def test_an_empty_wall_hides_the_shelf_and_says_so(self):
         seen = pump.run("talk:trophy_wall", answering())
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [False])
-        self.assertIn("Empty hooks", pump.only(seen, "say")[0]["text"])
+        self.assertIn("Nothing on the wall yet", pump.only(seen, "say")[0]["text"])
 
     def test_it_speaks_before_it_touches_the_picture(self):
         # `show` refuses hard on a map whose trophy_wall is not bound to a
@@ -366,11 +367,11 @@ class TheWall(unittest.TestCase):
         seen = pump.run("talk:trophy_wall", answering(
             trophies={"stickers": ["a", "b"], "badges": ["c"]}))
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [True])
-        self.assertIn("3 up there", pump.only(seen, "say")[0]["text"])
+        self.assertIn("3 trophies on the wall", pump.only(seen, "say")[0]["text"])
 
     def test_one_thing_is_said_in_words_and_not_as_the_number_one(self):
         seen = pump.run("talk:trophy_wall", answering(trophies={"stickers": ["a"], "badges": []}))
-        self.assertIn("One thing", pump.only(seen, "say")[0]["text"])
+        self.assertIn("One trophy on the wall", pump.only(seen, "say")[0]["text"])
 
     def test_it_shows_the_anchor_and_never_the_placement(self):
         # the anchor is `trophy_wall` and the drawn shelf is `the_trophy_wall`.
