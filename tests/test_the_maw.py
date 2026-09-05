@@ -352,7 +352,7 @@ class TheWall(unittest.TestCase):
     def test_an_empty_wall_hides_the_shelf_and_says_so(self):
         seen = pump.run("talk:trophy_wall", answering())
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [False])
-        self.assertIn("Nothing on the wall yet", pump.only(seen, "say")[0]["text"])
+        self.assertIn("No badges on the wall yet", pump.only(seen, "say")[0]["text"])
 
     def test_it_speaks_before_it_touches_the_picture(self):
         # `show` refuses hard on a map whose trophy_wall is not bound to a
@@ -367,11 +367,11 @@ class TheWall(unittest.TestCase):
         seen = pump.run("talk:trophy_wall", answering(
             trophies={"stickers": ["a", "b"], "badges": ["c"]}))
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [True])
-        self.assertIn("3 trophies on the wall", pump.only(seen, "say")[0]["text"])
+        self.assertIn("3 badges on the wall", pump.only(seen, "say")[0]["text"])
 
     def test_one_thing_is_said_in_words_and_not_as_the_number_one(self):
         seen = pump.run("talk:trophy_wall", answering(trophies={"stickers": ["a"], "badges": []}))
-        self.assertIn("One trophy on the wall", pump.only(seen, "say")[0]["text"])
+        self.assertIn("One badge on the wall", pump.only(seen, "say")[0]["text"])
 
     def test_it_shows_the_anchor_and_never_the_placement(self):
         # the anchor is `trophy_wall` and the drawn shelf is `the_trophy_wall`.
