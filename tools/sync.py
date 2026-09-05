@@ -1,5 +1,8 @@
 """Pull the engine's `vine.py` and `grape.py` into this repo.
 
+The islands do NOT come through here any more. They are written in this repo and
+the engine vendors them at build time; see FROM_ENGINE_FOLDERS below.
+
     python tools/sync.py
 
 Both files at the root of this repo are copies. The game writes its own into the
@@ -37,17 +40,27 @@ FROM_ENGINE = (("vine.py", "vine.py"), ("grape.py", "grape.py"))
 # crossing. Ash runs it when he merges.
 TO_ENGINE = (("islands.json", "src/game/roster/member-islands.json"),)
 
-# THE ISLANDS THE VINE ITSELF WROTE, whole folders rather than single files.
+# THE ISLANDS THE VINE ITSELF WROTE NOW LIVE HERE, AND THE ARROW HAS TURNED.
 #
-# The Panther's Maw is the game's own home base and it is written in the same
-# python a member writes, against the same words, so it is the ADVANCED example
-# somebody reads to understand the machine. It has to be in this repository for
-# that. It also has to SHIP, and the game fetches a bound island out of its own
-# `public/grapes/<folder>/`, so the real one lives over there and this is a copy.
+# Ruled by Ash 2026-09-04 (the engine's docs/ops/BRIEF-YEAR-ONE.md, WHERE IT
+# LIVES): "I wanted the entire continuation of the beach cutscene to be written
+# in the 3rd repo, including all the maw work." So `islands/panther-maw` and
+# `islands/castaway` are the ORIGINALS. This file used to copy panther-maw the
+# other way and its comment claimed the engine was the master. It was, and it is
+# not any more, and a stale comment saying otherwise is how somebody edits the
+# wrong copy for an afternoon.
 #
-# The engine's is the master, exactly as it is for vine.py, and for the same
-# reason: editing the copy in this repo changes nothing a player sees.
-FROM_ENGINE_FOLDERS = (("panther-maw", "public/grapes/panther-maw"),)
+# They still have to reach the game, because a bound island is fetched from the
+# game's own origin at `/grapes/<folder>/` rather than from GitHub on a school
+# Chromebook. That crossing is no longer this script's job: the engine pulls
+# them in at `npm run build` with `scripts/vendor-islands.mjs`, straight from
+# this repository or from GitHub when there is no checkout beside it. Nothing
+# here pushes an island into the engine, and nothing in the engine is edited.
+#
+# What that means for you day to day: commit and PUSH an island change here
+# before you build the engine on Vercel, or the deploy reads a branch that does
+# not have it yet and fails saying so.
+FROM_ENGINE_FOLDERS = ()
 
 
 def engine_dir(argv):
@@ -122,7 +135,7 @@ def main(argv=()):
     for ours_name, theirs_rel in TO_ENGINE:
         changed += copy(os.path.join(HERE, ours_name),
                         os.path.join(game, *theirs_rel.split("/")), ours_name, "->")
-    for folder, theirs_rel in FROM_ENGINE_FOLDERS:
+    for folder, theirs_rel in FROM_ENGINE_FOLDERS:  # empty since 2026-09-05, see above
         changed += copy_folder(os.path.join(game, *theirs_rel.split("/")),
                                os.path.join(HERE, "islands", folder), folder)
 

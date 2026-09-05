@@ -72,13 +72,19 @@ MAX_MODULES = 24
 # stale copy and spend an afternoon on it.
 ENGINE_OWNED = ("vine.py", "grape.py")
 
-# THE ISLANDS THE VINE ITSELF WROTE, which are in this repo to be READ.
+# THE ISLANDS THE VINE ITSELF WROTE, which are in this repo because they are
+# WRITTEN here. Read them; do not edit them.
 #
-# `islands/panther-maw/` is the game's own home base, written in the same python
-# a member writes, and it ships out of the engine rather than out of a row in
-# `islands.json`. It is not unregistered and it is not yours: `tools/sync.py`
-# keeps it level with the engine's copy and a test fails when it drifts.
-VINE_OWNED = ("panther-maw",)
+# `islands/panther-maw/` is the game's own home base and `islands/castaway/` is
+# the opening on the shore, both written in the same python a member writes.
+# They ship without a row in `islands.json` because a row is a PROGRAMME as well
+# as a binding, and neither of these is a thing you spend a season token on. The
+# engine binds them itself in `src/game/roster/vine-islands.ts` and vendors the
+# files at build time with `scripts/vendor-islands.mjs`.
+#
+# Until 2026-09-05 the comment here said the engine kept these level through
+# `tools/sync.py`. The arrow has turned: this repo is the master now.
+VINE_OWNED = ("panther-maw", "castaway")
 
 # names Python already uses. An island shipping random.py does not get a warning,
 # it replaces the real one for everything running in that runtime.
