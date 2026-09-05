@@ -18,9 +18,11 @@ label anyway, so naming it as the speaker would print the raw identifier
 
 HOW LONG A LINE MAY BE. One idea, about twelve words, and never more than three
 in a row before the player does something. That rule is not a style preference,
-it is the non-reader law: a student who skips every line in this room must still
-end up understanding where the chart table is, because the arrow taught them and
-the text only confirmed it.
+it is the literal-words law: a student who skips every line in this room must
+still end up understanding where the table is, because the light on the floor
+taught them and the text only confirmed it. And every line says the school
+thing first. Advisory is Advisory, the yearbook is the yearbook, the cords are
+your cords.
 """
 
 # ---- who is speaking ---------------------------------------------------------
@@ -40,33 +42,18 @@ TABLE = THOR
 FACE = "principal"
 
 
-# ---- walking in --------------------------------------------------------------
+# ---- the principal -----------------------------------------------------------
 #
-# Said once, the first time a run ever comes through the tunnel. Every arrival
-# after that is silent, and that silence is deliberate: this is the room a
-# student crosses forty times in an hour, and a room that greets you on the
-# fortieth crossing is a room you learn to walk past.
+# The first time in, he walks over and says this. ONE LINE, by ruling
+# (BRIEF-YEAR-ONE beat 4): the pick screen opens right after it, and the pick
+# screen is the thing that explains the year, by being a screen of cards a
+# student can press. There is no tour and no speech. He does not describe the
+# room; the table lights.
 
-ARRIVED = [
-    "This is the Panther's Maw, the school hall inside the mountain.",
-    "The principal is at the desk. Talk to him first.",
-]
+WELCOME = "Welcome. Pick what you'll do this year."
 
-
-# ---- the founding event ------------------------------------------------------
-
-GREETING = "Welcome to Bonney Lake High School, Panther. I am the principal here."
-
-# the room pointed out, one station per line, one idea per line. Three, because
-# three is the most the non-reader law allows in a row, and because the chart
-# table is introduced by the cutscene below and does not want saying twice.
-TOUR = [
-    (HEARTH, "That fire is Advisory. Every school year starts there."),
-    (COUNSELOR, "She is the counselor. Ask her about your honor cords."),
-    (WALL, "That wall holds your badges. Everything you earn goes up there."),
-]
-
-TURNING_BACK = "Now go to the year sheet table and plan your first year."
+# every visit after that, at the desk
+BACK_AGAIN = "Go to the table and pick what you'll do this year."
 
 
 # ---- the fire ----------------------------------------------------------------
@@ -85,6 +72,13 @@ NOTHING_YET = "No cord started yet. That is what four years are for."
 ASK = "Ask about the cords?"
 SHOW_ME = "Open the Handbook"
 NOT_NOW = "Not now"
+
+# beat 8, home. Advisory is done and the year can close, so she opens the
+# yearbook, and the yearbook is where the page turns and she drapes the cord.
+YEAR_DONE = "Year one is done. Let's turn the page and see what you earned."
+# the last line of the thirty minutes, said once, the next time he walks in
+# after the page has turned
+NEXT_TIME = "Year one is done. Year two, next time."
 
 
 # ---- the chart table ---------------------------------------------------------

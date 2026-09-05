@@ -1,7 +1,7 @@
 """THE PANTHER'S MAW: the home base, as an island.
 
-This is the room the game keeps coming back to. The year gets planned here, the
-required advisory is sat here, the cords get read out here, and everything a
+This is the room the game keeps coming back to. The year gets picked here, the
+required Advisory is sat here, the cords get read out here, and everything a
 student brings back from the water ends up on a wall in here.
 
 READ THIS ONE TO UNDERSTAND THE MACHINE. It is not the file you copy. The one you
@@ -19,10 +19,17 @@ claimed that anchor's name. That inversion is the whole difference between an
 island and a script. A script runs top to bottom and is over; an island can be
 walked away from, come back to on the third visit, and answer differently.
 
+WHICH BEATS OF YEAR ONE LIVE HERE. BRIEF-YEAR-ONE's beat 4, the principal, is
+the room's opening the first time in (`founding.py`). Beat 5, Advisory, is the
+fire. Beat 8, home, is the counselor opening the yearbook when the year can
+close, the wall showing what was earned, and one line the next time in.
+
 WHICH ANCHORS THIS ROOM ACTUALLY HAS. Eleven, and only six of them can be
 pressed. The other five are not oversights and no handler here claims them:
 
   arrive_maw    a spawn. It is where the tunnel puts you, not something you press.
+                It IS where the principal walks to, because it is the one name
+                that means "where you are standing when you have just come in".
   the_hall      a region. Regions are logged when you walk into them and there is
                 no handler key for one. A trigger fires a handler; a region does
                 not, and this room carries no triggers. If the room should ever
@@ -45,15 +52,20 @@ from vine import (
 from board import counsel, on_the_wall, wall_line
 from founding import FOUNDING, founding_event
 from lines import (
-    ARRIVED, ASK, BANKED, CIRCLE, COUNSELOR, EMPTY_WALL, HEARTH, LEFT,
-    NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SAT, SHEET, SHOW_ME,
-    TABLE, THOR, WALL, FACE,
+    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EMPTY_WALL, HEARTH, LEFT,
+    NEXT_TIME, NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SAT, SHEET,
+    SHOW_ME, TABLE, THOR, WALL, FACE, YEAR_DONE,
 )
 
-# this run has been through the tunnel before. Bare, like `maw:founding` and for
-# the same reason: see the note on FOUNDING in founding.py. A member's island
-# writes bare names too and the engine puts their programme id in front.
-SEEN = "maw:seen"
+# the last line of the thirty minutes has been said. Bare, like `maw:founding`
+# and for the same reason: see the note on FOUNDING in founding.py. A member's
+# island writes bare names too and the engine puts their programme id in front.
+NEXT_TIME_SAID = "maw:next_time"
+
+
+def turned(year):
+    """The flag the engine writes the moment a year's page has turned."""
+    return "yearbook:y%d" % year
 
 
 def dress_the_wall(count):
@@ -69,10 +81,10 @@ def dress_the_wall(count):
 
     So it is synced on arrival, on EVERY load, and the press only says the line.
 
-    Guarded for the same reason `turn` is in founding.py: `show` is a hard
+    Guarded for the same reason the walk is in founding.py: `show` is a hard
     refusal on a room whose `trophy_wall` is not bound to a placement, and the
     offline copy of this room is exactly that. A refusal here would take the
-    arrival lines with it.
+    founding with it.
     """
     try:
         yield show(WALL, count > 0)
@@ -86,11 +98,17 @@ def walking_in():
 
     EVERY TIME, which is the thing to design around, and it cuts both ways. The
     room gets crossed forty times in an hour, so a room that greets you on the
-    fortieth crossing is a room you learn to walk past, and the lines sit behind
-    a flag. But anything about how the room LOOKS has to be redone on every one
-    of those forty crossings, because a map load draws the painting fresh and
-    knows nothing about what happened on the last one. Those two live on opposite
-    sides of the early return below, and that is the whole shape of this handler.
+    fortieth crossing is a room you learn to walk past, and everything that
+    speaks sits behind a flag. But anything about how the room LOOKS has to be
+    redone on every one of those forty crossings, because a map load draws the
+    painting fresh and knows nothing about what happened on the last one. Those
+    two live on opposite sides of the early returns below, and that is the whole
+    shape of this handler.
+
+    THE FIRST TIME IN IS THE FOUNDING. He walks in and the principal walks to
+    him. There is no greeting before it: two lines of the room introducing
+    itself and then a man walking over to say a third is exactly the wall of
+    text a freshman clicks through without reading.
 
     The way he is facing when he gets here is not set in this file either. The
     spawn anchor carries a heading, MAPVIS is where somebody chose it, and the
@@ -100,37 +118,42 @@ def walking_in():
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
 
-    # ---- and what it says: the first time only -----------------------------
+    # ---- the first time in: beat 4 ----------------------------------------
     flags = yield get("flags")
-    if SEEN in flags:
+    if FOUNDING not in flags:
+        yield from founding_event(walk=True)
         return
 
-    for line in ARRIVED:
-        yield say(line, who=THOR)
-    yield set_flag(SEEN)
-    yield log("maw_first_arrival")
+    # ---- home, after the page has turned: the last line of year one --------
+    #
+    # Beat 8 ends with "Year two, next time." The page turns inside the
+    # yearbook, and the counselor drapes the cord there; this is the next time
+    # he walks in, and it is said once.
+    if turned(1) in flags and NEXT_TIME_SAID not in flags:
+        yield say(NEXT_TIME, who=COUNSELOR)
+        yield set_flag(NEXT_TIME_SAID)
+        yield log("year_two_next_time")
 
 
 @on_talk("principal_desk")
 def the_principal():
-    """The founding event, and then a person who remembers you came."""
+    """The founding, for a run that walked off before it finished; then one line."""
     flags = yield get("flags")
     if FOUNDING not in flags:
-        # the long one, in its own file, piped out through this handler
-        yield from founding_event()
+        # he is already standing in front of you, so the principal stays put
+        yield from founding_event(walk=False)
         return
 
-    yield say("Back again, Panther. Plan your next year at the year sheet table.",
-              who=PRINCIPAL, portrait=FACE)
+    yield say(BACK_AGAIN, who=PRINCIPAL, portrait=FACE)
 
 
 @on_talk("chart_table")
 def the_chart_table():
-    """The year sheet. A panel, and the drag of a season token is the mechanic.
+    """The year sheet. A panel, and the pick is the mechanic.
 
-    ONE OF THE TWO THINGS IN THIS ROOM THAT IS A PANEL RATHER THAN A SCENE. A
-    paper sheet really is a document, and the thing a student does at it is pick
-    up a token and put it somewhere, which no amount of dialogue can be.
+    ONE OF THE THINGS IN THIS ROOM THAT IS A PANEL RATHER THAN A SCENE. The
+    first year is picked off big drawn cards, and every year after is a paper
+    sheet; the engine decides which, and this opens whichever it is.
     """
     # NO `log("planner_opened")` HERE, and the TypeScript station this replaces
     # had one. `Planner.tsx` fires that same event itself when the panel mounts,
@@ -143,7 +166,7 @@ def the_chart_table():
 
 @on_talk("hearth")
 def the_fire():
-    """The required advisory beat for this year, or a banked fire.
+    """The required Advisory beat for this year, or a banked fire.
 
     WHICH BEAT, ASKED RATHER THAN SPELLED. `get("advisory")` answers with the id
     of the beat this year still owes, or None when the year has no content or
@@ -186,13 +209,28 @@ def the_fire():
 
 @on_talk("counselor")
 def the_counselor():
-    """The cords, said out loud by somebody, off the live table.
+    """The cords, said out loud by somebody, off the live table. And beat 8.
 
     A person rather than a board, because §8.4's whole ask was to surface the
     hidden earnable things, and a list on a wall is the thing a student already
     scrolls past. What she says changes with the run: on the way in during year
     one she has nothing, and on the way out she has the first cord that moved.
+
+    ON THE WAY OUT SHE IS HOME. When Advisory is done and this year's page has
+    not turned, she opens the yearbook. The yearbook is where the page turns,
+    in school words, and where she drapes the cord he is closest to; both of
+    those are the engine's own screens, raised here by name. A yearbook opened
+    before the sheet is stamped says the year is still open, honestly, and does
+    not turn.
     """
+    year = yield get("year")
+    flags = yield get("flags")
+    advisory = yield get("advisory")
+    if advisory is None and turned(year) not in flags:
+        yield say(YEAR_DONE, who=COUNSELOR)
+        yield open("yearbook")
+        return
+
     board = yield get("cord_board")
     lines = counsel(board)
 
@@ -218,24 +256,29 @@ def the_outfitter():
 
 @on_talk("trophy_wall")
 def the_wall():
-    """What four years put on a shelf, counted rather than promised.
+    """What the year put on a shelf, counted rather than promised, then shown.
 
-    No panel at all. The wall itself is the readout, and everything on it got
-    there because of something the student did somewhere else. A thing you walk
-    up to that changed because of a voyage you took two years ago is worth more
-    than a list of the same information.
+    The wall itself is the readout, and everything on it got there because of
+    something the student did somewhere else. A thing you walk up to that
+    changed because of a voyage you took two years ago is worth more than a
+    list of the same information.
+
+    AND THEN THE PANEL. The engine's wall has a frame for every thing picked
+    this year, empty and saying what would fill it until it is filled, which is
+    the outline that makes a student want the year (BRIEF-YEAR-ONE beat 4) and
+    the thing that shows what he earned at the end of it (beat 8). `open("wall")`
+    is that panel, raised by name.
 
     WHAT `show` CAN AND CANNOT DO HERE, said plainly because it is the honest
     limit. The engine can hide or reveal any placement an anchor is bound to, by
     the anchor's name. This wall is bound to ONE placement, a drawn shelf, so
     what `show` can express is a shelf that is there or a shelf that is not.
-    Filling it trophy by trophy needs one placement per trophy, drawn and bound
-    in MAPVIS, and until those exist the count is carried by the line.
+    Filling it trophy by trophy on the painting needs one placement per trophy,
+    drawn and bound in MAPVIS; until those exist the panel carries the frames.
 
     AND THE PICTURE IS NOT SET HERE. `walking_in` did it when the room loaded, so
-    the shelf was already telling the truth before the player walked over. A
-    press is somebody asking about a thing, and the answer to that is a sentence.
-    It is synced again anyway, because a sticker can be earned and brought back
+    the shelf was already telling the truth before the player walked over. It
+    is synced again anyway, because a sticker can be earned and brought back
     without the room reloading in between.
     """
     trophies = yield get("trophies")
@@ -247,3 +290,4 @@ def the_wall():
         yield say(wall_line(count), who=WALL)
 
     yield from dress_the_wall(count)
+    yield open("wall")
