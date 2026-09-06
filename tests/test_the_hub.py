@@ -1,6 +1,6 @@
-"""The hub does what it says: the crossing once, and three people on the way up.
+"""The hub does what it says: the arrival as one piece, and three people on the way up.
 
-BRIEF-YEAR-ONE beats 2 and 3, tested the way test_the_maw.py tests the room.
+BRIEF-ARRIVAL items 1 to 5, tested the way test_the_maw.py tests the room.
 Nothing here performs anything; the island yields dicts and this file answers
 them. What it can prove is the shape: the crossing is asked for exactly once
 per run and its refusal is caught and logged rather than taking the island
@@ -91,6 +91,57 @@ class TheCrossing(unittest.TestCase):
     def test_it_says_nothing_on_the_water(self):
         # the arrival card is the engine's and it is paid where he lands
         self.assertEqual(pump.only(pump.run("start", answering()), "say"), [])
+
+
+class TheArrivalIsOnePiece(unittest.TestCase):
+    """BRIEF-ARRIVAL items 1 to 5, in Ash's order, as the shape of the yields.
+
+    None of this proves it LOOKS right; nothing here draws anything. It proves
+    the order, which is the half a test can hold: the bars go up before the ship
+    moves, the island is framed before they come down, and nobody is asked to do
+    anything until the card has had the screen.
+    """
+
+    def setUp(self):
+        pump.load(ISLAND)
+
+    def test_the_crossing_is_inside_the_bars(self):
+        kinds = pump.kinds(pump.run("start", answering()))
+        self.assertLess(kinds.index("movie"), kinds.index("route"))
+        # and the bars come down again: two movies, on then off
+        movies = [i["on"] for i in pump.only(pump.run("start", answering()), "movie")]
+        self.assertEqual(movies, [True, False])
+
+    def test_the_island_is_framed_before_the_bars_come_down(self):
+        seen = pump.run("start", answering())
+        kinds = pump.kinds(seen)
+        views = pump.only(seen, "view")
+        self.assertEqual([v["view"] for v in views], ["island", "walk"])
+        # the pull-out is the last shot of the crossing, not the first of the walk
+        self.assertLess(kinds.index("view"), kinds.index("movie", kinds.index("route")))
+
+    def test_he_walks_to_the_door_and_the_way_is_drawn_first(self):
+        seen = pump.run("start", answering())
+        kinds = pump.kinds(seen)
+        self.assertEqual([i["anchor"] for i in pump.only(seen, "guide_to")], ["panthers_maw"])
+        self.assertEqual([i["anchor"] for i in pump.only(seen, "walk_to")], ["panthers_maw"])
+        self.assertLess(kinds.index("guide_to"), kinds.index("walk_to"))
+
+    def test_nobody_is_asked_to_walk_until_the_bars_are_down(self):
+        kinds = pump.kinds(pump.run("start", answering()))
+        self.assertLess(kinds.index("movie", kinds.index("route")), kinds.index("walk_to"))
+
+    def test_a_refused_crossing_still_takes_the_bars_down_and_still_walks(self):
+        # the one that matters: bars raised, the boat refused, and a student left
+        # behind two black bars with no controls would be a dead-looking laptop
+        seen = pump.run("start", answering(refuse=("route",)))
+        self.assertEqual([i["on"] for i in pump.only(seen, "movie")], [True, False])
+        self.assertEqual([i["anchor"] for i in pump.only(seen, "walk_to")], ["panthers_maw"])
+
+    def test_walking_back_out_of_the_mountain_raises_no_bars(self):
+        later = pump.run("start", answering(flags=["hub:crossed"]))
+        self.assertEqual(pump.only(later, "movie"), [])
+        self.assertEqual(pump.only(later, "walk_to"), [])
 
 
 class TheDock(unittest.TestCase):
