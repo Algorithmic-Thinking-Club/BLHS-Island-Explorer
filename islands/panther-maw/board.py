@@ -97,7 +97,14 @@ def on_the_wall(trophies):
 
 
 def wall_line(count):
-    """What the wall says about itself, which is a fact and not a compliment."""
-    if count == 1:
-        return "One badge on the wall now. You earned it."
-    return "%d badges on the wall now. You earned every one of them." % count
+    """What Thor says at the wall, which never carries a number.
+
+    It used to count badges out loud, and the panel that opens a second later
+    counts frames, so the two disagreed on the same screen every time
+    (STATE-OF-THE-GAME confusing 9). The panel is the readout. The line only
+    says whether there is anything up there yet, and the words live in
+    lines.py with the rest of what anybody says.
+    """
+    from lines import EMPTY_WALL, FULL_WALL
+
+    return FULL_WALL if count > 0 else EMPTY_WALL

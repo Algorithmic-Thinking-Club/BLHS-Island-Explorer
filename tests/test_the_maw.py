@@ -443,7 +443,7 @@ class TheWall(unittest.TestCase):
     def test_an_empty_wall_hides_the_shelf_and_says_so(self):
         seen = pump.run("talk:trophy_wall", answering())
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [False])
-        self.assertIn("No badges on the wall yet", pump.only(seen, "say")[0]["text"])
+        self.assertIn("What I earn this year goes up here", pump.only(seen, "say")[0]["text"])
 
     def test_it_speaks_before_it_touches_the_picture(self):
         # `show` refuses hard on a map whose trophy_wall is not bound to a
@@ -458,11 +458,17 @@ class TheWall(unittest.TestCase):
         seen = pump.run("talk:trophy_wall", answering(
             trophies={"stickers": ["a", "b"], "badges": ["c"]}))
         self.assertEqual([i["visible"] for i in pump.only(seen, "show")], [True])
-        self.assertIn("3 badges on the wall", pump.only(seen, "say")[0]["text"])
+        self.assertIn("see what is on it", pump.only(seen, "say")[0]["text"])
 
-    def test_one_thing_is_said_in_words_and_not_as_the_number_one(self):
-        seen = pump.run("talk:trophy_wall", answering(trophies={"stickers": ["a"], "badges": []}))
-        self.assertIn("One badge on the wall", pump.only(seen, "say")[0]["text"])
+    def test_no_number_is_ever_said_at_the_wall(self):
+        # the panel counts frames and the line used to count badges, so the
+        # two disagreed on one screen; the line carries no number at all now
+        for trophies in ({"stickers": [], "badges": []}, {"stickers": ["a"], "badges": []},
+                         {"stickers": ["a", "b"], "badges": ["c"]}):
+            with self.subTest(trophies=trophies):
+                said = pump.only(pump.run("talk:trophy_wall", answering(trophies=trophies)), "say")[0]
+                self.assertFalse(any(ch.isdigit() for ch in said["text"]))
+                self.assertEqual(said.get("who"), "thor")
 
     def test_it_opens_the_wall_panel_after_the_line(self):
         # the frames for everything picked this year are the engine's panel,

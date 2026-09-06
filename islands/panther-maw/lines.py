@@ -93,4 +93,11 @@ NOOK = "Pick a new coat color. Nothing here costs anything."
 
 # ---- the trophy wall ---------------------------------------------------------
 
-EMPTY_WALL = "No badges on the wall yet. Every badge I earn goes up here."
+#
+# NO NUMBER IN EITHER LINE, ON PURPOSE. The wall panel counts frames (Advisory
+# and the classes and the picks), the drape counts things on the wall, and the
+# stickers and badges the run holds are a third count. Thor used to say "no
+# badges on the wall yet" over a panel reading "3 of 6 frames filled"
+# (STATE-OF-THE-GAME confusing 9). The panel is the readout; he introduces it.
+EMPTY_WALL = "This is my trophy wall. What I earn this year goes up here."
+FULL_WALL = "This is my trophy wall. Let's see what is on it."

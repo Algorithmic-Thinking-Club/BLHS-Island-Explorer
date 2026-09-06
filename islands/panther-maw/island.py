@@ -52,7 +52,7 @@ from vine import (
 from board import counsel, on_the_wall, wall_line
 from founding import FOUNDING, founding_event
 from lines import (
-    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EMPTY_WALL, HEARTH, LEFT,
+    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
     NEXT_TIME, NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SAT, SHEET,
     SHOW_ME, TABLE, THOR, WALL, FACE, YEAR_DONE,
 )
@@ -284,10 +284,9 @@ def the_wall():
     trophies = yield get("trophies")
     count = on_the_wall(trophies)
 
-    if count == 0:
-        yield say(EMPTY_WALL, who=THOR)
-    else:
-        yield say(wall_line(count), who=WALL)
+    # Thor says it either way: a wall is furniture, and the line carries no
+    # count, so nothing he says can disagree with the panel's own numbers
+    yield say(wall_line(count), who=THOR)
 
     yield from dress_the_wall(count)
     yield open("wall")
