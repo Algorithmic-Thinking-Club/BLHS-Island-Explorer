@@ -67,7 +67,7 @@ STAMP_IT = "Pick one club or sport and two classes, then stamp it."
 
 # BEAT 3, after Advisory. The Guide's handover, and the only thing said about a
 # score, because the pop over the map is the result.
-GUIDE_IS_YOURS = "That is Advisory done. What you learned is in your Guide."
+GUIDE_IS_YOURS = "Everything you just learned is in your Guide, in the corner."
 # and when he left the questions unfinished
 COME_BACK = "Come back to the fire when you have a minute."
 
