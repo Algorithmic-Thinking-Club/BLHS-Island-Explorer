@@ -7,10 +7,11 @@ The whole arrival is one watched piece, in his second order:
      at the scale a ship is a ship, behind two black bars. No HUD, no plaques,
      no tiller. He watches her sail in.
   2  she reaches the dock. The camera pulls OUT to the whole island, and the
-     arrival card plays there.
+     arrival card plays there. The bars do not come down for it: they are up
+     for the whole arrival, from the first frame to the tunnel.
   3  THEN Thor hops out.
-  4  THEN the camera comes in CLOSE on him and he AUTO-WALKS, behind the bars
-     again and with the corner away: the dock, the stone harbor, the first
+  4  THEN the camera comes in CLOSE on him, in ONE move and not two, and he
+     AUTO-WALKS with the corner away: the dock, the stone harbor, the first
      stairs, the second stairs, the Panther's Maw door, with drawn arrows on the
      ground the whole way. He is being shown the road, not walking it.
   5  at the door a large drawn pointer hangs above the tunnel, and E goes in.
@@ -104,28 +105,38 @@ def putting_in():
     except Exception as refused:
         yield log("route_refused", {"path": SAIL_LINE, "why": str(refused)})
 
-    # ---- 2: she is at the dock, so the crossing is over ------------------
+    # ---- 2: she is at the dock ------------------------------------------
     #
-    # The bars come down with it, because what follows is a screen the student
-    # is meant to READ and the card cannot draw behind them. Then the camera
-    # pulls out and the card plays over the whole island.
-    yield movie(False)
+    # THE BARS STAY UP FOR ALL OF IT, ruled by Ash after watching: "The black
+    # rectangle should be there throughout the entire thing." They used to come
+    # down here and go back up for the walk, and the two seams in the middle
+    # were the glitches he saw. The card draws inside the frame now, which is
+    # where a title card belongs.
     yield view("island")
     yield wait(CARD_MS)
 
+    # and the one line anybody has written about this moment. It belongs to
+    # `dock_three`, a post MAPVIS has not placed, so nobody on this map can say
+    # it and it has never been heard. Said here with no speaker until the post
+    # exists, the way the card speaks without one.
+    yield say(WAITING)
+
     # ---- 3: and NOW he hops out ------------------------------------------
+    #
+    # NOTHING ELSE MOVES THE CAMERA HERE. Stepping ashore has always pulled to
+    # the walking shot, so the island shot travelled to it and then this island
+    # travelled again to the close one: full island, half island, then him.
+    # `ashore()` leaves the shot alone and the next line is the only move.
     yield ashore()
     yield wait(ISLAND_HOLD_MS)
 
     # ---- 4 and 5: in on him, and up the hill ------------------------------
     #
-    # THE WALK IS WATCHED TOO, and that is Ash's third note: the corner goes
-    # away and the bars come back for it. He is not playing this stretch, he is
-    # being shown the way, and the marks on the ground are what he is being
-    # shown. The frame comes off the moment he is standing at the tunnel,
-    # because pressing E is the first thing in this whole arrival that is his.
+    # He is not playing this stretch, he is being shown the way, and the marks
+    # on the ground are what he is being shown. The frame comes off the moment
+    # he is standing at the tunnel, because pressing E is the first thing in
+    # this whole arrival that is his.
     yield view("close")
-    yield movie(True)
     # the arrow marks on the ground and the big pointer over the tunnel are one
     # word: the engine draws the route he is about to walk and hangs the pointer
     # over the thing at the end of it
