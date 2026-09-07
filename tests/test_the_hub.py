@@ -112,13 +112,28 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         movies = [i["on"] for i in pump.only(pump.run("start", answering()), "movie")]
         self.assertEqual(movies, [True, False])
 
-    def test_the_island_is_framed_before_the_bars_come_down(self):
+    def test_the_crossing_is_close_and_the_pull_out_comes_after_it(self):
+        """Ash's second order: close on the ship, then the dock, then wide."""
         seen = pump.run("start", answering())
         kinds = pump.kinds(seen)
         views = pump.only(seen, "view")
-        self.assertEqual([v["view"] for v in views], ["island", "walk"])
-        # the pull-out is the last shot of the crossing, not the first of the walk
-        self.assertLess(kinds.index("view"), kinds.index("movie", kinds.index("route")))
+        self.assertEqual([v["view"] for v in views], ["ship", "island", "walk"])
+        # the ship shot is asked for before she moves, and the wide one after
+        self.assertLess(kinds.index("view"), kinds.index("route"))
+        self.assertLess(kinds.index("route"), kinds.index("view", kinds.index("route")))
+
+    def test_the_card_plays_at_the_wide_shot_and_he_hops_out_after_it(self):
+        kinds = pump.kinds(pump.run("start", answering()))
+        wide = kinds.index("view", kinds.index("route"))
+        self.assertLess(wide, kinds.index("ashore"))
+        # and the bars are down by then, because a card cannot draw behind them
+        self.assertLess(kinds.index("movie", kinds.index("route")), wide)
+
+    def test_he_is_not_put_ashore_before_the_island_has_been_seen(self):
+        seen = pump.run("start", answering())
+        kinds = pump.kinds(seen)
+        self.assertEqual(len(pump.only(seen, "ashore")), 1)
+        self.assertLess(kinds.index("ashore"), kinds.index("walk_to"))
 
     def test_he_walks_to_the_door_and_the_way_is_drawn_first(self):
         seen = pump.run("start", answering())

@@ -1,17 +1,24 @@
 """THE HUB: the crossing, the dock and the walk up, as an island.
 
-BRIEF-ARRIVAL, Ash 2026-09-06, after playing it. The whole arrival is one
-watched piece, in his order:
+BRIEF-ARRIVAL, Ash 2026-09-06, and then again after he played the first build.
+The whole arrival is one watched piece, in his second order:
 
-  1  the crossing is a CUTSCENE. The ship's own point of view, two black bars,
-     no HUD, no plaques, no tiller. He watches.
-  2  the ship stops at the dock and Thor hops out.
-  3  the moment he is on the dock the camera pulls out to the whole island, for
-     a moment. Then the arrival card.
-  4  then it comes back in and Thor AUTO-WALKS: the dock, the stone harbor, the
-     first stairs, the second stairs, the Panther's Maw door. Clean arrow marks
-     on the ground follow the whole route.
-  5  at the door a large pointer hangs above the tunnel, and E goes in.
+  1  the crossing is a CUTSCENE and it is CLOSE. The camera rides with the ship,
+     at the scale a ship is a ship, behind two black bars. No HUD, no plaques,
+     no tiller. He watches her sail in.
+  2  she reaches the dock. The camera pulls OUT to the whole island, and the
+     arrival card plays there.
+  3  THEN Thor hops out.
+  4  THEN the camera comes back in to a character-level shot on him, and he
+     AUTO-WALKS: the dock, the stone harbor, the first stairs, the second
+     stairs, the Panther's Maw door, with drawn marks on the ground the whole
+     way.
+  5  at the door a large drawn pointer hangs above the tunnel, and E goes in.
+
+THE HOP-OUT USED TO BE WELDED TO THE ARRIVAL and that is why the order above
+could not be written before. Berthing put the body on the dock in the same call,
+so there was nowhere to put the pull-out or the card. `ashore()` is the second
+half, said here at the moment this island means it.
 
 THIS IS THE VINE'S OWN CONTENT and it runs unscoped, like the Maw: the flag it
 writes is a bare name. A member's island is scoped and should be. Read
@@ -34,7 +41,7 @@ handlers simply never fire and the engine says so by name when the island loads.
 """
 from grape import on_start, on_talk
 from vine import (
-    get, guide_to, log, movie, route, say, set_flag, view, wait, walk_to,
+    ashore, get, guide_to, log, movie, route, say, set_flag, view, wait, walk_to,
 )
 
 from lines import DOCK_ONE, DOCK_THREE, DOCK_TWO, HELLO, KEEP_GOING, WAITING
@@ -50,10 +57,10 @@ DOOR = "panthers_maw"
 # every time he walked out of the mountain.
 CROSSED = "hub:crossed"
 
-# how long the whole island stays on screen before anybody is asked to do
-# anything. Long enough to read as a held shot and short enough that a fourteen
-# year old does not think the game has stopped.
-ISLAND_HOLD_MS = 2400
+# how long the wide shot holds AFTER he has stepped off, so that a student sees
+# a person appear on the dock rather than a cut. Short: the shot has already had
+# the card's length before this.
+ISLAND_HOLD_MS = 1400
 
 # and how long the engine's own arrival card owns the bottom of the screen. It
 # dwells for 3.2 seconds and takes another 0.7 to leave; this waits out both
@@ -88,30 +95,29 @@ def putting_in():
     if CROSSED in flags:
         return
 
-    # ---- 1 and 2: the crossing, as a movie -------------------------------
+    # ---- 1: the crossing, close, behind the bars -------------------------
     yield movie(True)
+    yield view("ship")
     try:
         yield route(SAIL_LINE, who="ship")
         yield log("crossing_sailed", {"path": SAIL_LINE})
     except Exception as refused:
         yield log("route_refused", {"path": SAIL_LINE, "why": str(refused)})
 
-    # ---- 3: the whole island, held, still inside the frame ---------------
+    # ---- 2: she is at the dock, so the crossing is over ------------------
     #
-    # The pull-out is the last shot of the crossing rather than the first shot
-    # of the walk, which is why it happens before the bars come down: he has
-    # just arrived somewhere and the picture says where. The card cannot draw
-    # under the bars, so the engine holds it until they lift.
-    yield view("island")
-    yield wait(ISLAND_HOLD_MS)
+    # The bars come down with it, because what follows is a screen the student
+    # is meant to READ and the card cannot draw behind them. Then the camera
+    # pulls out and the card plays over the whole island.
     yield movie(False)
-
-    # the arrival card, which the engine owes from the moment he stepped ashore
-    # and pays the instant the frame opens. Nothing here raises it; this waits
-    # for it, so the walk does not start underneath it.
+    yield view("island")
     yield wait(CARD_MS)
 
-    # ---- 4 and 5: back in, and up the hill -------------------------------
+    # ---- 3: and NOW he hops out ------------------------------------------
+    yield ashore()
+    yield wait(ISLAND_HOLD_MS)
+
+    # ---- 4 and 5: back in to him, and up the hill ------------------------
     yield view("walk")
     # the arrow marks on the ground and the big pointer over the tunnel are one
     # word: the engine draws the route he is about to walk and hangs the pointer
