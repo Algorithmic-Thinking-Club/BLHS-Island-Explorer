@@ -105,6 +105,15 @@ def putting_in():
     except Exception as refused:
         yield log("route_refused", {"path": SAIL_LINE, "why": str(refused)})
 
+    # WRITTEN HERE, THE INSTANT THE CROSSING IS OVER, and not at the end of the
+    # handler. It sat at the bottom while this grew from three lines to thirty
+    # seconds of directed arrival, and anything that ended the handler early --
+    # a refresh halfway up the quay, a tab closed and reopened -- replayed the
+    # whole crossing from wherever the body happened to be standing. The
+    # crossing happens once, at arrival, or it does not happen, and the moment
+    # it is true is the moment to write it down.
+    yield set_flag(CROSSED)
+
     # ---- 2: she is at the dock ------------------------------------------
     #
     # THE BARS STAY UP FOR ALL OF IT, ruled by Ash after watching: "The black
@@ -151,11 +160,6 @@ def putting_in():
     # when this handler returns and leaves the frame standing: the bars are the
     # picture and the lock is a lease on it. The door takes the frame with it.
     yield log("walked_to_the_maw")
-
-    # written whether she sailed or not: the crossing happens once, at arrival,
-    # or it does not happen. A second try on the next load would put a student
-    # who had just walked out of the mountain back onto the water.
-    yield set_flag(CROSSED)
 
 
 @on_talk(DOCK_ONE)

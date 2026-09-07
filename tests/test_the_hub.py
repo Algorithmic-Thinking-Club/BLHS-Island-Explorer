@@ -62,6 +62,12 @@ class TheCrossing(unittest.TestCase):
     def setUp(self):
         pump.load(ISLAND)
 
+    def test_the_crossing_is_written_down_the_moment_it_is_over(self):
+        """Not at the end of the handler: an interrupted arrival must not re-sail."""
+        kinds = pump.kinds(pump.run("start", answering()))
+        self.assertLess(kinds.index("set_flag"), kinds.index("ashore"))
+        self.assertLess(kinds.index("set_flag"), kinds.index("walk_to"))
+
     def test_the_ship_is_sent_along_the_sail_line_once(self):
         first = pump.run("start", answering())
         routes = pump.only(first, "route")
