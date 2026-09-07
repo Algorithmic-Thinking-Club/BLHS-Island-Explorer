@@ -46,40 +46,16 @@ pressed. The other five are not oversights and no handler here claims them:
 """
 from grape import on_start, on_talk
 from vine import (
-    choose, get, log, open, play, say, set_flag, show,
+    choose, get, log, open, play, say, set_flag,
 )
 
 from board import counsel, on_the_wall, wall_line
-from founding import NEXT_TIME_SAID, RAILED, rail, turned
+from founding import NEXT_TIME_SAID, RAILED, dress_the_wall, rail, turned
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
     NEXT_TIME, NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
     SHOW_ME, TABLE, THOR, WALL, FACE, YEAR_DONE,
 )
-
-
-def dress_the_wall(count):
-    """Make the drawn shelf agree with what the run is holding.
-
-    THE ROOM HAS TO BE TRUE BEFORE ANYBODY PRESSES ANYTHING. A placement MAPVIS
-    put on a painting is drawn from the first frame the map is on screen, and the
-    shelf Ash drew is a case with things already on its shelves. So a first-year
-    student with nothing earned used to walk in to a full trophy case, press E,
-    and watch the whole case vanish while Thor said the hooks were empty. The
-    world was lying at walking speed and then correcting itself as a reward for
-    talking to the furniture, which is exactly backwards.
-
-    So it is synced on arrival, on EVERY load, and the press only says the line.
-
-    Guarded for the same reason the walk is in founding.py: `show` is a hard
-    refusal on a room whose `trophy_wall` is not bound to a placement, and the
-    offline copy of this room is exactly that. A refusal here would take the
-    founding with it.
-    """
-    try:
-        yield show(WALL, count > 0)
-    except Exception as refused:
-        yield log("show_refused", {"anchor": WALL, "why": str(refused)})
 
 
 @on_start

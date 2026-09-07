@@ -53,13 +53,15 @@ leaving Advisory, and Advisory has no way out while the bars are up.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
     actor_release, as_a_cutscene, get, guide_to, lead_to, log, objective, open,
-    place, play, say, set_flag, view,
+    place, play, say, set_flag, show, view,
 )
+
+from board import on_the_wall
 
 from lines import (
     ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, FACE, FILL_IT_IN,
     FOLLOW, LOOK_AT_WALL, NEXT_TIME, PRINCIPAL, SCHEDULE_IS_YOURS, STAMP_IT,
-    TALK_TO_HER, WALL_IS_YOURS, WELCOME,
+    TALK_TO_HER, WALL, WALL_IS_YOURS, WELCOME,
 )
 
 # THE FLAG THE REST OF THE GAME READS, AND IT IS A BARE NAME.
@@ -115,6 +117,36 @@ DESK = "counselor"
 # how many times the rail will offer the same screen again before it lets go. A
 # student who closes the schedule twice has told you something.
 OFFERS = 3
+
+
+def dress_the_wall(count):
+    """Make the drawn shelf agree with what the run is holding.
+
+    THE ROOM HAS TO BE TRUE BEFORE ANYBODY PRESSES ANYTHING. A placement MAPVIS
+    put on a painting is drawn from the first frame the map is on screen, and the
+    shelf Ash drew is a case with things already on its shelves. So a first-year
+    student with nothing earned used to walk in to a full trophy case, press E,
+    and watch the whole case vanish while Thor said the hooks were empty. The
+    world was lying at walking speed and then correcting itself as a reward for
+    talking to the furniture, which is exactly backwards.
+
+    So it is synced on arrival, on EVERY load, and again at any moment something
+    might have landed on it since.
+
+    IT MOVED HERE FROM `island.py` SO THE RAIL CAN SAY IT TOO. Ash, watching
+    rail-2: the wall beat *"opens on an empty spot"*. It did: the room was dressed
+    when the map loaded, with nothing earned, and by the time the principal walks
+    him to the wall he has just passed Advisory and the case should be back. One
+    call, at the moment he is standing in front of it.
+
+    Guarded for the same reason the walk is: `show` is a hard refusal on a room
+    whose `trophy_wall` is not bound to a placement, and the offline copy of this
+    room is exactly that. A refusal here would take the founding with it.
+    """
+    try:
+        yield show(WALL, count > 0)
+    except Exception as refused:
+        yield log("show_refused", {"anchor": WALL, "why": str(refused)})
 
 
 def vignette(year):
@@ -353,6 +385,12 @@ def the_wall():
     yield from take_him(WALL)
     yield objective(LOOK_AT_WALL)
     yield say(WALL_IS_YOURS, who=PRINCIPAL, portrait=FACE)
+    # THE SHELF IS PUT BACK BEFORE THE PANEL OPENS. He has just passed
+    # Advisory, so there is something on the wall now, and the room was
+    # dressed when the map loaded with nothing on it. Ash, on rail-2: this
+    # beat "opens on an empty spot".
+    trophies = yield get("trophies")
+    yield from dress_the_wall(on_the_wall(trophies))
     yield open("wall", wait=True)
     yield set_flag(WALL_SHOWN)
 
