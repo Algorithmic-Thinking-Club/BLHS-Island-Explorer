@@ -50,22 +50,12 @@ from vine import (
 )
 
 from board import counsel, on_the_wall, wall_line
-from founding import FOUNDING, founding_event
+from founding import NEXT_TIME_SAID, RAILED, rail, turned
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
-    NEXT_TIME, NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SAT, SHEET,
+    NEXT_TIME, NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
     SHOW_ME, TABLE, THOR, WALL, FACE, YEAR_DONE,
 )
-
-# the last line of the thirty minutes has been said. Bare, like `maw:founding`
-# and for the same reason: see the note on FOUNDING in founding.py. A member's
-# island writes bare names too and the engine puts their programme id in front.
-NEXT_TIME_SAID = "maw:next_time"
-
-
-def turned(year):
-    """The flag the engine writes the moment a year's page has turned."""
-    return "yearbook:y%d" % year
 
 
 def dress_the_wall(count):
@@ -102,13 +92,14 @@ def walking_in():
     speaks sits behind a flag. But anything about how the room LOOKS has to be
     redone on every one of those forty crossings, because a map load draws the
     painting fresh and knows nothing about what happened on the last one. Those
-    two live on opposite sides of the early returns below, and that is the whole
+    two live on opposite sides of the early return below, and that is the whole
     shape of this handler.
 
-    THE FIRST TIME IN IS THE FOUNDING. He walks in and the principal walks to
-    him. There is no greeting before it: two lines of the room introducing
-    itself and then a man walking over to say a third is exactly the wall of
-    text a freshman clicks through without reading.
+    THE FIRST YEAR IS A RAIL, AND THIS IS WHERE IT RUNS. `founding.py` has the
+    whole of it. It is one handler on purpose, because an open handler is what
+    makes the rest of the room unpressable while a student is being walked
+    through it, and it asks the run which beats are still owed rather than
+    remembering, so a reload picks up where he was.
 
     The way he is facing when he gets here is not set in this file either. The
     spawn anchor carries a heading, MAPVIS is where somebody chose it, and the
@@ -118,18 +109,27 @@ def walking_in():
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
 
-    # ---- the first time in: beat 4 ----------------------------------------
+    # ---- year one, walked ---------------------------------------------------
+    #
+    # YEAR ONE AND NOT EVERY YEAR. BRIEF-MAW-RAIL is about the first thirty
+    # minutes: a student who has met the room once knows where the table and the
+    # fire are, and being walked to them again in year two would be the game
+    # taking the controls off somebody who has already shown they do not need it.
+    # Years two to four are the room with one thing lit, which is the game the
+    # objective sequencer has always run.
     flags = yield get("flags")
-    if FOUNDING not in flags:
-        yield from founding_event(walk=True)
+    year = yield get("year")
+    if RAILED not in flags and year == 1:
+        yield from rail(walk=True)
         return
 
     # ---- home, after the page has turned: the last line of year one --------
     #
-    # Beat 8 ends with "Year two, next time." The page turns inside the
-    # yearbook, and the counselor drapes the cord there; this is the next time
-    # he walks in, and it is said once.
-    if turned(1) in flags and NEXT_TIME_SAID not in flags:
+    # The rail says this itself when it closes the year with the student
+    # standing there. This is the other road to it: a run that turned the page
+    # from the sheet, or from the counselor on an ordinary press, and walked
+    # out before anybody said the year was over.
+    if turned(year - 1) in flags and NEXT_TIME_SAID not in flags:
         yield say(NEXT_TIME, who=COUNSELOR)
         yield set_flag(NEXT_TIME_SAID)
         yield log("year_two_next_time")
@@ -137,11 +137,17 @@ def walking_in():
 
 @on_talk("principal_desk")
 def the_principal():
-    """The founding, for a run that walked off before it finished; then one line."""
+    """The rail, for a run that stepped off it; then one line.
+
+    A student who closed the pick cards or left Advisory half answered has the
+    rail's own light still on that station and this desk to come back to. The
+    walk is False because he is standing in front of the principal already, and
+    walking him to the door to say hello would be walking him away.
+    """
     flags = yield get("flags")
-    if FOUNDING not in flags:
-        # he is already standing in front of you, so the principal stays put
-        yield from founding_event(walk=False)
+    year = yield get("year")
+    if RAILED not in flags and year == 1:
+        yield from rail(walk=False)
         return
 
     yield say(BACK_AGAIN, who=PRINCIPAL, portrait=FACE)
@@ -201,9 +207,13 @@ def the_fire():
     # the rule your own island must keep. A member's island scores its own
     # content and has to write the row itself. A core beat is the ENGINE'S
     # content: the runner already wrote the grade, the credit, the tags and the
-    # takeaway cards before this line ran, and awarding again would put a second
-    # row for the same year on the transcript and move the GPA twice.
-    yield say(SAT, who=HEARTH)
+    # facts before this line ran, and awarding again would put a second row for
+    # the same year on the transcript and move the GPA twice.
+    #
+    # AND NOTHING IS SAID AFTERWARDS. The grade pops over the map naming what was
+    # finished and what it was worth, which is the result (BRIEF-MAW-RAIL). A
+    # line here as well was the same fact said twice, in the slower of the two
+    # places.
     yield log("advisory_sat", {"beat": beat, "grade": score})
 
 

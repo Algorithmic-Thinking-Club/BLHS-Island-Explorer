@@ -16,13 +16,18 @@ the chart table is furniture, furniture does not talk, and the anchor carries no
 label anyway, so naming it as the speaker would print the raw identifier
 `chart_table` at the exact spot a person's name goes.
 
-HOW LONG A LINE MAY BE. One idea, about twelve words, and never more than three
-in a row before the player does something. That rule is not a style preference,
-it is the literal-words law: a student who skips every line in this room must
-still end up understanding where the table is, because the light on the floor
-taught them and the text only confirmed it. And every line says the school
-thing first. Advisory is Advisory, the yearbook is the yearbook, the cords are
-your cords.
+HOW LONG A LINE MAY BE, AND HOW MANY. One idea, about twelve words, and ONE LINE
+PER BEAT. That second half is BRIEF-MAW-RAIL and it is stricter than what was
+here: year one walks a student between five places, and at each one exactly one
+person says exactly one thing before the thing happens. Ash played the version
+with three lines a beat: "a bunch of words, a bunch of instructions that open to
+read more words. A student doesn't know what the hell is going on."
+
+That rule is not a style preference, it is the literal-words law: a student who
+skips every line in this room must still end up understanding where the table
+is, because the light on the floor taught them and the text only confirmed it.
+And every line says the school thing first. Advisory is Advisory, the yearbook is
+the yearbook, the cords are your cords.
 """
 
 # ---- who is speaking ---------------------------------------------------------
@@ -42,27 +47,43 @@ TABLE = THOR
 FACE = "principal"
 
 
-# ---- the principal -----------------------------------------------------------
+# ---- the principal, and the lines of the rail --------------------------------
 #
-# The first time in, he walks over and says this. ONE LINE, by ruling
-# (BRIEF-YEAR-ONE beat 4): the pick screen opens right after it, and the pick
-# screen is the thing that explains the year, by being a screen of cards a
-# student can press. There is no tour and no speech. He does not describe the
-# room; the table lights.
+# BEAT 1. He walks over and says this and nothing else. The pick screen opens
+# right after it, and the pick screen is the thing that explains the year, by
+# being a screen of cards a student can press. There is no tour and no speech.
+# He does not describe the room; the table lights and the student is walked to it.
 
-WELCOME = "Welcome. Pick what you'll do this year."
+WELCOME = "Welcome to Bonney Lake. Let's plan your year."
 
-# every visit after that, at the desk
-BACK_AGAIN = "Go to the table and pick what you'll do this year."
+# BEAT 2, after the cards have been stamped. It is the handover of the corner's
+# middle button as well as the answer to the stamp: BRIEF-MAW-RAIL gives each of
+# the three corner buttons one line at the moment it first matters, and this is
+# My Year's.
+YEAR_SET = "That is your year. It is in My Year, in the corner."
+# said only when he closed the cards without stamping, so the rail can offer them
+# again rather than walking him on with an empty sheet
+STAMP_IT = "Pick one club or sport and two classes, then stamp it."
+
+# BEAT 3, after Advisory. The Guide's handover, and the only thing said about a
+# score, because the pop over the map is the result.
+GUIDE_IS_YOURS = "That is Advisory done. What you learned is in your Guide."
+# and when he left the questions unfinished
+COME_BACK = "Come back to the fire when you have a minute."
+
+# every visit after the rail, at the desk
+BACK_AGAIN = "Everything you need is on the walls. Take a look around."
 
 
 # ---- the fire ----------------------------------------------------------------
+#
+# NOTHING IS SAID AFTER THE QUESTIONS ANY MORE. The reward pop names what was
+# finished and what it was worth, over the map, and that is the result. A line
+# here as well was the same fact said twice.
 
 CIRCLE = "Advisory is starting. Answer the questions."
 BANKED = "Advisory is done for this year. Come back next year."
-# said after the beat, and only when the player actually finished it. `play`
-# comes back None when they closed the panel, and None is not a score.
-SAT = "That is this year's Advisory done."
+# `play` comes back None when they closed the panel, and None is not a score
 LEFT = "You did not finish Advisory. Come back when you have a minute."
 
 
@@ -70,20 +91,20 @@ LEFT = "You did not finish Advisory. Come back when you have a minute."
 
 NOTHING_YET = "No cord started yet. That is what four years are for."
 ASK = "Ask about the cords?"
-SHOW_ME = "Open the Handbook"
+SHOW_ME = "Open the Guide"
 NOT_NOW = "Not now"
 
-# beat 8, home. Advisory is done and the year can close, so she opens the
-# yearbook, and the yearbook is where the page turns and she drapes the cord.
+# BEAT 5. She has the cord, the yearbook turns the page, and then the last line
+# of the thirty minutes, which carries the Map's handover with it.
+CORD = "Year one is done. Here is your first cord."
+NEXT_TIME = "Year two, next time. The Map in the corner is yours."
+# the counselor pressed on the way out with the year still open
 YEAR_DONE = "Year one is done. Let's turn the page and see what you earned."
-# the last line of the thirty minutes, said once, the next time he walks in
-# after the page has turned
-NEXT_TIME = "Year one is done. Year two, next time."
 
 
 # ---- the chart table ---------------------------------------------------------
 
-SHEET = "This is the year sheet. Plan all four years here."
+SHEET = "This is My Year. Plan all four years here."
 
 
 # ---- the outfitter -----------------------------------------------------------
