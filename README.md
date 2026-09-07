@@ -210,7 +210,7 @@ uses like `random.py` or `json.py`.
 
 ## The words
 
-`vine.py` has twenty-five, which is everything the engine understands. These nine
+`vine.py` has thirty-one, which is everything the engine understands. These ten
 are what the skeleton uses, and they are the ones that have been watched working
 from Python inside the game:
 
@@ -225,8 +225,9 @@ from Python inside the game:
 | `award(programme=, grade=)` | the row your island earned. `grade` is 0 to 4.0. |
 | `log(event, data=)` | one line on the record |
 | `guide_to(anchor)` | the arrow, along ground that can be walked |
+| `objective(text)` | the one line at the top of the screen: what to do NOW |
 
-The other sixteen move the world and direct a scene. Six of them have been there
+The other twenty-one move the world and direct a scene. Six of them have been there
 a while: `walk_to`, `look_at`, `show`, `fx`, `enter` and `cutscene`. Ten more are
 for DIRECTING rather than walking through: `pose` and `wait` and `wait_for` and
 `sound`, `route` and `framing` for a line or a shot somebody drew on the map in
@@ -244,14 +245,14 @@ file. `tests/test_the_maw.py` beside it is what testing an island of that size
 looks like. The one you copy to start is the skeleton, and after that the ATC
 island.
 
-It does not use all twenty-five. It uses twelve: `say` with a face on it,
+It does not use all thirty-one. It uses twelve: `say` with a face on it,
 `choose`, `get`, `open`, `play`, `set_flag`, `log`, `show`, `look_at`,
 `actor_face`, `cutscene` and `wait`. What it shows that a short island cannot is
 the SHAPE: seven handlers on one map, content in one file and control flow in
 another, and one scene long enough to live in its own file and be pulled in with
 `yield from`.
 
-The other thirteen are in `vine.py` with what each one does. For `route`,
+The rest are in `vine.py` with what each one does. For `route`,
 `framing`, `pose`, `guide_to`, `wait_for` and `sound` inside one running scene,
 read the beach opening in the engine at `public/grapes/castaway/island.py`. The
 Maw does not use those because the room it is written for carries no drawn paths

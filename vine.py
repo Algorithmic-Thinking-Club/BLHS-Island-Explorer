@@ -314,6 +314,33 @@ def ashore():
     return {"kind": "ashore"}
 
 
+def objective(text=None):
+    """The one line at the top of the screen: what the student is doing NOW.
+
+        yield objective("Follow the principal")
+        ...
+        yield objective(None)      # hand it back to the year
+
+    THE PANEL IS ALWAYS THERE and something is always in it. Left alone it says
+    what the YEAR wants next, which the engine works out from the run: stamp the
+    schedule, sit Advisory, talk to the counselor. Inside a scene you are
+    directing, that sentence is about a step you are walking the student PAST,
+    and the honest line for the thirty seconds he is following somebody across a
+    room is "Follow the principal". That is a step only you know about, so this
+    is the word that says it.
+
+    ONE SHORT IMPERATIVE. A verb and its target, about six words. The panel draws
+    one line and clips what will not fit, because a paragraph at the top of the
+    screen is the thing this game has been told three times not to do.
+
+    IT DOES NOT HAVE TO BE TURNED OFF, though it is tidier to. The bars coming
+    down hand the panel back to the year on their own, so a scene wrapped in
+    `as_a_cutscene` cannot leave a stale sentence on the glass even if it
+    refuses in the middle.
+    """
+    return {"kind": "objective", "text": text}
+
+
 def movie(on=True):
     """Two black bars, no HUD, no plaques, and the controls taken away.
 
