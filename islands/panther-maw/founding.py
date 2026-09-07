@@ -52,13 +52,14 @@ it. With nothing pickable on the schedule today that road is only reachable by
 leaving Advisory, and Advisory has no way out while the bars are up.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
-    actor_release, as_a_cutscene, get, guide_to, lead_to, log, open, place, play,
-    say, set_flag, view,
+    actor_release, as_a_cutscene, get, guide_to, lead_to, log, objective, open,
+    place, play, say, set_flag, view,
 )
 
 from lines import (
-    ADVISORY_IS_MONDAY, COME_BACK, CORD, COUNSELOR, FACE, NEXT_TIME, PRINCIPAL,
-    SCHEDULE_IS_YOURS, STAMP_IT, WALL_IS_YOURS, WELCOME,
+    ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, FACE, FILL_IT_IN,
+    FOLLOW, LOOK_AT_WALL, NEXT_TIME, PRINCIPAL, SCHEDULE_IS_YOURS, STAMP_IT,
+    TALK_TO_HER, WALL_IS_YOURS, WELCOME,
 )
 
 # THE FLAG THE REST OF THE GAME READS, AND IT IS A BARE NAME.
@@ -219,10 +220,18 @@ def take_him(anchor):
     when they stop, because which way "at him" is depends on where they both ended
     up and no compass point written here would survive somebody moving a table.
 
+    AND THE PANEL SAYS WHAT HE IS DOING. BRIEF-MAW-RAIL-3 A: the line at the top
+    of the screen is the student's own step, and for the whole of a led walk his
+    step is following the man in front of him. The year's own sentence would say
+    "Go to the table and pick your year" over a student who is being taken there,
+    which is the game telling him to do the thing it is doing for him.
+
     EVERY WORD IS CAUGHT. A refusal in the middle of a beat would take the rest of
     year one with it, and the beat after this one is a screen that can still be
     filled in from a standstill.
     """
+    yield objective(FOLLOW)
+
     try:
         yield guide_to(anchor)
     except Exception as refused:
@@ -244,6 +253,11 @@ def step_off():
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
+    # AND THE PANEL GOES BACK TO THE YEAR. It says what the run owes next from
+    # here on, which after the counselor is "Explore the Maw. Year two, next
+    # time." The bars coming down would do this on their own; it is said out
+    # loud because every road out of the rail runs through this function.
+    yield objective(None)
 
 
 # ---- the five beats ----------------------------------------------------------
@@ -251,6 +265,7 @@ def step_off():
 
 def the_tunnel(walk):
     """BEAT 1. He is at the mouth, the principal is already there, one line."""
+    yield objective(FOLLOW)
     yield say(WELCOME, who=PRINCIPAL, portrait=FACE)
 
     # the year has begun, which is what lights the table. Two bare flags and no
@@ -273,6 +288,7 @@ def the_table():
     and the year's own light is still on this table when they change their mind.
     """
     yield from take_him(TABLE)
+    yield objective(FILL_IT_IN)
     yield say(SCHEDULE_IS_YOURS, who=PRINCIPAL, portrait=FACE)
 
     planned = False
@@ -306,6 +322,7 @@ def the_fire(beat):
     transcript and move the GPA twice.
     """
     yield from take_him(FIRE)
+    yield objective(ANSWER)
     yield say(ADVISORY_IS_MONDAY, who=PRINCIPAL, portrait=FACE)
 
     # BOTH ARMS OF THE STUDY RUN THROUGH THIS ONE WORD, and the arm is not this
@@ -334,6 +351,7 @@ def the_wall():
     one line says why he is looking at it and nothing else.
     """
     yield from take_him(WALL)
+    yield objective(LOOK_AT_WALL)
     yield say(WALL_IS_YOURS, who=PRINCIPAL, portrait=FACE)
     yield open("wall", wait=True)
     yield set_flag(WALL_SHOWN)
@@ -353,6 +371,7 @@ def the_counselor(year):
     say he has.
     """
     yield from take_him(DESK)
+    yield objective(TALK_TO_HER)
     yield say(CORD, who=COUNSELOR)
     yield open("yearbook", wait=True)
 
@@ -417,14 +436,17 @@ def year_one(walk):
             yield from step_off()
             return
 
-    # YEAR TWO DOES NOT OPEN WITH A SPEECH. The page has just turned, the run is
-    # now in year two, and the engine's own year-start card would mount the moment
-    # the world went quiet and say three more things over the top of "Year two,
-    # next time". BRIEF-MAW-RAIL-2: that line is the last one a student reads.
-    # Written here rather than left to the engine because the principal really has
-    # opened both years in person, standing in front of him.
-    year = yield get("year")
-    yield set_flag(vignette(year))
+    # AND YEAR TWO DOES NOT OPEN AT ALL. BRIEF-MAW-RAIL-3 C, Ash after playing
+    # rail-2: "After 'Year two, next time' nothing wakes up. No 'Go to the table
+    # and pick your year', no lit table, no year-two planner, no year-two
+    # Advisory... Year two is not designed yet and is not reachable in a
+    # thirty-minute advisory block anyway."
+    #
+    # The rail used to write year two's vignette flag here, to stop the engine's
+    # own year-start card mounting over the top of "Year two, next time". The
+    # engine stops handing the next year out now (src/game/run/year.ts,
+    # SESSION_ENDS_AFTER_YEAR), so there is no year two to open and no card to
+    # head off, and this is where those two lines were.
 
     # AND THE CORNER ARRIVES. The three buttons have been hidden for the whole
     # cutscene; these two flags are what makes them swing down on their hooks on

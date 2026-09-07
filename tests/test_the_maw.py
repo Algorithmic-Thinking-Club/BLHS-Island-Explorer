@@ -39,7 +39,7 @@ def _engine_words():
 
 
 def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", picks=(), score=3.4,
-              refuse=(), year=1):
+              refuse=(), year=1, planned=False):
     """An engine that answers the questions this island actually asks.
 
     `refuse` names words this pretend engine cannot perform. A real refusal is
@@ -54,6 +54,11 @@ def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", pic
         "advisory": advisory,
         "mode": mode,
         "year": year,
+        # IS THIS YEAR'S SHEET REALLY STAMPED. The rail asks before it walks him
+        # on: a student who pressed Close for now has not made the decision the
+        # beat exists for, and walking him to the fire with an empty schedule is
+        # the rail losing the one thing it took him to the table for.
+        "planned": planned,
     }
 
     def answer(intent):

@@ -89,6 +89,23 @@ WALL_IS_YOURS = "What you earn goes up here."
 BACK_AGAIN = "Everything you need is on the walls. Take a look around."
 
 
+# ---- THE PANEL AT THE TOP OF THE SCREEN --------------------------------------
+#
+# BRIEF-MAW-RAIL-3 A, Ash after playing rail-2: a panel at the top centre says
+# the current objective at EVERY moment, in a cutscene and out of one. Outside a
+# scene the engine writes it off the year itself; inside this one the year is
+# describing a step the student is being walked past, so the rail says it.
+#
+# ONE SHORT IMPERATIVE AND NOTHING ELSE. A verb and its target. These are not
+# dialogue: nobody says them, they are the sign over the door of the thing that
+# is happening, and a student who reads nothing else on the screen reads this.
+FOLLOW = "Follow the principal."
+FILL_IT_IN = "Fill your schedule."
+ANSWER = "Answer Advisory."
+LOOK_AT_WALL = "Look at your trophy wall."
+TALK_TO_HER = "Talk to the counselor."
+
+
 # ---- the fire ----------------------------------------------------------------
 #
 # NOTHING IS SAID AFTER THE QUESTIONS ANY MORE. The reward pop names what was

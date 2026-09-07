@@ -129,7 +129,12 @@ def walking_in():
     # standing there. This is the other road to it: a run that turned the page
     # from the sheet, or from the counselor on an ordinary press, and walked
     # out before anybody said the year was over.
-    if turned(year - 1) in flags and NEXT_TIME_SAID not in flags:
+    # BOTH SPELLINGS OF "THE PAGE HAS TURNED", because the run stops handing out
+    # years at the end of year one now (BRIEF-MAW-RAIL-3 C). Before that the turn
+    # advanced `year`, so the page a student had just closed was last year's;
+    # today the year stays where it is and the closed page is this one's. A run
+    # made under either rule gets the line.
+    if (turned(year) in flags or turned(year - 1) in flags) and NEXT_TIME_SAID not in flags:
         yield say(NEXT_TIME, who=COUNSELOR)
         yield set_flag(NEXT_TIME_SAID)
         yield log("year_two_next_time")
