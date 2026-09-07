@@ -188,6 +188,7 @@ def view(shot, ms=None):
 
         island   the whole painted island, centred and held still
         walk     the shot you walk around in, following the body
+        close    in on the character, for a walk somebody is watching
         ship     riding with the boat, close enough that she is a boat
         sail     the wide sailing floor, the shot open water is crossed at
 

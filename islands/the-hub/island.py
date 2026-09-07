@@ -9,10 +9,10 @@ The whole arrival is one watched piece, in his second order:
   2  she reaches the dock. The camera pulls OUT to the whole island, and the
      arrival card plays there.
   3  THEN Thor hops out.
-  4  THEN the camera comes back in to a character-level shot on him, and he
-     AUTO-WALKS: the dock, the stone harbor, the first stairs, the second
-     stairs, the Panther's Maw door, with drawn marks on the ground the whole
-     way.
+  4  THEN the camera comes in CLOSE on him and he AUTO-WALKS, behind the bars
+     again and with the corner away: the dock, the stone harbor, the first
+     stairs, the second stairs, the Panther's Maw door, with drawn arrows on the
+     ground the whole way. He is being shown the road, not walking it.
   5  at the door a large drawn pointer hangs above the tunnel, and E goes in.
 
 THE HOP-OUT USED TO BE WELDED TO THE ARRIVAL and that is why the order above
@@ -117,13 +117,21 @@ def putting_in():
     yield ashore()
     yield wait(ISLAND_HOLD_MS)
 
-    # ---- 4 and 5: back in to him, and up the hill ------------------------
-    yield view("walk")
+    # ---- 4 and 5: in on him, and up the hill ------------------------------
+    #
+    # THE WALK IS WATCHED TOO, and that is Ash's third note: the corner goes
+    # away and the bars come back for it. He is not playing this stretch, he is
+    # being shown the way, and the marks on the ground are what he is being
+    # shown. The frame comes off the moment he is standing at the tunnel,
+    # because pressing E is the first thing in this whole arrival that is his.
+    yield view("close")
+    yield movie(True)
     # the arrow marks on the ground and the big pointer over the tunnel are one
     # word: the engine draws the route he is about to walk and hangs the pointer
     # over the thing at the end of it
     yield guide_to(DOOR)
     yield walk_to(DOOR)
+    yield movie(False)
     yield log("walked_to_the_maw")
 
     # written whether she sailed or not: the crossing happens once, at arrival,
