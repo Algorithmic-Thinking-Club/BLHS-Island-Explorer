@@ -15,7 +15,7 @@ student follows him, which is what a freshman orientation IS. The person in
 charge takes you round, stops, turns to face you, and says the one sentence that
 says why you are standing here. Then the thing happens.
 
-  1  THE TUNNEL      he walks over to you and says the one line
+  1  THE TUNNEL      he is already waiting there and says the one line
   2  THE TABLE       he leads, you follow, your schedule opens, you fill it in
   3  THE FIRE        he leads, you follow, Advisory is three things by hand
   4  THE WALL        he leads, you follow, the wall opens on what you picked
@@ -30,8 +30,13 @@ gone, and every press in the room is dropped, so a wrong click does nothing,
 which is what a rail is.
 
 AND IT IS WATCHED FROM HIS SHOULDER. `view("close")` is the character point of
-view: the room is never all on screen at once, a station fills about a quarter of
-the glass, and the camera rides him the whole way. It is handed back at the end.
+view, twice the shot the room opens at: it is never all on screen at once and the
+camera rides him the whole way. It is handed back at the end.
+
+THERE IS NO WAY OUT OF IT EITHER, which Ash ruled after playing: no "Leave this
+for now" on Advisory, no "Close for now" on the schedule, no Escape, no doors and
+no stations. The engine reads the bars being up as the statement that something
+else is directing, so every panel raised inside them loses its dismiss.
 
 IT IS RESUMABLE AT EVERY BEAT, which is the other half of being one handler. It
 does not remember where it got to; it ASKS the run, the same way `objective.ts`
@@ -39,14 +44,15 @@ does, so a student who reloads the tab mid-year is picked up at the beat they
 were standing in rather than walked through four they have already done.
 
 AND IT LETS GO WHEN THE STUDENT DOES. A beat that ends without its decision being
-made, the schedule closed unstamped or Advisory left half answered, goes through
-`step_off` rather than walking him on with an empty sheet: the bars come down,
-the camera comes back, the principal is his own again, and what he gets is the
-room with one thing lit, which is the game he had before the rail. Pressing that
-thing puts him back on it.
+made goes through `step_off` rather than walking him on with an empty sheet: the
+camera comes back, the principal is his own again, the bars come down in
+`as_a_cutscene`'s own `finally`, and what he gets is the room with one thing lit,
+which is the game he had before the rail. Pressing that thing puts him back on
+it. With nothing pickable on the schedule today that road is only reachable by
+leaving Advisory, and Advisory has no way out while the bars are up.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
-    actor_move, actor_release, get, guide_to, lead_to, log, movie, open, play,
+    actor_release, as_a_cutscene, get, guide_to, lead_to, log, open, place, play,
     say, set_flag, view,
 )
 
@@ -127,18 +133,21 @@ def turned(year):
     return "yearbook:y%d" % year
 
 
-def come_over():
-    """The principal walks to where the student came in, and says so if he cannot.
+def waiting_at_the_door():
+    """He is ALREADY at the tunnel mouth when the student walks in.
 
-    AT WALKING PACE, WITH HIS LEGS MOVING, which is BRIEF-ARRIVAL item 6 and Ash's
-    own reading of the first build: *"The principal sprints out, glitched."* A
-    driven body travels at the MAP's speed, which is the player's own sprint, so
-    he crossed the room in four seconds. `pace` is the word for it.
+    Ash, 2026-09-06, watching it: *"THE PRINCIPAL DOES NOT WALK TO THOR ANY MORE.
+    He is ALREADY WAITING at the tunnel mouth when Thor comes in."* And on the
+    walk that used to be here: *"he flies upward, across the edge."* That walk was
+    `actor_move`, which carries a body in a straight line at its target, so on a
+    room with a gap between the bridge and the floor he crossed the gap. It is cut
+    rather than fixed: a person who is already there when you arrive is the better
+    picture anyway, and it is what a real orientation looks like.
 
-    NO `facing` IS PASSED ANY MORE. He is walking straight at the student, so the
-    heading the walk itself leaves him on is already the one that faces you, and a
-    compass point named here would turn him away from the person he came to meet
-    on any map whose tunnel is somewhere else.
+    `place` is a word this island could not say until today. It puts a body at an
+    anchor with no walk in it, beside the player rather than on top of him, turned
+    to look at him. It is the first thing the rail does, before the camera moves,
+    so there is no frame with him standing anywhere else.
 
     ONE OF THE PLACES THIS ISLAND CATCHES A REFUSAL, AND IT IS DECORATION. A word
     the engine cannot perform does not come back as a False you can test. It is
@@ -158,10 +167,10 @@ def come_over():
     the same mistake.
     """
     try:
-        yield actor_move(PRINCIPAL, MEET, pace="walk")
+        yield place(PRINCIPAL, MEET)
         return True
     except Exception as refused:
-        yield log("actor_move_refused", {"actor": PRINCIPAL, "to": MEET, "why": str(refused)})
+        yield log("place_refused", {"actor": PRINCIPAL, "at": MEET, "why": str(refused)})
         return False
 
 
@@ -206,6 +215,10 @@ def take_him(anchor):
     it, which is the difference between this and the first version: they used to
     go up and come down around each walk, and those seams are what he saw.
 
+    AND NO FACING IS NAMED. `lead_to` turns the two of them to look at each other
+    when they stop, because which way "at him" is depends on where they both ended
+    up and no compass point written here would survive somebody moving a table.
+
     EVERY WORD IS CAUGHT. A refusal in the middle of a beat would take the rest of
     year one with it, and the beat after this one is a screen that can still be
     filled in from a standstill.
@@ -222,34 +235,22 @@ def take_him(anchor):
 
 
 def step_off():
-    """The rail lets go: bars down, camera back, the principal his own again.
+    """The rail lets go: arrow down, camera back, the principal his own again.
 
-    Every road out of `rail` runs through here, the one where the student finished
-    year one and the three where he closed a screen instead. A student behind two
-    black bars with a camera nobody handed back is a dead session that looks like
-    a dead laptop, and there is exactly one place in this file that could leave
-    him in one.
+    Every road out of `year_one` runs through here. The BARS are not here and that
+    is the point of `as_a_cutscene`: they come down in its `finally`, so they come
+    down on a road nobody wrote as well as on the four that are written.
     """
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
-    yield movie(False)
 
 
 # ---- the five beats ----------------------------------------------------------
 
 
 def the_tunnel(walk):
-    """BEAT 1. He is at the mouth, the principal comes to him, one line.
-
-    `walk` is False from the desk: a student who pressed E on the principal is
-    standing in front of him already, and walking him to the door to say hello
-    would be walking him away.
-    """
-    came = True
-    if walk:
-        came = yield from come_over()
-
+    """BEAT 1. He is at the mouth, the principal is already there, one line."""
     yield say(WELCOME, who=PRINCIPAL, portrait=FACE)
 
     # the year has begun, which is what lights the table. Two bare flags and no
@@ -258,7 +259,7 @@ def the_tunnel(walk):
     year = yield get("year")
     yield set_flag(FOUNDING)
     yield set_flag(vignette(year))
-    yield log("founding_seen", {"where": MEET if walk else PRINCIPAL, "walked": came})
+    yield log("founding_seen", {"where": MEET if walk else PRINCIPAL})
 
 
 def the_table():
@@ -368,22 +369,26 @@ def the_counselor(year):
 # ---- the rail ----------------------------------------------------------------
 
 
-def rail(walk=True):
-    """Every beat the run still owes, in order, as one movie.
+def year_one(walk):
+    """Every beat the run still owes, in order. Read top to bottom.
 
-    Read top to bottom: it is the same shape `objective.ts` uses to decide what
-    the one lit thing is, asked of the same facts, and that is on purpose. The
-    sequencer and the rail cannot disagree about where a student is in the year
-    because they are reading the same run.
+    It is the same shape `objective.ts` uses to decide what the one lit thing is,
+    asked of the same facts, and that is on purpose: the sequencer and the rail
+    cannot disagree about where a student is in the year because they are reading
+    the same run.
     """
-    # THE BARS AND THE SHOT GO UP TOGETHER AND STAY UP. Everything below happens
-    # inside them, including the four screens: a panel draws over a movie, and the
-    # corner, the plaques and the task line do not draw at all.
-    yield movie(True)
+    flags = yield get("flags")
+    first = FOUNDING not in flags
+
+    # HE IS PLACED BEFORE THE CAMERA MOVES, so there is no frame of him standing
+    # at his desk while the shot travels in.
+    if first and walk:
+        yield from waiting_at_the_door()
+
+    # THE SHOT IS THE STUDENT'S OWN SHOULDER for the whole of what follows.
     yield view("close")
 
-    flags = yield get("flags")
-    if FOUNDING not in flags:
+    if first:
         yield from the_tunnel(walk)
 
     planned = yield get("planned")
@@ -429,3 +434,16 @@ def rail(walk=True):
     yield set_flag(RAILED)
     yield from step_off()
     yield log("rail_done", {"year": year})
+
+
+def rail(walk=True):
+    """Year one, run inside the bars, which come down whatever happens.
+
+    `as_a_cutscene` is `movie(True)`, the scene, and `movie(False)` in a `finally`.
+    It is the shape a member should copy for anything a student WATCHES, and it
+    exists because the gap between those two lines is the one place in this API
+    where forgetting leaves somebody behind two black bars with no controls. Here
+    the scene is six or seven minutes long with four screens inside it, and any
+    word in it can refuse; the bars still come down.
+    """
+    yield from as_a_cutscene(year_one(walk))
