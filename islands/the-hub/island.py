@@ -133,23 +133,23 @@ def putting_in():
     # ---- 4 and 5: in on him, and up the hill ------------------------------
     #
     # He is not playing this stretch, he is being shown the way, and the marks
-    # on the ground are what he is being shown. The frame comes off the moment
-    # he is standing at the tunnel, because pressing E is the first thing in
-    # this whole arrival that is his.
+    # on the ground are what he is being shown.
     yield view("close")
     # the arrow marks on the ground and the big pointer over the tunnel are one
     # word: the engine draws the route he is about to walk and hangs the pointer
     # over the thing at the end of it
     yield guide_to(DOOR)
     yield walk_to(DOOR)
-    # AND THE SHOT IS HANDED BACK BEFORE THE CONTROLS ARE. The close shot is
-    # twice the walking one since BRIEF-MAW-RAIL-2, which is right for a walk
-    # somebody is watching and too tight for a player who has just been given the
-    # keys: at the tunnel he would be able to see about a third of the quay he
-    # had just come up. The order matters, `view` before `movie`, so the travel
-    # happens while he still cannot walk out of it.
-    yield view("walk")
-    yield movie(False)
+    # NO `view("walk")` AND NO `movie(False)` HERE, AND BOTH ARE A RULING RATHER
+    # THAN AN OVERSIGHT. Ash, 2026-09-06, watching this exact moment: "after the
+    # auto walk ends and thor has 'Go to panther's maw' the black boxes
+    # disappear, and it zoomed out, and the three buttons are back. none of that
+    # should happen." He arrives at the tunnel still inside the frame, at the
+    # close shot, with the corner still away.
+    #
+    # HE CAN STILL PRESS THE DOOR, because the engine hands the controls back
+    # when this handler returns and leaves the frame standing: the bars are the
+    # picture and the lock is a lease on it. The door takes the frame with it.
     yield log("walked_to_the_maw")
 
     # written whether she sailed or not: the crossing happens once, at arrival,

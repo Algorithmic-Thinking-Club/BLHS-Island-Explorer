@@ -112,10 +112,10 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         self.assertLess(kinds.index("movie"), kinds.index("route"))
         # up for the crossing, down at the dock, up again for the walk he is
         # being shown, and down when he is standing at the tunnel
-        # up once at the first frame and down once at the tunnel, and never in
-        # between: the two seams in the middle were the glitches Ash watched
+        # raised once, at the first frame, and never lowered by this island at
+        # all: the frame lasts the whole arrival and the door takes it with it
         movies = [i["on"] for i in pump.only(pump.run("start", answering()), "movie")]
-        self.assertEqual(movies, [True, False])
+        self.assertEqual(movies, [True])
 
     def test_the_crossing_is_close_and_the_pull_out_comes_after_it(self):
         """Ash's second order: close on the ship, then the dock, then wide."""
@@ -131,10 +131,10 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         kinds = pump.kinds(pump.run("start", answering()))
         wide = kinds.index("view", kinds.index("route"))
         self.assertLess(wide, kinds.index("ashore"))
-        # and the bars are still up over it: there is only one `movie` before
-        # the walk and it is the one that raised them
-        self.assertEqual(kinds.index("movie"), kinds.index("movie"))
-        self.assertLess(wide, kinds.index("movie", wide))
+        # and the bars are still up over it: the only `movie` in the whole
+        # handler is the one that raised them, before anything moved
+        self.assertEqual(kinds.count("movie"), 1)
+        self.assertLess(kinds.index("movie"), wide)
 
     def test_the_camera_moves_once_from_the_island_to_him(self):
         """Ash watched a two step shift: full island, half island, then Thor."""
@@ -162,22 +162,22 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         self.assertEqual([i["anchor"] for i in pump.only(seen, "walk_to")], ["panthers_maw"])
         self.assertLess(kinds.index("guide_to"), kinds.index("walk_to"))
 
-    def test_the_walk_is_watched_and_the_frame_comes_off_at_the_door(self):
+    def test_the_frame_is_raised_once_and_never_lowered_here(self):
         seen = pump.run("start", answering())
         kinds = pump.kinds(seen)
-        walk = kinds.index("walk_to")
         movies = [i for i, k in enumerate(kinds) if k == "movie"]
-        # raised before anything moves, and lowered only after the walk: the bars
-        # are up over every frame in between
-        self.assertEqual(len(movies), 2)
+        # one word, before anything moves, and nothing takes it down: the engine
+        # hands the controls back when this handler ends and the door takes the
+        # frame when he walks through it
+        self.assertEqual(len(movies), 1)
         self.assertLess(movies[0], kinds.index("route"))
-        self.assertLess(walk, movies[1])
+        self.assertLess(movies[0], kinds.index("walk_to"))
 
     def test_a_refused_crossing_still_takes_the_bars_down_and_still_walks(self):
         # the one that matters: bars raised, the boat refused, and a student left
         # behind two black bars with no controls would be a dead-looking laptop
         seen = pump.run("start", answering(refuse=("route",)))
-        self.assertEqual([i["on"] for i in pump.only(seen, "movie")], [True, False])
+        self.assertEqual([i["on"] for i in pump.only(seen, "movie")], [True])
         self.assertEqual([i["anchor"] for i in pump.only(seen, "walk_to")], ["panthers_maw"])
 
     def test_walking_back_out_of_the_mountain_raises_no_bars(self):
