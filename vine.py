@@ -144,6 +144,47 @@ def actor_move(actor, to, facing=None, pace=None):
     return intent
 
 
+def lead_to(actor, to, pace=None):
+    """Somebody walks ahead to an anchor and the player follows them there.
+
+    Comes back when they have BOTH stopped. The leader sets off, the player
+    comes up behind him once he is a couple of body lengths clear, and the
+    leader turns round to face the player at the end of it, which is when you
+    say your line.
+
+    This is the shape a guided tour has, and writing it as `actor_move` and then
+    `walk_to` does not work: `actor_move` waits for the leader to ARRIVE, so the
+    student stands still watching a man cross a room and then walks the same
+    floor on his own afterwards, and both bodies aim at the same standing spot
+    and finish inside each other.
+
+    The leader goes ROUND things. `actor_move` carries a body straight at its
+    target, which is right for a crate and wrong for a person crossing a room
+    with a fire in the middle of it.
+    """
+    intent = {"kind": "lead_to", "actor": actor, "to": to}
+    if pace is not None:
+        intent["pace"] = pace
+    return intent
+
+
+def place(actor, at, facing=None):
+    """Put somebody at an anchor with no walk in it. For SETTING a scene.
+
+    Use it before anything starts moving: the principal is already waiting at
+    the tunnel mouth when the student walks in, rather than jogging over to him
+    while he watches. With no `facing` they are turned to look at the player,
+    because a body placed before a scene begins is nearly always waiting for him.
+
+    Placing somebody where the player is standing puts them BESIDE him, not
+    inside him, which is the same clearance `actor_move` uses.
+    """
+    intent = {"kind": "place", "actor": actor, "at": at}
+    if facing is not None:
+        intent["facing"] = facing
+    return intent
+
+
 def actor_face(actor, facing):
     """Turn somebody, without moving them."""
     return {"kind": "actor_face", "actor": actor, "facing": facing}
@@ -283,10 +324,48 @@ def movie(on=True):
     `movie(False)` gives it all back. TURN IT OFF. An island that raises the
     bars and then raises an exception leaves a student behind two black bars
     with no controls, which looks like a broken laptop rather than a game; the
-    engine lifts them on its own after two minutes and says so loudly, and that
+    engine lifts them on its own after ten minutes and says so loudly, and that
     is a safety net rather than a way of writing this.
+
+    Most scenes should use `cutscene()` below instead, which is this word with
+    the turning-off already written.
     """
     return {"kind": "movie", "on": bool(on)}
+
+
+def as_a_cutscene(scene):
+    """Run a whole scene inside the bars, and take them down whatever happens.
+
+        yield from as_a_cutscene(my_scene())
+
+    where `my_scene` is a generator function of your own. The bars go up, the
+    corner goes away and the controls are taken before your first line; they
+    come back after your last one, and they come back even if a word in the
+    middle refuses and your scene stops on the spot.
+
+    THAT LAST PART IS THE WHOLE REASON IT EXISTS. `movie(True)` is one line and
+    `movie(False)` is one line, and the gap between them is the one place in this
+    API where forgetting leaves a student looking at a laptop that appears to
+    have died. Written this way there is no forgetting: the `finally` is the
+    engine's promise rather than yours.
+
+    WHY IT IS NOT `with cutscene():`, which is the shape you would reach for
+    first. Every word here HAPPENS by being yielded, and a `with` block's
+    __enter__ and __exit__ are ordinary calls that cannot yield anything out of
+    the generator they are written in. So the bars would not go up until the next
+    line that happened to yield, and on the way out they would not come down at
+    all. This is `with` with a `yield from` in front of it and it gives the same
+    guarantee.
+
+    AND IT IS NOT CALLED `cutscene`, because that word is already taken by the
+    one below it, which plays a scene somebody registered in the engine. Two
+    different things with one name is worse than a longer name.
+    """
+    yield movie(True)
+    try:
+        yield from scene
+    finally:
+        yield movie(False)
 
 
 def show(anchor, visible=True):
@@ -321,13 +400,28 @@ def cutscene(script):
 
 # ---- the panels a player sits down with -------------------------------------
 
-def open(ui):
-    """Open one panel: planner, handbook, chart, wardrobe or settings."""
+def open(ui, wait=False):
+    """Open one panel: planner, handbook, chart, wardrobe, wall or settings.
+
+    Comes back the instant the screen is up. Pass `wait=True` and it comes back
+    when the panel has been CLOSED instead, which is what you want when the next
+    thing your island does has to happen after the student has finished with it:
+
+        yield open("planner", wait=True)   # he picks his year
+        yield walk_to("hearth")            # and only then does he walk on
+
+    Without it the line after this one runs underneath the panel, which is right
+    for a station that opens the wardrobe and says nothing else, and wrong for
+    anything that is walking somebody through a sequence.
+    """
     # this shadows the builtin `open` if you import it by name, and that costs
     # nothing: there is no filesystem inside the worker to open a file on. The
     # name matches the engine's word, and one spelling is worth more than one
     # builtin nobody can use here.
-    return {"kind": "open", "ui": ui}
+    intent = {"kind": "open", "ui": ui}
+    if wait:
+        intent["wait"] = True
+    return intent
 
 
 # ---- doing something that gets a score --------------------------------------
@@ -358,6 +452,7 @@ def get(path):
     cord_board  every cord as a dict: name, rule, earned, progress, detail
     trophies    {"stickers": [...], "badges": [...]}, what is on the wall
     flags       your island's own flags, with your programme id stripped back off
+    planned     True once this year's sheet has been stamped
     islands     {programme id: "misty"/"discovered"/"available"/"active"/"completed"}
     handle      the name the player chose, or None
     mode        "game" or "plain", which half of the class this is
