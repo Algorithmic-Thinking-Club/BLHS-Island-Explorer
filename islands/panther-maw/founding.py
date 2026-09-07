@@ -58,8 +58,9 @@ from board import on_the_wall
 
 from lines import (
     ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, EXPLORE, FACE,
-    FILL_IT_IN, FOLLOW, GUIDE_IS, LOOK_AT_WALL, MAP_IS, MY_YEAR_IS, PRINCIPAL,
-    SCHEDULE_IS_YOURS, STAMP_IT, TALK_TO_HER, WALL, WALL_IS_YOURS, WELCOME,
+    FILL_IT_IN, FOLLOW, GUIDE_IS, LOOK_AT_WALL, MAP_IS, MY_YEAR_IS,
+    PRINCIPAL, SCHEDULE_IS_YOURS, SOMEBODY, STAMP_IT, TALK_TO_HER, WALL,
+    WALL_IS_YOURS, WELCOME, WELL_DONE, WELL_DONE_BARE, WELL_DONE_GRADED,
 )
 
 # THE FLAG THE REST OF THE GAME READS, AND IT IS A BARE NAME.
@@ -494,13 +495,82 @@ def the_handover():
     yield log("handover", {})
 
 
-def year_one(walk):
-    """Every beat the run still owes, in order. Read top to bottom.
+def name_list(names):
+    """"A", "A and B", "A, B and C". Nobody in this game says "and B, C"."""
+    if not names:
+        return ""
+    if len(names) == 1:
+        return names[0]
+    return "%s and %s" % (", ".join(names[:-1]), names[-1])
+
+
+def well_done(handle, picks):
+    """The principal's congratulation, built out of the save and nothing else.
+
+    Ash's shape for the ending, 2026-09-07: he congratulates the student BY NAME
+    on what he ACTUALLY did. So there is no written sentence that would be true
+    of everybody; there are three shapes in `lines.py` and the run decides which
+    one it has earned.
+
+    `picks` is already masked by the engine (`roster/placeholders`), so a
+    programme nobody has built prints as its Example name here as well and this
+    line can never congratulate a freshman on a football season that does not
+    exist.
+    """
+    who = handle or SOMEBODY
+    chose = [c["name"] for c in (picks.get("classes") or [])]
+    chose += [p["name"] for p in (picks.get("seasons") or [])]
+
+    # the Advisory row, which is the only thing in year one that carries a grade
+    grade = None
+    for row in picks.get("graded") or []:
+        if row.get("kind") == "core":
+            grade = row.get("grade")
+
+    if chose and grade:
+        return WELL_DONE_GRADED % (who, name_list(chose), grade)
+    if chose:
+        return WELL_DONE % (who, name_list(chose))
+    return WELL_DONE_BARE % who
+
+
+def year_is_done():
+    """Has this year anything left owing. THE CLOSING FILM'S TRIGGER.
+
+    ASKED OF THE SEQUENCER AND NEVER SPELLED OUT HERE. `get("phase")` is
+    `src/game/run/objective.ts`'s own answer, the same one that decides which
+    station in this room lights up, and "yearbook" is its word for a year with
+    the sheet stamped, the core beat sat and no voyage left to sail.
+
+    THE VERSION THAT WOULD HAVE BEEN WRONG is `get("advisory") is None`, which is
+    what this file could ask before today. It is true the moment the fire is
+    answered, and TODAY that is the end of the year because nothing can be sailed
+    to. The first island a member builds makes it false: a stamped sheet with a
+    season token on it owes a voyage, the phase says "voyage", and an ending
+    written the other way would play in the middle of the student's year with the
+    island he chose still out there unvisited.
+    """
+    phase = yield get("phase")
+    return phase == "yearbook"
+
+
+# ---- THE OPENING FILM --------------------------------------------------------
+
+
+def opening(walk):
+    """The tunnel, the schedule, Advisory, and then the handover.
 
     It is the same shape `objective.ts` uses to decide what the one lit thing is,
     asked of the same facts, and that is on purpose: the sequencer and the film
     cannot disagree about where a student is in the year because they are reading
     the same run.
+
+    IT ENDS AT THE HANDOVER AND NOT AT THE YEARBOOK. The wall and the counselor
+    moved out of here into `closing`, which is a film of its own with a trigger of
+    its own. Today those two run back to back with nothing in between, because
+    there are no islands and Advisory is therefore the last thing the year owes;
+    the day the first island lands, the middle of the year appears between them
+    and not one line of this function changes.
     """
     flags = yield get("flags")
     first = FOUNDING not in flags
@@ -530,6 +600,36 @@ def year_one(walk):
             yield from step_off()
             return
 
+    yield from the_handover()
+
+
+# ---- THE CLOSING FILM --------------------------------------------------------
+
+
+def closing():
+    """The ending: one line naming what he did, the wall, the cord, the page.
+
+    Ash's shape, 2026-09-07: *"the principal meets him and congratulates him BY
+    NAME on what he actually did (the picks and grades from the save, one line),
+    the wall shows it, the counselor drapes the cord, the yearbook card, bars
+    down, the end."*
+
+    HE IS PLACED FIRST, so the film opens on a man already standing in front of
+    the student rather than on a man crossing a room to reach him. That matters
+    on both roads in: straight off the end of the opening, where he is standing
+    at the fire beside him, and a student who sailed home with the year finished,
+    where he is back at his own desk across the hall.
+
+    NOTHING PROMISES A YEAR TWO. The page turning is the ending.
+    """
+    yield view("close")
+    yield from waiting_at_the_door()
+
+    handle = yield get("handle")
+    picks = yield get("picks")
+    yield objective(TALK_TO_HER)
+    yield say(well_done(handle, picks), who=PRINCIPAL, portrait=FACE)
+
     flags = yield get("flags")
     if WALL_SHOWN not in flags:
         yield from the_wall()
@@ -542,14 +642,18 @@ def year_one(walk):
             yield from step_off()
             return
 
-    # AND YEAR TWO DOES NOT OPEN AT ALL. BRIEF-MAW-RAIL-3 C, Ash after playing
-    # rail-2: "After 'Year two, next time' nothing wakes up. No 'Go to the table
-    # and pick your year', no lit table, no year-two planner, no year-two
-    # Advisory... Year two is not designed yet and is not reachable in a
-    # thirty-minute advisory block anyway." The engine stops handing the next
-    # year out (src/game/run/year.ts, SESSION_ENDS_AFTER_YEAR), so there is no
-    # year two to open and no card to head off.
-    yield from the_handover()
+    # AND THE GAME IS HANDED BACK. The corner is already his, so what is left is
+    # the camera, the arrow and the sentence. `objective.ts` says the same words
+    # from here on, so nothing changes under him when the island's word is
+    # dropped as the bars come down one line later.
+    yield guide_to(None)
+    yield from let_go()
+    yield view("walk")
+    yield objective(EXPLORE)
+    yield log("closing_done", {"year": year})
+
+
+# ---- the two of them, each inside its own frame ------------------------------
 
 
 def rail(walk=True):
@@ -569,4 +673,14 @@ def rail(walk=True):
     `movie(True)` on the first line here is already true, and the first time it
     goes false is `the_handover`.
     """
-    yield from as_a_cutscene(year_one(walk))
+    yield from as_a_cutscene(opening(walk))
+
+
+def ending():
+    """THE CLOSING FILM, inside its own frame.
+
+    Its trigger is `year_is_done()` and both callers are in `island.py`: the room
+    opening with the year finished, which is the road every student takes, and
+    the principal being pressed by one who walked out of the middle of it.
+    """
+    yield from as_a_cutscene(closing())

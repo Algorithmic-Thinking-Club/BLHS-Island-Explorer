@@ -50,7 +50,9 @@ from vine import (
 )
 
 from board import counsel, on_the_wall, wall_line
-from founding import HANDED_OVER, RAILED, dress_the_wall, rail, turned
+from founding import (
+    HANDED_OVER, RAILED, dress_the_wall, ending, rail, turned, year_is_done,
+)
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EXPLORE, HEARTH, LEFT,
     NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
@@ -97,7 +99,30 @@ def walking_in():
     year = yield get("year")
     if RAILED not in flags and year == 1:
         yield from rail(walk=True)
-        return
+        # AND IT FALLS THROUGH RATHER THAN RETURNING, which is the whole of the
+        # two-film shape. The opening ends at the handover, and today the
+        # closing's own trigger is already true on that frame, because there are
+        # no islands and Advisory is therefore the last thing the year owes. So
+        # the two play back to back with no reload in between. The day one
+        # island exists the trigger below is false here and the middle of the
+        # year happens instead, with no edit to this file.
+        flags = yield get("flags")
+
+    # ---- THE CLOSING FILM ---------------------------------------------------
+    #
+    # THE TRIGGER IS THE SEQUENCER'S OWN ANSWER, asked at the one moment it is
+    # cheap to ask: the room loading. `year_is_done` reads `get("phase")`, so
+    # this fires when the whole YEAR is finished rather than when Advisory is;
+    # its docstring has why that difference matters.
+    #
+    # THREE ROADS REACH IT and they are all this line. The opening falling
+    # through above. A student who sailed home with the year done, because the
+    # room loads when he walks in through the tunnel. And a reload, because this
+    # handler runs on every load and the phase is read fresh each time.
+    done = yield from year_is_done()
+    if done:
+        yield from ending()
+        flags = yield get("flags")
 
     # ---- and after it, the room is his, and the panel says so ---------------
     #
@@ -134,6 +159,13 @@ def the_principal():
     year = yield get("year")
     if RAILED not in flags and year == 1:
         yield from rail(walk=False)
+        return
+
+    # the ending, for a student who closed the yearbook without turning the page
+    # and walked away. The year's own light is on this desk while it is owed.
+    done = yield from year_is_done()
+    if done:
+        yield from ending()
         return
 
     yield say(BACK_AGAIN, who=PRINCIPAL, portrait=FACE)

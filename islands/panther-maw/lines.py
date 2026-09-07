@@ -175,3 +175,23 @@ NOOK = "Pick a new coat color. Nothing here costs anything."
 # (STATE-OF-THE-GAME confusing 9). The panel is the readout; he introduces it.
 EMPTY_WALL = "This is my trophy wall. What I earn this year goes up here."
 FULL_WALL = "This is my trophy wall. Let's see what is on it."
+
+
+# ---- THE CLOSING FILM'S OWN LINE, and it is BUILT rather than written --------
+#
+# Ash's shape for the ending, 2026-09-07: the principal *"congratulates him BY
+# NAME on what he actually did (the picks and grades from the save, one line)"*.
+#
+# So there is no sentence here to copy. `well_done` in founding.py assembles one
+# of these three out of `get("handle")` and `get("picks")`, and every word of it
+# is something the student really chose or really earned. A congratulation about
+# somebody else's afternoon is worse than no congratulation at all.
+#
+# They live here with the rest of the content, so changing what he says is still
+# an edit to this file and not to the control flow.
+WELL_DONE = "%s, you picked %s."
+WELL_DONE_GRADED = "%s, you picked %s, and Advisory came back %s."
+WELL_DONE_BARE = "%s, that is your first year at Bonney Lake."
+
+# what he is called when the student never typed a name
+SOMEBODY = "Panther"
