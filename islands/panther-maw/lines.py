@@ -47,31 +47,45 @@ TABLE = THOR
 FACE = "principal"
 
 
-# ---- the principal, and the lines of the rail --------------------------------
+# ---- the principal, and the five lines of the rail ---------------------------
 #
-# BEAT 1. He walks over and says this and nothing else. The pick screen opens
-# right after it, and the pick screen is the thing that explains the year, by
-# being a screen of cards a student can press. There is no tour and no speech.
-# He does not describe the room; the table lights and the student is walked to it.
+# ONE LINE PER STOP AND THE LINE IS THE WHY. BRIEF-MAW-RAIL-2, Ash after playing
+# rail-1: *"Everything in the cutscene should be clear and easy to follow and
+# make sense WHY it is happening. I have no idea what is going on: a fire, click
+# two classes, it makes no sense. And if you think more text is the answer, we
+# are doomed."*
+#
+# So the answer is not more words, it is the RIGHT words and fewer of them. The
+# principal walks ahead and the student follows him, which is what an orientation
+# is, and at each stop he turns round and says the one sentence that says why
+# this thing is happening to you. Never an instruction: the light on the floor
+# and the screen that opens are the instruction.
+#
+# These five are word for word from the brief and nothing may be added beside
+# them. The two lines about the corner buttons that used to ride along on beats 2
+# and 3 are CUT: the corner is hidden for the whole cutscene now and appears when
+# the bars come down, so a sentence handing it over was a sentence about a button
+# that was not on the screen.
 
-WELCOME = "Welcome to Bonney Lake. Let's plan your year."
+# BEAT 1, at the tunnel mouth, after he has walked over to you.
+WELCOME = "Welcome to Bonney Lake High. Come with me."
 
-# BEAT 2, after the cards have been stamped. It is the handover of the corner's
-# middle button as well as the answer to the stamp: BRIEF-MAW-RAIL gives each of
-# the three corner buttons one line at the moment it first matters, and this is
-# My Year's.
-YEAR_SET = "That is your year. It is in My Year, in the corner."
-# said only when he closed the cards without stamping, so the rail can offer them
-# again rather than walking him on with an empty sheet
-STAMP_IT = "Pick one club or sport and two classes, then stamp it."
+# BEAT 2, at the table, before the schedule opens.
+SCHEDULE_IS_YOURS = "Your schedule. Every Panther fills one in."
+# said ONLY when he closed the schedule without stamping it, so the rail can
+# offer it again rather than walking him on with an empty sheet. It is not a
+# sixth line: nobody on the road ever hears it.
+STAMP_IT = "Fill both Elective periods, pick one club or sport, then stamp it."
 
-# BEAT 3, after Advisory. The Guide's handover, and the only thing said about a
-# score, because the pop over the map is the result.
-GUIDE_IS_YOURS = "Everything you just learned is in your Guide, in the corner."
-# and when he left the questions unfinished
+# BEAT 3, at the fire, before Advisory.
+ADVISORY_IS_MONDAY = "This is Advisory. Every Monday starts here."
+# and when he left the questions unfinished. Recovery, like STAMP_IT.
 COME_BACK = "Come back to the fire when you have a minute."
 
-# every visit after the rail, at the desk
+# BEAT 4, at the wall, before it opens.
+WALL_IS_YOURS = "What you earn goes up here."
+
+# every visit after the rail is over, at the desk
 BACK_AGAIN = "Everything you need is on the walls. Take a look around."
 
 
@@ -95,9 +109,12 @@ SHOW_ME = "Open the Guide"
 NOT_NOW = "Not now"
 
 # BEAT 5. She has the cord, the yearbook turns the page, and then the last line
-# of the thirty minutes, which carries the Map's handover with it.
+# of the thirty minutes.
 CORD = "Year one is done. Here is your first cord."
-NEXT_TIME = "Year two, next time. The Map in the corner is yours."
+# THE LAST LINE OF THE THIRTY MINUTES, and it carries nothing else. It used to
+# hand over the Map as well; the corner arrives on its own the moment the bars
+# come down, one second after this is read.
+NEXT_TIME = "Year two, next time."
 # the counselor pressed on the way out with the year still open
 YEAR_DONE = "Year one is done. Let's turn the page and see what you earned."
 

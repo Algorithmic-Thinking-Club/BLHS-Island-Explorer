@@ -142,6 +142,13 @@ def putting_in():
     # over the thing at the end of it
     yield guide_to(DOOR)
     yield walk_to(DOOR)
+    # AND THE SHOT IS HANDED BACK BEFORE THE CONTROLS ARE. The close shot is
+    # twice the walking one since BRIEF-MAW-RAIL-2, which is right for a walk
+    # somebody is watching and too tight for a player who has just been given the
+    # keys: at the tunnel he would be able to see about a third of the quay he
+    # had just come up. The order matters, `view` before `movie`, so the travel
+    # happens while he still cannot walk out of it.
+    yield view("walk")
     yield movie(False)
     yield log("walked_to_the_maw")
 
