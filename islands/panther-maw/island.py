@@ -22,7 +22,7 @@ walked away from, come back to on the third visit, and answer differently.
 WHICH BEATS OF YEAR ONE LIVE HERE. BRIEF-YEAR-ONE's beat 4, the principal, is
 the room's opening the first time in (`founding.py`). Beat 5, Advisory, is the
 fire. Beat 8, home, is the counselor opening the yearbook when the year can
-close, the wall showing what was earned, and one line the next time in.
+close and the wall showing what was earned.
 
 WHICH ANCHORS THIS ROOM ACTUALLY HAS. Eleven, and only six of them can be
 pressed. The other five are not oversights and no handler here claims them:
@@ -46,15 +46,13 @@ pressed. The other five are not oversights and no handler here claims them:
 """
 from grape import on_start, on_talk
 from vine import (
-    choose, get, log, open, play, say,
+    choose, get, log, objective, open, play, say,
 )
 
 from board import counsel, on_the_wall, wall_line
-from founding import (
-    RAILED, dress_the_wall, ending, rail, turned, year_is_done,
-)
+from founding import HANDED_OVER, RAILED, dress_the_wall, rail, turned
 from lines import (
-    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
+    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EXPLORE, HEARTH, LEFT,
     NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
     SHOW_ME, TABLE, THOR, FACE, YEAR_DONE,
 )
@@ -73,11 +71,11 @@ def walking_in():
     two live on opposite sides of the early return below, and that is the whole
     shape of this handler.
 
-    THE FIRST YEAR IS A RAIL, AND THIS IS WHERE IT RUNS. `founding.py` has the
-    whole of it. It is one handler on purpose, because an open handler is what
-    makes the rest of the room unpressable while a student is being walked
-    through it, and it asks the run which beats are still owed rather than
-    remembering, so a reload picks up where he was.
+    THE FILM RUNS HERE, and it is the second half of one that started on the
+    beach. `founding.py` has the whole of it. It is one handler on purpose,
+    because an open handler is what makes the rest of the room unpressable while
+    a student is being walked through it, and it asks the run which beats are
+    still owed rather than remembering, so a reload picks up where he was.
 
     The way he is facing when he gets here is not set in this file either. The
     spawn anchor carries a heading, MAPVIS is where somebody chose it, and the
@@ -87,40 +85,35 @@ def walking_in():
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
 
-    # ---- THE OPENING FILM ---------------------------------------------------
+    # ---- the film, walked --------------------------------------------------
     #
-    # YEAR ONE AND NOT EVERY YEAR. It is about the first thirty minutes: a
+    # YEAR ONE AND NOT EVERY YEAR. The film is about the first thirty minutes: a
     # student who has met the room once knows where the table and the fire are,
     # and being walked to them again in year two would be the game taking the
     # controls off somebody who has already shown they do not need it. Years two
     # to four are the room with one thing lit, which is the game the objective
     # sequencer has always run.
-    #
-    # IT FALLS THROUGH RATHER THAN RETURNING. The opening ends at the handover,
-    # and today the closing's own trigger is true on that very frame, because
-    # there are no islands and Advisory is therefore the last thing the year
-    # owes. So the two films play back to back with no reload in between, which
-    # is what Ash asked for and is the state the game is honestly in.
     flags = yield get("flags")
     year = yield get("year")
     if RAILED not in flags and year == 1:
         yield from rail(walk=True)
+        return
 
-    # ---- THE CLOSING FILM ---------------------------------------------------
+    # ---- and after it, the room is his, and the panel says so ---------------
     #
-    # THE TRIGGER IS THE SEQUENCER'S OWN ANSWER and it is asked here, at the one
-    # moment it can be asked cheaply: the room loading. `year_is_done` reads
-    # `get("phase")`, so this fires when the whole year is finished and not when
-    # Advisory is; see its docstring for why that difference matters the day the
-    # first island exists.
+    # BRIEF-INTRO-FILM section 4: once the film has handed over, the panel reads
+    # "Explore. Talk to anyone. Open the Guide." The handover says it too, and
+    # this is the OTHER road to the same sentence: a student who walked out to
+    # the hub and came back, or who reloaded the tab, arrives with the island's
+    # word forgotten (it is dropped whenever the bars come down) and this puts it
+    # back on the first frame of the room.
     #
-    # THREE ROADS REACH IT and they are all this line. The opening falling
-    # through above. A student who sailed home with the year finished, because
-    # the room loads when he walks in through the tunnel. And a reload, because
-    # this handler runs on every load and the phase is read fresh.
-    done = yield from year_is_done()
-    if done:
-        yield from ending()
+    # `src/game/run/objective.ts` answers the same words when nobody says
+    # anything at all, so the panel cannot flicker between two endings; this line
+    # is what makes the sentence the ISLAND'S, which is where a member would put
+    # their own.
+    if HANDED_OVER in flags:
+        yield objective(EXPLORE)
 
 
 @on_talk("principal_desk")
@@ -141,11 +134,6 @@ def the_principal():
     year = yield get("year")
     if RAILED not in flags and year == 1:
         yield from rail(walk=False)
-        return
-
-    done = yield from year_is_done()
-    if done:
-        yield from ending()
         return
 
     yield say(BACK_AGAIN, who=PRINCIPAL, portrait=FACE)
