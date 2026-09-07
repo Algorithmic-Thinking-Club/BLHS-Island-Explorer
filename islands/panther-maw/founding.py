@@ -476,6 +476,12 @@ def the_handover():
     """
     yield set_flag(RAILED)
     yield movie(False)
+    # AND THE PANEL SAYS THE ENDING BEFORE HE SPEAKS, not after. `movie(False)`
+    # drops the island's word, so for the length of these three lines the panel
+    # falls back to the year, and the year knows an ending is still owing: it
+    # printed "The principal is waiting" over the top of the principal, who was
+    # standing right there talking to him. Measured on the cold run.
+    yield objective(EXPLORE)
 
     yield set_flag(HANDBOOK)
     yield say(MY_YEAR_IS, who=PRINCIPAL, portrait=FACE)
@@ -490,7 +496,6 @@ def the_handover():
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
-    yield objective(EXPLORE)
     yield set_flag(HANDED_OVER)
     yield log("handover", {})
 
@@ -625,9 +630,14 @@ def closing():
     yield view("close")
     yield from waiting_at_the_door()
 
+    # THE PANEL SAYS WHAT HE IS DOING, and for the length of the ending that is
+    # following the man who came to find him. FOLLOW rather than a sentence of
+    # its own, because the very next thing after the line is being led to the
+    # wall, and each beat sets its own step after that.
+    yield objective(FOLLOW)
+
     handle = yield get("handle")
     picks = yield get("picks")
-    yield objective(TALK_TO_HER)
     yield say(well_done(handle, picks), who=PRINCIPAL, portrait=FACE)
 
     flags = yield get("flags")
