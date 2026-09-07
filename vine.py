@@ -11,11 +11,10 @@ a dict, throws it away, and the engine never hears about it.
 
 The names and the spelling come from src/vine/intents.ts. `say` builds
 {"kind": "say"} because that is the kind the engine already performs, and
-nothing between here and there translates anything. There are twenty-five words
-and this file has all twenty-five: for a year it had two, so thirteen things the
-engine could already do were unreachable from a member's island, and the ten
-below that were added after are the ones for DIRECTING a scene rather than
-walking through one.
+nothing between here and there translates anything. There are thirty-one words
+and this file has all thirty-one: for a year it had two, so thirteen things the
+engine could already do were unreachable from a member's island, and the ones
+added after that are for DIRECTING a scene rather than walking through one.
 
 EVERY PLACE IS AN ANCHOR NAME, NEVER AN X AND A Y. MAPVIS is the only thing that
 can make an anchor, it keeps the name separate from the label so renaming a door
@@ -484,6 +483,17 @@ def get(path):
     handle      the name the player chose, or None
     mode        "game" or "plain", which half of the class this is
     graduated   True or False
+    phase       where the year is, in the sequencer's own words: "founding",
+                "vignette", "plan", "core", "voyage", "rising", "yearbook" or
+                "done". **"yearbook" is how you ask whether the year is
+                finished.** Do not write that question as "Advisory is over":
+                the day one island can be sailed to, a stamped sheet still owes
+                a voyage and this is the only thing that knows it.
+    picks       what he actually chose and earned THIS year, for a line that
+                names it: {"classes": [{"id","name"}], "seasons":
+                [{"season","id","name"}], "graded": [{"title","grade","kind"}],
+                "gpa": a number or None}. The names are already masked, so an
+                island nobody has built prints as an Example here too.
     """
     return {"kind": "get", "path": path}
 

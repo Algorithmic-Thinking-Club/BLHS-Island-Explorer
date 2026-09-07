@@ -46,15 +46,17 @@ pressed. The other five are not oversights and no handler here claims them:
 """
 from grape import on_start, on_talk
 from vine import (
-    choose, get, log, open, play, say, set_flag,
+    choose, get, log, open, play, say,
 )
 
 from board import counsel, on_the_wall, wall_line
-from founding import NEXT_TIME_SAID, RAILED, dress_the_wall, rail, turned
+from founding import (
+    RAILED, dress_the_wall, ending, rail, turned, year_is_done,
+)
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
-    NEXT_TIME, NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
-    SHOW_ME, TABLE, THOR, WALL, FACE, YEAR_DONE,
+    NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
+    SHOW_ME, TABLE, THOR, FACE, YEAR_DONE,
 )
 
 
@@ -85,50 +87,65 @@ def walking_in():
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
 
-    # ---- year one, walked ---------------------------------------------------
+    # ---- THE OPENING FILM ---------------------------------------------------
     #
-    # YEAR ONE AND NOT EVERY YEAR. BRIEF-MAW-RAIL is about the first thirty
-    # minutes: a student who has met the room once knows where the table and the
-    # fire are, and being walked to them again in year two would be the game
-    # taking the controls off somebody who has already shown they do not need it.
-    # Years two to four are the room with one thing lit, which is the game the
-    # objective sequencer has always run.
+    # YEAR ONE AND NOT EVERY YEAR. It is about the first thirty minutes: a
+    # student who has met the room once knows where the table and the fire are,
+    # and being walked to them again in year two would be the game taking the
+    # controls off somebody who has already shown they do not need it. Years two
+    # to four are the room with one thing lit, which is the game the objective
+    # sequencer has always run.
+    #
+    # IT FALLS THROUGH RATHER THAN RETURNING. The opening ends at the handover,
+    # and today the closing's own trigger is true on that very frame, because
+    # there are no islands and Advisory is therefore the last thing the year
+    # owes. So the two films play back to back with no reload in between, which
+    # is what Ash asked for and is the state the game is honestly in.
     flags = yield get("flags")
     year = yield get("year")
     if RAILED not in flags and year == 1:
         yield from rail(walk=True)
-        return
 
-    # ---- home, after the page has turned: the last line of year one --------
+    # ---- THE CLOSING FILM ---------------------------------------------------
     #
-    # The rail says this itself when it closes the year with the student
-    # standing there. This is the other road to it: a run that turned the page
-    # from the sheet, or from the counselor on an ordinary press, and walked
-    # out before anybody said the year was over.
-    # BOTH SPELLINGS OF "THE PAGE HAS TURNED", because the run stops handing out
-    # years at the end of year one now (BRIEF-MAW-RAIL-3 C). Before that the turn
-    # advanced `year`, so the page a student had just closed was last year's;
-    # today the year stays where it is and the closed page is this one's. A run
-    # made under either rule gets the line.
-    if (turned(year) in flags or turned(year - 1) in flags) and NEXT_TIME_SAID not in flags:
-        yield say(NEXT_TIME, who=COUNSELOR)
-        yield set_flag(NEXT_TIME_SAID)
-        yield log("year_two_next_time")
+    # THE TRIGGER IS THE SEQUENCER'S OWN ANSWER and it is asked here, at the one
+    # moment it can be asked cheaply: the room loading. `year_is_done` reads
+    # `get("phase")`, so this fires when the whole year is finished and not when
+    # Advisory is; see its docstring for why that difference matters the day the
+    # first island exists.
+    #
+    # THREE ROADS REACH IT and they are all this line. The opening falling
+    # through above. A student who sailed home with the year finished, because
+    # the room loads when he walks in through the tunnel. And a reload, because
+    # this handler runs on every load and the phase is read fresh.
+    done = yield from year_is_done()
+    if done:
+        yield from ending()
 
 
 @on_talk("principal_desk")
 def the_principal():
-    """The rail, for a run that stepped off it; then one line.
+    """Whichever film the run still owes; then one line.
 
     A student who closed the pick cards or left Advisory half answered has the
-    rail's own light still on that station and this desk to come back to. The
-    walk is False because he is standing in front of the principal already, and
-    walking him to the door to say hello would be walking him away.
+    year's own light still on this desk to come back to, and so does one who
+    closed the yearbook without turning the page. Pressing him puts the student
+    back on the film he stepped off, which is the whole reason a film that lets
+    go leaves the room with one thing lit.
+
+    The walk is False on the opening because he is standing in front of the
+    principal already, and walking him to the tunnel to say hello would be
+    walking him away from the man he just pressed.
     """
     flags = yield get("flags")
     year = yield get("year")
     if RAILED not in flags and year == 1:
         yield from rail(walk=False)
+        return
+
+    done = yield from year_is_done()
+    if done:
+        yield from ending()
         return
 
     yield say(BACK_AGAIN, who=PRINCIPAL, portrait=FACE)

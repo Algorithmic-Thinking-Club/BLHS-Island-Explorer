@@ -104,6 +104,30 @@ FILL_IT_IN = "Fill your schedule."
 ANSWER = "Answer Advisory."
 LOOK_AT_WALL = "Look at your trophy wall."
 TALK_TO_HER = "Talk to the counselor."
+# THE LAST ONE, and it is the only line on this page that is not about a step in
+# a film. It is what the panel reads once the game is his: three things he can do
+# and no order to do them in. `src/game/run/objective.ts` says the same words for
+# the rest of the session, because the island's word is dropped the moment the
+# bars come down and a sentence that changed by itself a second after he read it
+# would be worse than no sentence.
+EXPLORE = "Explore. Talk to anyone. Open the Guide."
+
+
+# ---- THE HANDOVER, which is the last thing the opening film does -------------
+#
+# BRIEF-INTRO-FILM section 4, Ash 2026-09-07, word for word: *"the bars come
+# down, the corner appears one plaque at a time with one line each said by the
+# principal, 'My Year is what you picked. The Guide is every club and class at
+# Bonney Lake. The Map is where you sail.'"*
+#
+# These three are the only place in the game where the principal explains a
+# control, and they are allowed to be that because the control is arriving on
+# screen while he says it. Nothing here describes a thing that is not visibly
+# swinging down into the corner as it is read.
+MY_YEAR_IS = "My Year is what you picked."
+GUIDE_IS = "The Guide is every club and class at Bonney Lake."
+MAP_IS = "The Map is where you sail."
+
 
 
 # ---- the fire ----------------------------------------------------------------
@@ -125,13 +149,8 @@ ASK = "Ask about the cords?"
 SHOW_ME = "Open the Guide"
 NOT_NOW = "Not now"
 
-# BEAT 5. She has the cord, the yearbook turns the page, and then the last line
-# of the thirty minutes.
+# THE CLOSING FILM. She has the cord and the yearbook turns the page.
 CORD = "Year one is done. Here is your first cord."
-# THE LAST LINE OF THE THIRTY MINUTES, and it carries nothing else. It used to
-# hand over the Map as well; the corner arrives on its own the moment the bars
-# come down, one second after this is read.
-NEXT_TIME = "Year two, next time."
 # the counselor pressed on the way out with the year still open
 YEAR_DONE = "Year one is done. Let's turn the page and see what you earned."
 
