@@ -659,6 +659,13 @@ def closing():
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
+    # THE BARS COME DOWN HERE AND NOT IN THE `finally`, the same way the
+    # handover does it, and for the same reason: `movie(False)` DROPS the
+    # island's word off the panel, so saying the last sentence first and then
+    # letting the wrapper lower them wiped it and left the room to say it again
+    # a frame later. This order means the sentence a student ends on is written
+    # once and never blinks.
+    yield movie(False)
     yield objective(EXPLORE)
     yield log("closing_done", {"year": year})
 
