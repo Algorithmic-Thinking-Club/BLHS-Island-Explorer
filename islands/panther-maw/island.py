@@ -51,8 +51,8 @@ from vine import (
 
 from board import counsel, on_the_wall, wall_line
 from founding import (
-    HANDED_OVER, RAILED, dress_the_wall, ending, he_steps_in_front, rail, turned,
-    year_is_done,
+    HANDED_OVER, RAILED, dress_the_wall, ending, he_steps_in_front, let_go, rail,
+    turned, year_is_done,
 )
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EXPLORE, HEARTH, LEFT,
@@ -121,9 +121,19 @@ def walking_in():
     # His own note the same day is the fix and not a workaround: the principal
     # "pops up in front of thor at any time, he isnt bound to the entrance of the
     # maw". So the room steps him in front rather than leaving him underfoot, and
-    # the films move him from there. He has no life behaviour of his own on this
-    # map, so holding him costs nothing that was happening anyway.
+    # the films move him from there.
+    #
+    # AND THEN HE IS HANDED STRAIGHT BACK, which is the difference between
+    # dressing a room and holding a body. `place` puts a placement under this
+    # island's control and the engine re-asserts its position every frame until
+    # somebody lets go, so a room that placed him and kept him made the principal
+    # undrivable by anything else for the whole visit. Caught by
+    # `scripts/arrival-proof.mjs` on the live deploy: its "a driven body really
+    # crosses the room" check moved him fourteen pixels instead of a hundred,
+    # because this line had him. He has no wandering of his own on this map, so
+    # letting go leaves him exactly where he was put.
     yield from he_steps_in_front()
+    yield from let_go()
 
     # ---- the film, walked --------------------------------------------------
     #
