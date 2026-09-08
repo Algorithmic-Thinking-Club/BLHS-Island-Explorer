@@ -50,8 +50,8 @@ camera comes back, the principal is his own again, the bars come down in
 which is the game he had before. Pressing that thing puts him back on the film.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
-    actor_release, as_a_cutscene, get, guide_to, lead_to, log, movie, objective,
-    open, place, play, say, set_flag, show, view,
+    actor_face, actor_release, as_a_cutscene, enter, get, guide_to, lead_to, log,
+    movie, objective, open, place, play, say, set_flag, show, view, walk_to,
 )
 
 from board import on_the_wall
@@ -114,8 +114,6 @@ HANDED_OVER = "maw:handed_over"
 
 # where he walks to in beat 1: the spot the tunnel puts a student on. The one
 # name on this map that means "where you are standing when you have just come in".
-# The engine stops him a body length short of it rather than on top of the
-# student, because a person walking over to meet you stops in front of you.
 MEET = "arrive_maw"
 
 # the four places the rail leads him to, in order
@@ -123,6 +121,59 @@ TABLE = "chart_table"
 FIRE = "hearth"
 WALL = "trophy_wall"
 DESK = "counselor"
+
+# ---- WHERE THE TWO OF THEM STAND, AT EVERY STOP -----------------------------
+#
+# ASH, 2026-09-07, AFTER PLAYING RAIL-6: *"The principal and Thor are in ugly
+# random spots instead of clean spots: if they are supposed to be at the
+# schedule, Thor is at the staircase and the principal is covering the table."*
+#
+# Both halves of that are one missing idea, and it is not a bug in this file. A
+# station carries ONE mark, the standing spot its author drew IN MAPVIS FOR THE
+# STUDENT, and until today every word that took a body to a station took it to
+# that one mark. So `lead_to` landed the principal on the spot the student is
+# meant to stand on, in front of the thing he was about to talk about, and the
+# student was left wherever "two body lengths behind him" happened to fall.
+# Measured on rail-6: at the schedule the principal stood on 295,213, which is
+# the table's own mark, and Thor stood on 284,174, which is the entrance bridge.
+# Ash called that a staircase and he was being generous.
+#
+# So each stop carries a SECOND mark. Thor takes the station's own, which is
+# what it was drawn for; the principal takes this offset from it, and then turns
+# to face him. Every pair below was photographed at 4x before it was written
+# down (`scripts/_maw-spots.mjs`), and every one of them is floor the walk law
+# will hold, which is not the same question and was checked separately.
+#
+# THE NUMBERS ARE PIXELS AND THAT IS THE COMPROMISE. Everything else an island
+# says is a name, because names survive somebody moving a table. These do not,
+# and the day MAPVIS can put a second post beside a station they become names
+# like everything else. Until then a room where two people talk to each other
+# needs two marks and the tool authors one.
+#
+# WHY THE HEADING IS WRITTEN OUT rather than left to the engine. `lead_to` turns
+# the leader to face the player when they both stop, which was right when they
+# both stopped in the same place. The student walks the last two body lengths
+# himself now, so the man would be facing where the boy USED to be. It is one
+# word per stop and it is the difference between a conversation and two people
+# standing near each other.
+#
+# WHY EAST OR WEST AT EVERY STOP, and never a heading with "north" in it. A body
+# placed below the student is drawn from BEHIND at this camera: the picture is
+# the back of a mortarboard, which reads as a man walking away mid-sentence. The
+# offsets keep him level and to one side, where he is drawn three-quarters on.
+STOPS = {
+    #          how far the principal stands from the student's own mark, and
+    #          which way he turns once the student is standing on it
+    TABLE: ((-20, -2), "east"),
+    FIRE: ((-20, 4), "east"),
+    WALL: ((16, 6), "west"),
+    DESK: ((-18, 4), "east"),
+}
+
+# and the one stop nobody walks to: he is waiting at the tunnel mouth, down the
+# ramp from where the door puts the student, so that "come with me" is said by a
+# man already standing on the way in.
+WAITING_AT = (24, 8)
 
 # how many times the rail will offer the same screen again before it lets go. A
 # student who closes the schedule twice has told you something.
@@ -221,7 +272,7 @@ def waiting_at_the_door():
     the same mistake.
     """
     try:
-        yield place(PRINCIPAL, MEET)
+        yield place(PRINCIPAL, MEET, off=WAITING_AT)
         return True
     except Exception as refused:
         yield log("place_refused", {"actor": PRINCIPAL, "at": MEET, "why": str(refused)})
@@ -248,15 +299,23 @@ def let_go():
 
 
 def take_him(anchor):
-    """The rail's one move: he leads, the student follows, and nobody is told to.
+    """The rail's one move: he leads, the student follows, and both stop clean.
 
-    THE ORDER IS THE WHOLE BEAT AND IT IS DELIBERATE.
+    THE ORDER IS THE WHOLE BEAT AND IT IS DELIBERATE. Four words, and the last
+    two are what rail-6 was missing.
 
     `guide_to` puts the light on the floor, the drawn arrows along the route and
-    the big pointer over the thing at the end of it. Then `lead_to` walks the
-    principal there with the student two body lengths behind him, and turns him
-    round to face the student when they both stop, which is the frame the line is
-    said on.
+    the big pointer over the thing at the end of it. `lead_to` walks the
+    principal there with the student two body lengths behind him, to the mark
+    BESIDE the station rather than onto it. `walk_to` closes those two body
+    lengths, so the student finishes standing where the station was drawn to be
+    stood at instead of wherever following happened to leave him. `actor_face`
+    turns the man to the boy, who has moved since the walk turned him.
+
+    IT IS FOUR WORDS AND NOT ONE BECAUSE THE BEAT HAS FOUR THINGS IN IT, and
+    every one of them was wrong on rail-6 in a way a screenshot showed and no
+    test could: two people who both walked to the same spot end up standing in
+    the same spot, and only one of them can win it.
 
     NO `look_at` ANY MORE. The first rail sent the camera to each station for a
     second before setting off, and this one is watched from the student's own
@@ -269,9 +328,12 @@ def take_him(anchor):
     it, which is the difference between this and the first version: they used to
     go up and come down around each walk, and those seams are what he saw.
 
-    AND NO FACING IS NAMED. `lead_to` turns the two of them to look at each other
-    when they stop, because which way "at him" is depends on where they both ended
-    up and no compass point written here would survive somebody moving a table.
+    THE FACING IS NAMED AND IT DID NOT USED TO BE. `lead_to` turns the two of
+    them to look at each other when they stop, which was the whole answer while
+    they stopped in the same place: whichever way "at him" was, the engine knew
+    it and nothing here had to. The student walks on afterwards now, so the man
+    would be left looking at the floor the boy has just left. `STOPS` carries the
+    heading beside the offset, because the two are one decision.
 
     AND THE PANEL SAYS WHAT HE IS DOING. BRIEF-MAW-RAIL-3 A: the line at the top
     of the screen is the student's own step, and for the whole of a led walk his
@@ -283,6 +345,8 @@ def take_him(anchor):
     year one with it, and the beat after this one is a screen that can still be
     filled in from a standstill.
     """
+    off, facing = STOPS[anchor]
+
     yield objective(FOLLOW)
 
     try:
@@ -291,9 +355,25 @@ def take_him(anchor):
         yield log("guide_refused", {"anchor": anchor, "why": str(refused)})
 
     try:
-        yield lead_to(PRINCIPAL, anchor, pace="walk")
+        yield lead_to(PRINCIPAL, anchor, off=off, pace="walk")
     except Exception as refused:
         yield log("lead_to_refused", {"anchor": anchor, "why": str(refused)})
+
+    # AND THE LAST TWO BODY LENGTHS ARE THE STUDENT'S OWN. `lead_to` leaves him
+    # a following distance short of wherever the leader stopped, which is a
+    # picture of following and is not a picture of arriving. This walks him onto
+    # the station's own standing spot, the same one every press of E uses, and
+    # the walk turns him the way its author drew the station to be looked at.
+    try:
+        yield walk_to(anchor)
+    except Exception as refused:
+        yield log("walk_to_refused", {"anchor": anchor, "why": str(refused)})
+
+    # and the man turns to the boy, who has moved since `lead_to` turned him
+    try:
+        yield actor_face(PRINCIPAL, facing)
+    except Exception as refused:
+        yield log("actor_face_refused", {"anchor": anchor, "why": str(refused)})
 
 
 def step_off():
@@ -617,6 +697,29 @@ def opening(walk):
             yield from step_off()
             return
 
+    # ---- AND THE WALL, WHICH IS THE LAST THING BEFORE HE IS LET GO ----------
+    #
+    # ASH, 2026-09-07, AFTER PLAYING RAIL-6: *"The intro cutscene just ends after
+    # Advisory, some random dialogue."* Both halves of that sentence are this
+    # beat missing. The film went from the fire straight to the handover, so the
+    # last thing a student watched was a quiz, and then the bars came down and
+    # three sentences arrived over a game he had just been handed, which is
+    # exactly what random dialogue looks like from the outside.
+    #
+    # BRIEF-MAW-NOW item 2 puts it back in his order: *"After Advisory: the wall,
+    # then the handover, then silence."* The wall is the beat that says what the
+    # year was FOR. It is also the one that makes the handover read as an
+    # ending rather than as an interruption: the man shows you the shelf your
+    # year goes on, and then gives you the room.
+    #
+    # AND IT IS THE SAME BEAT THE CLOSING OWNS, not a copy. `WALL_SHOWN` is what
+    # keeps them one beat: whichever film gets there first draws it, and the
+    # other one skips it. A student who steps off the opening at the schedule
+    # and comes back through the ending still sees the wall exactly once.
+    flags = yield get("flags")
+    if WALL_SHOWN not in flags:
+        yield from the_wall()
+
     yield from the_handover()
 
 
@@ -664,22 +767,47 @@ def closing():
             yield from step_off()
             return
 
-    # AND THE GAME IS HANDED BACK. The corner is already his, so what is left is
-    # the camera, the arrow and the sentence. `objective.ts` says the same words
-    # from here on, so nothing changes under him when the island's word is
-    # dropped as the bars come down one line later.
+    # ---- AND HE WALKS OUT OF THE MOUNTAIN, WHICH IS THE ENDING --------------
+    #
+    # ASH, 2026-09-07, AFTER PLAYING RAIL-6: *"The end cutscene also just ends,
+    # 'here is your cord'."* It did. The cord was the last thing that happened,
+    # the bars went down where he was standing, and the panel went back to
+    # telling him to explore, which is the sentence the year STARTS with.
+    #
+    # BRIEF-MAW-NOW item 3, in his order: *"After the cord: the cover plays,
+    # Thor is put on the hub dock, bars down, and the bar says the year is over.
+    # Quick and clean."* So the film does not stop, it LEAVES. He is carried out
+    # of the room the year happened in and put back down on the dock he sailed
+    # into, which is the one picture in this game that means a chapter closed,
+    # and it costs no new art and not one new sentence.
+    #
+    # `cover="ceremony"` IS THE ONLY THING AN ISLAND MAY SAY ABOUT A COVER, and
+    # it says what the moment is rather than what to draw. `src/game/stage/
+    # covers.ts` keeps the rule that the destination picks the picture, which is
+    # right for the sixty doors twenty islands will have and wrong for the end of
+    # a year: the door out of the Maw is the same door he takes four times an
+    # hour. The registry has held a ceremony cover since somebody wrote one, with
+    # the archipelago painting on it and no fact card because the run is over
+    # rather than waiting, and nothing in the repository had ever called it.
+    #
+    # THE BARS COME DOWN BEFORE THE DOOR AND NOT AFTER IT. Two reasons, and both
+    # are the same reason. `enter` tears this map down and this island with it,
+    # so nothing written under it will run, `as_a_cutscene`'s own `finally`
+    # included: bars left up here would be bars left up on the hub with nobody
+    # left alive to lower them. And the cover is over the whole window while it
+    # happens, so a student cannot see the frame they come down on.
+    #
+    # NOTHING IS SAID INTO THE PANEL EITHER. `movie(False)` drops the island's
+    # word, and the year's own sequencer has read `yearbook:y1` by now and says
+    # the year is done on every map for the rest of the session
+    # (`src/game/run/objective.ts`, the first clause). One sentence, from the one
+    # place that still exists a second from now.
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
-    # THE BARS COME DOWN HERE AND NOT IN THE `finally`, the same way the
-    # handover does it, and for the same reason: `movie(False)` DROPS the
-    # island's word off the panel, so saying the last sentence first and then
-    # letting the wrapper lower them wiped it and left the room to say it again
-    # a frame later. This order means the sentence a student ends on is written
-    # once and never blinks.
     yield movie(False)
-    yield objective(EXPLORE)
     yield log("closing_done", {"year": year})
+    yield enter("hub", cover="ceremony")
 
 
 # ---- the two of them, each inside its own frame ------------------------------
