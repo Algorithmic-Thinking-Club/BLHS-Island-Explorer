@@ -59,7 +59,7 @@ from board import on_the_wall
 from lines import (
     ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, EXPLORE, FACE,
     FILL_IT_IN, FOLLOW, GUIDE_IS, LOOK_AT_WALL, MAP_IS, MY_YEAR_IS,
-    PRINCIPAL, SCHEDULE_IS_YOURS, SOMEBODY, STAMP_IT, TALK_TO_HER, WALL,
+    PRINCIPAL, SCHEDULE_IS_YOURS, SOMEBODY, STAMP_IT, TALK_TO_HER, THOR, WALL,
     WALL_IS_YOURS, WELCOME, WELL_DONE, WELL_DONE_BARE, WELL_DONE_GRADED,
 )
 
@@ -112,8 +112,12 @@ RAILED = "maw:railed"
 # intro does not end with a promise about next time."*
 HANDED_OVER = "maw:handed_over"
 
-# where he walks to in beat 1: the spot the tunnel puts a student on. The one
-# name on this map that means "where you are standing when you have just come in".
+# the spot the tunnel puts a student on, and the one name on this map that means
+# "where you are standing when you have just come in". NOTHING IS PLACED HERE ANY
+# MORE: the principal appears in front of the student rather than at a fixture
+# (`he_steps_in_front`, and Ash's ruling on 2026-09-08 quoted in it). It survives
+# because the log line below records which road beat 1 was reached by, and that
+# is a fact about the tunnel.
 MEET = "arrive_maw"
 
 # the four places the rail leads him to, in order
@@ -161,19 +165,23 @@ DESK = "counselor"
 # placed below the student is drawn from BEHIND at this camera: the picture is
 # the back of a mortarboard, which reads as a man walking away mid-sentence. The
 # offsets keep him level and to one side, where he is drawn three-quarters on.
+#
+# AND THE STUDENT HAS AN OFFSET TOO, WHICH IS ZERO AT THREE OF THE FOUR. His mark
+# is the station's own standing spot, which is what it was drawn for, and the day
+# the desk got one this line goes back to zero as well. Ash moved the counselor
+# onto the desk in MAPVIS on 2026-09-08 and her standing spot stayed on the far
+# side of the hall, so the engine drops it (`src/game/pmap/anchors.ts` says why
+# and says so in the console) and falls back to the desk's own pixel, which is
+# the desk. Standing him ON her is not better than standing him sixty pixels
+# away, so the film says where a student stands at a desk until the map does.
 STOPS = {
-    #          how far the principal stands from the student's own mark, and
-    #          which way he turns once the student is standing on it
-    TABLE: ((-20, -2), "east"),
-    FIRE: ((-20, 4), "east"),
-    WALL: ((16, 6), "west"),
-    DESK: ((-18, 4), "east"),
+    #          where the student stands, where the principal stands, and which
+    #          way the principal turns once they are both there
+    TABLE: ((0, 0), (-20, -2), "east"),
+    FIRE: ((0, 0), (-20, 4), "east"),
+    WALL: ((0, 0), (16, 6), "west"),
+    DESK: ((6, 12), (-22, -2), "east"),
 }
-
-# and the one stop nobody walks to: he is waiting at the tunnel mouth, down the
-# ramp from where the door puts the student, so that "come with me" is said by a
-# man already standing on the way in.
-WAITING_AT = (24, 8)
 
 # how many times the rail will offer the same screen again before it lets go. A
 # student who closes the schedule twice has told you something.
@@ -238,21 +246,28 @@ def turned(year):
     return "yearbook:y%d" % year
 
 
-def waiting_at_the_door():
-    """He is ALREADY at the tunnel mouth when the student walks in.
+def he_steps_in_front():
+    """He appears in front of the student, wherever the student is standing.
 
-    Ash, 2026-09-06, watching it: *"THE PRINCIPAL DOES NOT WALK TO THOR ANY MORE.
-    He is ALREADY WAITING at the tunnel mouth when Thor comes in."* And on the
-    walk that used to be here: *"he flies upward, across the edge."* That walk was
-    `actor_move`, which carries a body in a straight line at its target, so on a
-    room with a gap between the bridge and the floor he crossed the gap. It is cut
-    rather than fixed: a person who is already there when you arrive is the better
-    picture anyway, and it is what a real orientation looks like.
+    ASH, 2026-09-08: *"The principal panther arguably is like a extension of thor.
+    he pops up in front of thor at any time. he isnt bound to the entrance of the
+    maw."*
 
-    `place` is a word this island could not say until today. It puts a body at an
-    anchor with no walk in it, beside the player rather than on top of him, turned
-    to look at him. It is the first thing the rail does, before the camera moves,
-    so there is no frame with him standing anywhere else.
+    That sentence is the whole design of this function and it took three tries to
+    get here. The first version WALKED him over, which crossed the gap between the
+    bridge and the floor and Ash saw a man flying across the edge. The second
+    placed him at `arrive_maw`, the tunnel, which is right for a student who has
+    just come in and wrong for every other moment: a student who finished his year
+    standing at the fire and pressed the principal got a man who materialised
+    across the room and then had to walk back, which is what Ash saw on rail-5 and
+    called teleporting.
+
+    `place(PRINCIPAL, THOR)` has no anchor in it at all. THOR is the player as a
+    PLACE, the same word that already means the player as a speaker, and with no
+    offset the engine puts a body one body length ahead of him on the heading he
+    is facing. So the scene happens where the student is, which is what "an
+    extension of thor" means, and no beat in this file has to know where he is
+    standing when it starts.
 
     ONE OF THE PLACES THIS ISLAND CATCHES A REFUSAL, AND IT IS DECORATION. A word
     the engine cannot perform does not come back as a False you can test. It is
@@ -262,20 +277,20 @@ def waiting_at_the_door():
     exists to prevent, and a traceback with your own line number in it is the fix.
 
     So the question is never "should I catch refusals", it is "is this beat worth
-    the scene". The walk is the beat's picture and the flag is its meaning, and
-    here the flag is the rest of year one. A room cut without a body bound to the
-    desk is real: the game falls back to the copy of this room committed in the
-    engine when it cannot reach the platform, and that copy binds no placements at
-    all. There, he says the line from his desk and the rail carries on.
+    the scene". The picture is the beat and the flag is its meaning, and here the
+    flag is the rest of year one. A room cut without a body bound to the principal
+    is real: the game falls back to the copy of this room committed in the engine
+    when it cannot reach the platform, and that copy binds no placements at all.
+    There, he says the line from nowhere and the rail carries on.
 
     It still SAYS what refused. Swallowing it silently would be the other half of
     the same mistake.
     """
     try:
-        yield place(PRINCIPAL, MEET, off=WAITING_AT)
+        yield place(PRINCIPAL, THOR)
         return True
     except Exception as refused:
-        yield log("place_refused", {"actor": PRINCIPAL, "at": MEET, "why": str(refused)})
+        yield log("place_refused", {"actor": PRINCIPAL, "at": THOR, "why": str(refused)})
         return False
 
 
@@ -345,7 +360,7 @@ def take_him(anchor):
     year one with it, and the beat after this one is a screen that can still be
     filled in from a standstill.
     """
-    off, facing = STOPS[anchor]
+    mine, his, facing = STOPS[anchor]
 
     yield objective(FOLLOW)
 
@@ -355,7 +370,7 @@ def take_him(anchor):
         yield log("guide_refused", {"anchor": anchor, "why": str(refused)})
 
     try:
-        yield lead_to(PRINCIPAL, anchor, off=off, pace="walk")
+        yield lead_to(PRINCIPAL, anchor, off=his, pace="walk")
     except Exception as refused:
         yield log("lead_to_refused", {"anchor": anchor, "why": str(refused)})
 
@@ -365,7 +380,7 @@ def take_him(anchor):
     # the station's own standing spot, the same one every press of E uses, and
     # the walk turns him the way its author drew the station to be looked at.
     try:
-        yield walk_to(anchor)
+        yield walk_to(anchor, off=mine)
     except Exception as refused:
         yield log("walk_to_refused", {"anchor": anchor, "why": str(refused)})
 
@@ -675,7 +690,7 @@ def opening(walk):
     # HE IS PLACED BEFORE THE CAMERA MOVES, so there is no frame of him standing
     # at his desk while the shot travels in.
     if first and walk:
-        yield from waiting_at_the_door()
+        yield from he_steps_in_front()
 
     # THE SHOT IS THE STUDENT'S OWN SHOULDER for the whole of what follows.
     yield view("close")
@@ -743,7 +758,7 @@ def closing():
     NOTHING PROMISES A YEAR TWO. The page turning is the ending.
     """
     yield view("close")
-    yield from waiting_at_the_door()
+    yield from he_steps_in_front()
 
     # THE PANEL SAYS WHAT HE IS DOING, and for the length of the ending that is
     # following the man who came to find him. FOLLOW rather than a sentence of

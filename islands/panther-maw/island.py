@@ -51,7 +51,8 @@ from vine import (
 
 from board import counsel, on_the_wall, wall_line
 from founding import (
-    HANDED_OVER, RAILED, dress_the_wall, ending, rail, turned, year_is_done,
+    HANDED_OVER, RAILED, dress_the_wall, ending, he_steps_in_front, rail, turned,
+    year_is_done,
 )
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EXPLORE, HEARTH, LEFT,
@@ -109,6 +110,20 @@ def walking_in():
     # ---- what the room looks like: every load, before the early return -----
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
+
+    # AND THE PRINCIPAL IS NOT STANDING INSIDE WHOEVER JUST WALKED IN.
+    #
+    # Ash moved his post to the tunnel mouth in MAPVIS on 2026-09-08, six pixels
+    # from the spot the door puts a student on, so on every load that does not
+    # start a film the two of them were drawn as one blob and the plaque over it
+    # said "Talk to Principal Panther". Measured in a browser on Maw v7.
+    #
+    # His own note the same day is the fix and not a workaround: the principal
+    # "pops up in front of thor at any time, he isnt bound to the entrance of the
+    # maw". So the room steps him in front rather than leaving him underfoot, and
+    # the films move him from there. He has no life behaviour of his own on this
+    # map, so holding him costs nothing that was happening anyway.
+    yield from he_steps_in_front()
 
     # ---- the film, walked --------------------------------------------------
     #
