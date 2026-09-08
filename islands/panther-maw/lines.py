@@ -104,6 +104,9 @@ FILL_IT_IN = "Fill your schedule."
 ANSWER = "Answer Advisory."
 LOOK_AT_WALL = "Look at your trophy wall."
 TALK_TO_HER = "Talk to the counselor."
+# the last step of the introduction, over the wide shot of the room
+LOOK_AROUND = "Look around the Maw."
+
 # THE LAST ONE, and it is the only line on this page that is not about a step in
 # a film. It is what the panel reads once the game is his: three things he can do
 # and no order to do them in. `src/game/run/objective.ts` says the same words for
@@ -124,9 +127,24 @@ EXPLORE = "Explore. Talk to anyone. Open the Guide."
 # control, and they are allowed to be that because the control is arriving on
 # screen while he says it. Nothing here describes a thing that is not visibly
 # swinging down into the corner as it is read.
-MY_YEAR_IS = "My Year is what you picked."
-GUIDE_IS = "The Guide is every club and class at Bonney Lake."
-MAP_IS = "The Map is where you sail."
+# ---- THE END OF THE INTRODUCTION, WHICH IS ONE LINE OVER A WIDE SHOT --------
+#
+# ASH, 2026-09-08, AFTER PLAYING RAIL-7: *"the cutscene abruptly goes away. no
+# clean introduction cutscene ending. just a few dialogues saying 'Map, Guide, My
+# year' that a freshman wont even connect, until they realize its talking about
+# those three random buttons at the top."*
+#
+# THE THREE SENTENCES ARE CUT. They were his own words from BRIEF-INTRO-FILM and
+# they did not survive being played: a man in a cave naming three controls in the
+# opposite corner of the screen, with nothing moving while he says them, is a
+# tutorial written as dialogue, which is the one thing this game keeps ruling
+# out. BRIEF-CLOSE-THE-LOOP section 1 replaces them with a picture and one line,
+# and each plaque explains itself the first time it is pressed instead.
+#
+# THE LINE ITSELF IS THE BRIEF'S, word for word, and it does two things at once:
+# it hands the room over, and it says where the year ends, which is the only
+# thing the student needs to remember once he is walking around on his own.
+THE_MAW_IS_YOURS = "The Maw is yours. Find me when your year is done."
 
 
 
