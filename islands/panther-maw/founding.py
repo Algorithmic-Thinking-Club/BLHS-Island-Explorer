@@ -130,33 +130,44 @@ OFFERS = 3
 
 
 def dress_the_wall(count):
-    """Make the drawn shelf agree with what the run is holding.
+    """The case is furniture. It is on the wall, and it stays on the wall.
 
-    THE ROOM HAS TO BE TRUE BEFORE ANYBODY PRESSES ANYTHING. A placement MAPVIS
-    put on a painting is drawn from the first frame the map is on screen, and the
-    shelf Ash drew is a case with things already on its shelves. So a first-year
-    student with nothing earned used to walk in to a full trophy case, press E,
-    and watch the whole case vanish while Thor said the hooks were empty. The
-    world was lying at walking speed and then correcting itself as a reward for
-    talking to the furniture, which is exactly backwards.
+    ASH, 2026-09-07, AFTER PLAYING RAIL-5: *"The 'what you earn goes up here'
+    asset is still nonexistent."* It was, and nothing in the engine was wrong.
+    The published Maw v6 binds `trophy_wall` to the placement `the_trophy_wall`,
+    the asset row carries that name, `assets/trophy-shelf.png` is 64x80 and
+    serves 200 off the platform, and `show` found all of it. This function then
+    hid it, on the first frame of the room, on every load, because `count` is the
+    number of stickers and badges the run is holding and NOTHING IN YEAR ONE
+    AWARDS EITHER: Advisory writes a grade and a credit and no trophy, so the
+    count is zero from the title screen to the handover and the case was never
+    once drawn.
 
-    So it is synced on arrival, on EVERY load, and again at any moment something
-    might have landed on it since.
+    THE OLD RULE WAS THE WRONG RULE and it is worth writing down rather than
+    quietly deleting. It came from a real complaint: a first-year student with
+    nothing earned walked in to a case that LOOKED full, because the painting has
+    things on its shelves. The answer taken was to hide the case, which trades a
+    case that overstates for a wall with a hole in it, and a hole is worse. A
+    trophy case in a school is empty in September and is still a trophy case; a
+    student is supposed to see it, want it filled, and read what is in it off the
+    panel. That is the whole of "what you earn goes up here" and it needs the
+    case ON THE WALL to say it.
 
-    IT MOVED HERE FROM `island.py` SO THE RAIL CAN SAY IT TOO. Ash, watching
-    rail-2: the wall beat *"opens on an empty spot"*. It did: the room was dressed
-    when the map loaded, with nothing earned, and by the time the principal walks
-    him to the wall he has just passed Advisory and the case should be back. One
-    call, at the moment he is standing in front of it.
+    SO THE COUNT NO LONGER DECIDES ANYTHING HERE, and the panel is where the
+    honest number lives: `open("wall")` draws one frame per thing picked this
+    year, filled where it is filled and empty where it is not, and `wall_line`
+    says whether there is anything up there yet. The argument is kept because
+    every caller has it to hand and the logged line is worth having.
 
     Guarded for the same reason the walk is: `show` is a hard refusal on a room
-    whose `trophy_wall` is not bound to a placement, and the offline copy of this
-    room is exactly that. A refusal here would take the founding with it.
+    whose `trophy_wall` is not bound to a placement, and a bundle that predates
+    the binding is exactly that. A refusal here would take the founding with it,
+    and the engine has already said the sentence an author needs in the console.
     """
     try:
-        yield show(WALL, count > 0)
+        yield show(WALL, True)
     except Exception as refused:
-        yield log("show_refused", {"anchor": WALL, "why": str(refused)})
+        yield log("show_refused", {"anchor": WALL, "why": str(refused), "on": count})
 
 
 def vignette(year):
@@ -399,10 +410,11 @@ def the_wall():
     yield from take_him(WALL)
     yield objective(LOOK_AT_WALL)
     yield say(WALL_IS_YOURS, who=PRINCIPAL, portrait=FACE)
-    # THE SHELF IS PUT BACK BEFORE THE PANEL OPENS. He has just passed
-    # Advisory, so there is something on the wall now, and the room was
-    # dressed when the map loaded with nothing on it. Ash, on rail-2: this
-    # beat "opens on an empty spot".
+    # THE CASE IS ON THE WALL BEFORE THE PANEL OPENS, said again here rather
+    # than trusted. The room dressed itself when the map loaded and nothing
+    # since then can have taken the case down, so this is a no-op on every
+    # ordinary road; it stays because it is the one line that would put the
+    # room right if some later beat ever hid something.
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
     yield open("wall", wait=True)
