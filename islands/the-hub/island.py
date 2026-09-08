@@ -53,7 +53,8 @@ handlers simply never fire and the engine says so by name when the island loads.
 """
 from grape import on_start, on_talk
 from vine import (
-    ashore, get, guide_to, log, movie, route, say, set_flag, view, wait, walk_to,
+    ashore, end_run, get, guide_to, log, movie, route, say, set_flag, view, wait,
+    walk_to,
 )
 
 from lines import DOCK_ONE, DOCK_THREE, DOCK_TWO, HELLO, KEEP_GOING, WAITING
@@ -79,7 +80,79 @@ TIED_UP_HOLD_MS = 900
 CARD_MS = 3900
 
 
+def sailing_out():
+    """THE LAST BEAT OF THE YEAR, and the only one that happens out here.
+
+    BRIEF-CLOSE-THE-LOOP section 3, from Ash's verdict on rail-7: *"I actually
+    ended on an open note, i did not know how to do a 'end of year' thing. so i
+    left it at thor goes to dock. what happens next i needed your help."* The
+    brief's answer: *"After the cord and the yearbook card: the archipelago cover,
+    the hub dock, and the ship sails OUT on her own, the same shot as leaving the
+    beach, bars up, no tiller, the berth quiet from the moment the closing starts,
+    to black, and the title screen."*
+
+    IT IS ON THE HUB AND NOT IN THE MAW BECAUSE THE MAW IS GONE BY THEN. `enter`
+    tears a map down and the island with it, so the Maw's closing film cannot
+    write a line that runs after the door. What crosses the door is the FRAME: the
+    bars are still up when this runs, which is why nothing here raises them.
+
+    AND IT RUNS BEFORE THE ARRIVAL, which is the other reason it is a separate
+    handler rather than a branch inside `putting_in`. That one returns early on a
+    run that has already crossed, and every run reaching this point has.
+    """
+    year = yield get("year")
+
+    # ---- the camera pulls out to the whole island --------------------------
+    #
+    # THE SHIP DOES NOT SAIL OUT, AND THAT IS THE ONE LINE OF THE BRIEF THIS DOES
+    # NOT BUILD. Section 3 asks for *"the ship sails OUT on her own, the same shot
+    # as leaving the beach"*. Measured on the published hub v15: `route` refuses
+    # it, in the engine's own words, *"the_hub_approach is one-way, so it cannot
+    # be run backwards"*, and there is no hull on the water to sail anyway,
+    # because stepping ashore drops it. A departure needs a second authored line
+    # in MAPVIS going the other way, which is Ash's hands and not this session's.
+    #
+    # WHAT IS LEFT IS STILL THE SHOT. `view("island")` is the same wide frame the
+    # arrival card played over on the way in, so the year opens and closes on one
+    # picture of the whole place, and the bars are still up from the Maw.
+    yield view("island")
+    yield log("year_one_over", {"year": year})
+    yield wait(2600)
+
+    # ---- to black, and the title -------------------------------------------
+    #
+    # `end_run` is the last word an island can say. The save is kept: the title
+    # reads it, says "Year one is done", and opens the yearbook from there. The
+    # bars never come down out here, because there is no "out here" left to see.
+    yield end_run()
+
+
+def turned(year):
+    """The flag the engine writes the moment a year's page has turned."""
+    return "yearbook:y%d" % year
+
+
 @on_start
+def arriving():
+    """The one handler the engine calls, and the two things it can mean.
+
+    ONE `on_start` PER ISLAND, and `grape.py` refuses a second one at import with
+    both function names in the message, which is the right refusal: two handlers
+    on one key means whichever was written last silently wins.
+
+    The hub has two beats and they are at opposite ends of the year. A run that
+    has not crossed yet gets the arrival; a run whose yearbook page has turned
+    gets the departure and the title. Everything in between walks on and off this
+    island through the tunnel and wants neither.
+    """
+    year = yield get("year")
+    flags = yield get("flags")
+    if turned(year) in flags:
+        yield from sailing_out()
+        return
+    yield from putting_in()
+
+
 def putting_in():
     """The crossing and the walk up, once per run, until he stands at the tunnel.
 

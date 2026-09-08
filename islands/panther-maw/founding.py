@@ -805,22 +805,21 @@ def closing():
     # the archipelago painting on it and no fact card because the run is over
     # rather than waiting, and nothing in the repository had ever called it.
     #
-    # THE BARS COME DOWN BEFORE THE DOOR AND NOT AFTER IT. Two reasons, and both
-    # are the same reason. `enter` tears this map down and this island with it,
-    # so nothing written under it will run, `as_a_cutscene`'s own `finally`
-    # included: bars left up here would be bars left up on the hub with nobody
-    # left alive to lower them. And the cover is over the whole window while it
-    # happens, so a student cannot see the frame they come down on.
+    # AND THE BARS STAY UP THROUGH THE DOOR, which is the change on 2026-09-08.
+    # They used to come down here, because the ending stopped on the dock and a
+    # student left standing behind black bars is a student left behind. It does
+    # not stop on the dock any more: the hub's own island takes the last beat
+    # (`islands/the-hub/island.py`, `sailing_out`) and the frame has to be
+    # standing when it does, or the departure plays with the corner up and the
+    # tiller on offer. The engine carries a movie frame through a door the film
+    # walked through, which is the same thing the OPENING relies on in the other
+    # direction.
     #
-    # NOTHING IS SAID INTO THE PANEL EITHER. `movie(False)` drops the island's
-    # word, and the year's own sequencer has read `yearbook:y1` by now and says
-    # the year is done on every map for the rest of the session
-    # (`src/game/run/objective.ts`, the first clause). One sentence, from the one
-    # place that still exists a second from now.
+    # NOTHING IS SAID INTO THE PANEL EITHER. The year's own sequencer has read
+    # `yearbook:y1` by now and says the year is done on every map for the rest of
+    # the session (`src/game/run/objective.ts`, the first clause).
     yield guide_to(None)
     yield from let_go()
-    yield view("walk")
-    yield movie(False)
     yield log("closing_done", {"year": year})
     yield enter("hub", cover="ceremony")
 
