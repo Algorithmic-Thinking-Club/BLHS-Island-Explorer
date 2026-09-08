@@ -56,7 +56,7 @@ from founding import (
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EXPLORE, HEARTH, LEFT,
     NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
-    SHOW_ME, TABLE, THOR, FACE, YEAR_DONE,
+    SHOW_ME, TABLE, THOR, FACE,
 )
 
 # ONE FILM PER SITTING, AND THIS IS WHAT COUNTS THE SITTING.
@@ -150,7 +150,13 @@ def walking_in():
     done = yield from year_is_done()
     if done and not _OPENED_HERE:
         yield from ending()
-        flags = yield get("flags")
+        # AND NOTHING AFTER IT. The ending walks him out of the mountain, so by
+        # the time it comes back this map is being torn down and this worker
+        # with it. The one road where it returns having done nothing is a
+        # student who closed the yearbook without turning the page, and that
+        # road went through `step_off`, which has already handed the panel back
+        # to the year. Either way the line below is not this handler's to say.
+        return
 
     # ---- and after it, the room is his, and the panel says so ---------------
     #
@@ -161,11 +167,15 @@ def walking_in():
     # word forgotten (it is dropped whenever the bars come down) and this puts it
     # back on the first frame of the room.
     #
-    # `src/game/run/objective.ts` answers the same words when nobody says
-    # anything at all, so the panel cannot flicker between two endings; this line
-    # is what makes the sentence the ISLAND'S, which is where a member would put
-    # their own.
-    if HANDED_OVER in flags:
+    # AND NOT ONCE THE YEAR HAS CLOSED, which is BRIEF-MAW-NOW item 3 seen from
+    # the other end. `objective.ts` says "Year one is done." from the moment the
+    # page turns, on every map, for the rest of the session. This sentence is the
+    # one the year STARTS with, so a student who finished, was put out on the
+    # dock, and wandered back into the mountain would have been told to go and
+    # explore by the room he had just finished. The flag is the same one the
+    # engine reads, so the two cannot disagree.
+    year = yield get("year")
+    if HANDED_OVER in flags and turned(year) not in flags:
         yield objective(EXPLORE)
 
 
@@ -277,26 +287,31 @@ def the_counselor():
     scrolls past. What she says changes with the run: on the way in during year
     one she has nothing, and on the way out she has the first cord that moved.
 
-    ON THE WAY OUT SHE IS HOME. When Advisory is done and this year's page has
-    not turned, she opens the yearbook. The yearbook is where the page turns,
-    in school words, and where she drapes the cord he is closest to; both of
-    those are the engine's own screens, raised here by name. A yearbook opened
-    before the sheet is stamped says the year is still open, honestly, and does
-    not turn.
+    ON THE WAY OUT SHE IS THE ENDING'S, NOT HER OWN. When the year has nothing
+    left owing she starts the closing film rather than opening the yearbook
+    herself: she is IN that film, the cord and the page belong to it, and the
+    note at the press below has what pressing her used to cost.
     """
     year = yield get("year")
     flags = yield get("flags")
-    advisory = yield get("advisory")
-    # AND NOT ON THE LOAD THE INTRODUCTION PLAYED ON. Two reasons, and the second
-    # is the one that bites. A student handed the game at the handover and told
-    # to talk to anyone should not have the third person he presses declare the
-    # year over. And the page turning here writes `yearbook:y1`, which is the
-    # flag the closing film's own trigger goes false on, so a counselor who
-    # closed the year in the same sitting would have deleted the ending before
-    # the principal ever got to play it.
-    if advisory is None and turned(year) not in flags and not _OPENED_HERE:
-        yield say(YEAR_DONE, who=COUNSELOR)
-        yield open("yearbook")
+    # ---- SHE DOES NOT CLOSE THE YEAR BEHIND THE FILM'S BACK -----------------
+    #
+    # She used to. If the year had nothing left owing and the page had not
+    # turned, pressing her said a line and opened the yearbook, and the page
+    # turning writes `yearbook:y1`, which is the exact flag the closing film's
+    # trigger goes false on. So a student who was handed the room, told to talk
+    # to anyone, and talked to her, deleted the whole ending before the principal
+    # ever got to play it: no congratulation, no wall, no cover, no walk out to
+    # the dock. It was the most likely single press in the game to make.
+    #
+    # Now she starts the ending instead, which is the same thing the principal's
+    # desk does and for the same reason: the film is what closes a year, and
+    # anybody in it may be the one you walk up to. `_OPENED_HERE` still holds it
+    # off in the sitting the introduction played in, by Ash's rule that the two
+    # films never share a sitting.
+    done = yield from year_is_done()
+    if done and not _OPENED_HERE:
+        yield from ending()
         return
 
     board = yield get("cord_board")

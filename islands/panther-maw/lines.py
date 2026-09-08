@@ -151,8 +151,14 @@ NOT_NOW = "Not now"
 
 # THE CLOSING FILM. She has the cord and the yearbook turns the page.
 CORD = "Year one is done. Here is your first cord."
-# the counselor pressed on the way out with the year still open
-YEAR_DONE = "Year one is done. Let's turn the page and see what you earned."
+
+# THERE USED TO BE A SECOND ONE HERE and it is CUT rather than left lying about.
+# "Year one is done. Let's turn the page and see what you earned." was what she
+# said to a student who pressed her with the year finished, and saying it turned
+# the page, which is the flag the closing film's own trigger goes false on: the
+# most likely press in the room deleted the whole ending. She starts the film now
+# (`island.py`), and inside it she says CORD, so the room never had two ways of
+# closing a year and only ever needed one sentence.
 
 
 # ---- the chart table ---------------------------------------------------------
