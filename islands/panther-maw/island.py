@@ -59,6 +59,29 @@ from lines import (
     SHOW_ME, TABLE, THOR, FACE, YEAR_DONE,
 )
 
+# ONE FILM PER SITTING, AND THIS IS WHAT COUNTS THE SITTING.
+#
+# Ash, 2026-09-07, after playing rail-5: the introduction handed the game over
+# and the ending started three seconds later, so the bars came down, three lines
+# were said, the bars went straight back up and the principal walked back to the
+# door to meet a student he had been standing beside all morning. Two films with
+# no game in between is not two films.
+#
+# So the closing never plays in the same sitting as the opening. It plays when
+# the student walks BACK IN through the tunnel with the year done, which is the
+# shape it will always have once an island exists and he has sailed home. Today
+# he only has to walk out to the quay and turn round, and that is the point: the
+# handover means the room is his, and the first thing he does with it is leave.
+#
+# A MODULE VARIABLE IS THE RIGHT SIZE FOR THIS, and it is worth saying why rather
+# than reaching for a flag. A flag lives in the save and outlives the tab; this
+# must not, because "did the opening play a minute ago" is a fact about THIS
+# visit to THIS room. The engine gives an island a fresh MicroPython worker on
+# every map load (`src/vine/py/runGrape.ts` opens one per scene), so this list is
+# empty again the moment he comes back in, which is exactly the lifetime wanted.
+# Do not write a `set_flag` for something this short.
+_OPENED_HERE = []
+
 
 @on_start
 def walking_in():
@@ -98,14 +121,12 @@ def walking_in():
     flags = yield get("flags")
     year = yield get("year")
     if RAILED not in flags and year == 1:
+        _OPENED_HERE.append(True)
         yield from rail(walk=True)
-        # AND IT FALLS THROUGH RATHER THAN RETURNING, which is the whole of the
-        # two-film shape. The opening ends at the handover, and today the
-        # closing's own trigger is already true on that frame, because there are
-        # no islands and Advisory is therefore the last thing the year owes. So
-        # the two play back to back with no reload in between. The day one
-        # island exists the trigger below is false here and the middle of the
-        # year happens instead, with no edit to this file.
+        # AND THE SITTING IS SPENT. The opening ends at the handover and that is
+        # the end of what a student watches today: the bars come down once, the
+        # corner arrives, the panel says what there is to do, and then the room
+        # is quiet. Nothing below runs on this load.
         flags = yield get("flags")
 
     # ---- THE CLOSING FILM ---------------------------------------------------
@@ -115,12 +136,19 @@ def walking_in():
     # this fires when the whole YEAR is finished rather than when Advisory is;
     # its docstring has why that difference matters.
     #
-    # THREE ROADS REACH IT and they are all this line. The opening falling
-    # through above. A student who sailed home with the year done, because the
-    # room loads when he walks in through the tunnel. And a reload, because this
-    # handler runs on every load and the phase is read fresh each time.
+    # AND IT IS ASKED ON A LOAD THAT DID NOT JUST PLAY THE OPENING. Ash's rule,
+    # 2026-09-07: the ending plays on ENTERING the Maw with the year done, and
+    # never in the same sitting as the introduction. Both halves matter. Without
+    # the first the ending would need a press to start; without the second the
+    # handover is undone by the next line of the same handler.
+    #
+    # TWO ROADS REACH IT now. A student who walked out to the quay and came back
+    # in through the tunnel, which is every student today. And one who sailed
+    # home with the year done, which is every student the day an island exists.
+    # A reload is the same road as the first: the room loads, this handler runs,
+    # and no opening played on that load.
     done = yield from year_is_done()
-    if done:
+    if done and not _OPENED_HERE:
         yield from ending()
         flags = yield get("flags")
 
@@ -163,8 +191,13 @@ def the_principal():
 
     # the ending, for a student who closed the yearbook without turning the page
     # and walked away. The year's own light is on this desk while it is owed.
+    #
+    # AND NOT ON THE LOAD THE INTRODUCTION PLAYED ON, the same rule the room
+    # opening keeps. A student who is handed the game and walks straight over to
+    # the man who handed it to him gets a hello, not the whole of the ending
+    # thirty seconds after the bars came down.
     done = yield from year_is_done()
-    if done:
+    if done and not _OPENED_HERE:
         yield from ending()
         return
 
@@ -254,7 +287,14 @@ def the_counselor():
     year = yield get("year")
     flags = yield get("flags")
     advisory = yield get("advisory")
-    if advisory is None and turned(year) not in flags:
+    # AND NOT ON THE LOAD THE INTRODUCTION PLAYED ON. Two reasons, and the second
+    # is the one that bites. A student handed the game at the handover and told
+    # to talk to anyone should not have the third person he presses declare the
+    # year over. And the page turning here writes `yearbook:y1`, which is the
+    # flag the closing film's own trigger goes false on, so a counselor who
+    # closed the year in the same sitting would have deleted the ending before
+    # the principal ever got to play it.
+    if advisory is None and turned(year) not in flags and not _OPENED_HERE:
         yield say(YEAR_DONE, who=COUNSELOR)
         yield open("yearbook")
         return
