@@ -129,62 +129,30 @@ FIRE = "hearth"
 WALL = "trophy_wall"
 DESK = "counselor"
 
-# ---- WHERE THE TWO OF THEM STAND, AT EVERY STOP -----------------------------
+# ---- WHERE THE TWO OF THEM STAND: THE MAP SAYS, AND THIS FILE DOES NOT ------
 #
-# ASH, 2026-09-07, AFTER PLAYING RAIL-6: *"The principal and Thor are in ugly
-# random spots instead of clean spots: if they are supposed to be at the
-# schedule, Thor is at the staircase and the principal is covering the table."*
+# ASH, 2026-09-08: *"I am reorganising the Maw in MAPVIS. Read every stand point
+# and position from the published map by anchor name. Hardcode nothing."*
 #
-# Both halves of that are one missing idea, and it is not a bug in this file. A
-# station carries ONE mark, the standing spot its author drew IN MAPVIS FOR THE
-# STUDENT, and until today every word that took a body to a station took it to
-# that one mark. So `lead_to` landed the principal on the spot the student is
-# meant to stand on, in front of the thing he was about to talk about, and the
-# student was left wherever "two body lengths behind him" happened to fall.
-# Measured on rail-6: at the schedule the principal stood on 295,213, which is
-# the table's own mark, and Thor stood on 284,174, which is the entrance bridge.
-# Ash called that a staircase and he was being generous.
+# What stood here was a table of eight pixel offsets and four compass headings,
+# one row per station, each photographed at 4x off a screenshot of Maw v7. Every
+# one of those numbers was a bet on where a table is, and the tables are being
+# moved this week. A film that says `(-20, -2)` about the schedule is a film that
+# breaks silently the next time somebody drags it: nothing throws, the two of
+# them just stand in the wrong place again and only Ash's eyes find out.
 #
-# So each stop carries a SECOND mark. Thor takes the station's own, which is
-# what it was drawn for; the principal takes this offset from it, and then turns
-# to face him. Every pair below was photographed at 4x before it was written
-# down (`scripts/_maw-spots.mjs`), and every one of them is floor the walk law
-# will hold, which is not the same question and was checked separately.
+# So the numbers are gone and the beat asks for the SHAPE instead. A station has
+# one mark, the standing spot its author drew for the student, and the student
+# takes it. The principal wants to be beside him, and which pixel that is depends
+# on where the mark is, which side of it is floor, and which way they walked in.
+# The scene knows all three and this file knows none of them, so `lead_to` with
+# no offset works it out: one body length square to the approach, on the side
+# with room, and further from the furniture of the two. Then `actor_face` with
+# the heading "thor" turns the man to look at the boy, wherever the boy ended up.
 #
-# THE NUMBERS ARE PIXELS AND THAT IS THE COMPROMISE. Everything else an island
-# says is a name, because names survive somebody moving a table. These do not,
-# and the day MAPVIS can put a second post beside a station they become names
-# like everything else. Until then a room where two people talk to each other
-# needs two marks and the tool authors one.
-#
-# WHY THE HEADING IS WRITTEN OUT rather than left to the engine. `lead_to` turns
-# the leader to face the player when they both stop, which was right when they
-# both stopped in the same place. The student walks the last two body lengths
-# himself now, so the man would be facing where the boy USED to be. It is one
-# word per stop and it is the difference between a conversation and two people
-# standing near each other.
-#
-# WHY EAST OR WEST AT EVERY STOP, and never a heading with "north" in it. A body
-# placed below the student is drawn from BEHIND at this camera: the picture is
-# the back of a mortarboard, which reads as a man walking away mid-sentence. The
-# offsets keep him level and to one side, where he is drawn three-quarters on.
-#
-# AND THE STUDENT HAS AN OFFSET TOO, WHICH IS ZERO AT THREE OF THE FOUR. His mark
-# is the station's own standing spot, which is what it was drawn for, and the day
-# the desk got one this line goes back to zero as well. Ash moved the counselor
-# onto the desk in MAPVIS on 2026-09-08 and her standing spot stayed on the far
-# side of the hall, so the engine drops it (`src/game/pmap/anchors.ts` says why
-# and says so in the console) and falls back to the desk's own pixel, which is
-# the desk. Standing him ON her is not better than standing him sixty pixels
-# away, so the film says where a student stands at a desk until the map does.
-STOPS = {
-    #          where the student stands, where the principal stands, and which
-    #          way the principal turns once they are both there
-    TABLE: ((0, 0), (-20, -2), "east"),
-    FIRE: ((0, 0), (-20, 4), "east"),
-    WALL: ((0, 0), (16, 6), "west"),
-    DESK: ((6, 12), (-22, -2), "east"),
-}
+# THE TEST FOR THIS IS THE ABSENCE OF DIGITS. `maw-films.test.ts` reads this file
+# and fails on a coordinate pair anywhere in the rail, which is the only way to
+# stop the next screenshot-driven session from pasting four more of them in.
 
 # how many times the rail will offer the same screen again before it lets go. A
 # student who closes the schedule twice has told you something.
@@ -346,12 +314,12 @@ def take_him(anchor):
     it, which is the difference between this and the first version: they used to
     go up and come down around each walk, and those seams are what he saw.
 
-    THE FACING IS NAMED AND IT DID NOT USED TO BE. `lead_to` turns the two of
-    them to look at each other when they stop, which was the whole answer while
-    they stopped in the same place: whichever way "at him" was, the engine knew
-    it and nothing here had to. The student walks on afterwards now, so the man
-    would be left looking at the floor the boy has just left. `STOPS` carries the
-    heading beside the offset, because the two are one decision.
+    NOT ONE NUMBER IN ANY OF IT. `lead_to` with no offset puts the man beside
+    the student's own mark, on the side of it that has floor, square to the way
+    they walked in. `actor_face(PRINCIPAL, "thor")` turns him to look at the boy
+    wherever the boy ended up. Both are worked out by the scene against the map
+    that is loaded, so a table dragged across the Maw in MAPVIS moves the pair of
+    them with it and nothing here changes.
 
     AND THE PANEL SAYS WHAT HE IS DOING. BRIEF-MAW-RAIL-3 A: the line at the top
     of the screen is the student's own step, and for the whole of a led walk his
@@ -363,8 +331,6 @@ def take_him(anchor):
     year one with it, and the beat after this one is a screen that can still be
     filled in from a standstill.
     """
-    mine, his, facing = STOPS[anchor]
-
     yield objective(FOLLOW)
 
     try:
@@ -373,7 +339,7 @@ def take_him(anchor):
         yield log("guide_refused", {"anchor": anchor, "why": str(refused)})
 
     try:
-        yield lead_to(PRINCIPAL, anchor, off=his, pace="walk")
+        yield lead_to(PRINCIPAL, anchor, pace="walk")
     except Exception as refused:
         yield log("lead_to_refused", {"anchor": anchor, "why": str(refused)})
 
@@ -383,13 +349,13 @@ def take_him(anchor):
     # the station's own standing spot, the same one every press of E uses, and
     # the walk turns him the way its author drew the station to be looked at.
     try:
-        yield walk_to(anchor, off=mine)
+        yield walk_to(anchor)
     except Exception as refused:
         yield log("walk_to_refused", {"anchor": anchor, "why": str(refused)})
 
     # and the man turns to the boy, who has moved since `lead_to` turned him
     try:
-        yield actor_face(PRINCIPAL, facing)
+        yield actor_face(PRINCIPAL, "thor")
     except Exception as refused:
         yield log("actor_face_refused", {"anchor": anchor, "why": str(refused)})
 
@@ -689,7 +655,7 @@ def take_him_to_the_middle():
     lights and there is nothing to press when they arrive, which is the point.
     """
     try:
-        yield lead_to(PRINCIPAL, HALL, off=(-22, 2), pace="walk")
+        yield lead_to(PRINCIPAL, HALL, pace="walk")
     except Exception as refused:
         yield log("lead_to_refused", {"anchor": HALL, "why": str(refused)})
     try:
@@ -697,7 +663,7 @@ def take_him_to_the_middle():
     except Exception as refused:
         yield log("walk_to_refused", {"anchor": HALL, "why": str(refused)})
     try:
-        yield actor_face(PRINCIPAL, "east")
+        yield actor_face(PRINCIPAL, "thor")
     except Exception as refused:
         yield log("actor_face_refused", {"anchor": HALL, "why": str(refused)})
 
