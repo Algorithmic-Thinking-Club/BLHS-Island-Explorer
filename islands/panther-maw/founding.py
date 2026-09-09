@@ -50,7 +50,8 @@ camera comes back, the principal is his own again, the bars come down in
 which is the game he had before. Pressing that thing puts him back on the film.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
-    actor_face, actor_release, as_a_cutscene, enter, get, guide_to, lead_to, log,
+    actor_face, actor_move, actor_release, as_a_cutscene, enter, get, guide_to,
+    lead_to, log,
     movie, objective, open, place, play, say, set_flag, show, view, wait, walk_to,
 )
 
@@ -632,6 +633,30 @@ def the_handover():
     yield set_flag(CHART)
     yield wait(700)
 
+    # ---- 5: and then somebody points at each of them --------------------------
+    #
+    # ASH, 2026-09-08 item 7: *"The intro's handover gets a tutorial: after the
+    # wide shot and the line, each of the three plaques and the help button lights
+    # in turn with an animated pointer and one line in a small panel beside it,
+    # under fifteen seconds in total, with a Skip in the corner. Then the bar
+    # names the first pick."*
+    #
+    # Which is the half the plaques arriving on their own could never do. A sign
+    # swinging onto the glass says LOOK; it does not say what the thing is for,
+    # and "each plaque explains itself the first time it is pressed" only helps a
+    # student who presses one. Ash played the version where nobody pointed and
+    # called it three random buttons at the top.
+    #
+    # IT IS ONE WORD AND THE ENGINE OWNS THE REST. The controls are laid out by
+    # the HUD at whatever the window is, so an island cannot be the thing that
+    # knows where they are; `open("tour")` lights them where they really are.
+    # `wait=True` is what makes the bar's first sentence land after it and not
+    # underneath it.
+    try:
+        yield open("tour", wait=True)
+    except Exception as refused:
+        yield log("tour_refused", {"why": str(refused)})
+
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
@@ -863,14 +888,37 @@ def closing():
 
     NOTHING PROMISES A YEAR TWO. The page turning is the ending.
     """
+    # ---- HE WALKS OVER (Ash, 2026-09-08 item 6) ---------------------------
+    #
+    # *"Make it glorious with what exists: the camera, the principal walking to
+    # him, the wall filling frame by frame with a pop each, the cord, the
+    # yearbook card, the ship sailing out to black."*
+    #
+    # THE MAN ARRIVING IS THE FIRST SHOT OF THE ENDING. `place` put him in front
+    # of the student on the frame the film started, which is right for the
+    # founding (he is already talking to you when the game opens) and wrong for
+    # this: year one ends with somebody coming to find you, and if he is simply
+    # there when the shot opens then nobody came.
+    #
+    # The camera goes in FIRST and holds on the student for a beat, so the walk
+    # happens inside a shot rather than under a cut.
     yield view("close")
-    yield from he_steps_in_front()
+    yield wait(700)
 
     # THE PANEL SAYS WHAT HE IS DOING, and for the length of the ending that is
     # following the man who came to find him. FOLLOW rather than a sentence of
     # its own, because the very next thing after the line is being led to the
     # wall, and each beat sets its own step after that.
     yield objective(FOLLOW)
+
+    try:
+        yield actor_move(PRINCIPAL, THOR, pace="walk")
+    except Exception as refused:
+        # a man who cannot cross the room is still a man who has something to
+        # say, so the film falls back to the shape it had and carries on
+        yield log("walk_over_refused", {"why": str(refused)})
+        yield from he_steps_in_front()
+    yield wait(400)
 
     handle = yield get("handle")
     picks = yield get("picks")
