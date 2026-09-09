@@ -107,13 +107,12 @@ TALK_TO_HER = "Talk to the counselor."
 # the last step of the introduction, over the wide shot of the room
 LOOK_AROUND = "Look around the Maw."
 
-# THE LAST ONE, and it is the only line on this page that is not about a step in
-# a film. It is what the panel reads once the game is his: three things he can do
-# and no order to do them in. `src/game/run/objective.ts` says the same words for
-# the rest of the session, because the island's word is dropped the moment the
-# bars come down and a sentence that changed by itself a second after he read it
-# would be worse than no sentence.
-EXPLORE = "Explore. Talk to anyone. Open the Guide."
+# THERE USED TO BE ONE MORE and it is CUT, 2026-09-08. "Explore. Talk to anyone.
+# Open the Guide." was what the handover pinned, and an island's word outranks the
+# year's, so it sat on the bar for the rest of the session over a year that still
+# had two classes owing. Ash ruled the middle of year one is those two classes and
+# the bar names them, which is `src/game/run/objective.ts`'s job; the film's last
+# act is to hand the panel back rather than to have the last word.
 
 
 # ---- THE HANDOVER, which is the last thing the opening film does -------------

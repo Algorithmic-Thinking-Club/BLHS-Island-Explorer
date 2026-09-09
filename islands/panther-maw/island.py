@@ -55,7 +55,7 @@ from founding import (
     turned, year_is_done,
 )
 from lines import (
-    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, EXPLORE, HEARTH, LEFT,
+    ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
     NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
     SHOW_ME, TABLE, THOR, FACE,
 )
@@ -183,25 +183,17 @@ def walking_in():
         # to the year. Either way the line below is not this handler's to say.
         return
 
-    # ---- and after it, the room is his, and the panel says so ---------------
+    # ---- AND THE PANEL IS THE YEAR'S, NOT THIS ROOM'S -----------------------
     #
-    # BRIEF-INTRO-FILM section 4: once the film has handed over, the panel reads
-    # "Explore. Talk to anyone. Open the Guide." The handover says it too, and
-    # this is the OTHER road to the same sentence: a student who walked out to
-    # the hub and came back, or who reloaded the tab, arrives with the island's
-    # word forgotten (it is dropped whenever the bars come down) and this puts it
-    # back on the first frame of the room.
+    # Nothing is pinned here any more. The room used to put "Explore. Talk to
+    # anyone. Open the Guide." back on the bar on every load once the handover
+    # had happened, and an island's word outranks the year's, so the sentence
+    # the game START a year with sat on the glass for the rest of the session.
     #
-    # AND NOT ONCE THE YEAR HAS CLOSED, which is BRIEF-MAW-NOW item 3 seen from
-    # the other end. `objective.ts` says "Year one is done." from the moment the
-    # page turns, on every map, for the rest of the session. This sentence is the
-    # one the year STARTS with, so a student who finished, was put out on the
-    # dock, and wandered back into the mountain would have been told to go and
-    # explore by the room he had just finished. The flag is the same one the
-    # engine reads, so the two cannot disagree.
-    year = yield get("year")
-    if HANDED_OVER in flags and turned(year) not in flags:
-        yield objective(EXPLORE)
+    # Ash, 2026-09-08: the middle of year one is the two classes, and the bar is
+    # what names them. `src/game/run/objective.ts` says the right thing at every
+    # step of the year on its own, and the one thing this room can do to help is
+    # stop talking over it.
 
 
 @on_talk("principal_desk")
@@ -319,26 +311,19 @@ def the_counselor():
     """
     year = yield get("year")
     flags = yield get("flags")
-    # ---- SHE DOES NOT CLOSE THE YEAR BEHIND THE FILM'S BACK -----------------
+    # ---- SHE NEVER STARTS THE ENDING ----------------------------------------
     #
-    # She used to. If the year had nothing left owing and the page had not
-    # turned, pressing her said a line and opened the yearbook, and the page
-    # turning writes `yearbook:y1`, which is the exact flag the closing film's
-    # trigger goes false on. So a student who was handed the room, told to talk
-    # to anyone, and talked to her, deleted the whole ending before the principal
-    # ever got to play it: no congratulation, no wall, no cover, no walk out to
-    # the dock. It was the most likely single press in the game to make.
+    # ASH, 2026-09-08: *"pressing the principal starts the closing film (the
+    # counselor never starts it)."*
     #
-    # Now she starts the ending instead, which is the same thing the principal's
-    # desk does and for the same reason: the film is what closes a year, and
-    # anybody in it may be the one you walk up to. `_OPENED_HERE` still holds it
-    # off in the sitting the introduction played in, by Ash's rule that the two
-    # films never share a sitting.
-    done = yield from year_is_done()
-    if done and not _OPENED_HERE:
-        yield from ending()
-        return
-
+    # She used to open the yearbook herself, which deleted the ending outright,
+    # and then she started the film, which was better and still wrong: the closing
+    # is the PRINCIPAL coming to find you, and a student who wanders over to her
+    # first should not trigger the man walking up behind him. Two doors into one
+    # film is one door too many, and she is in the film anyway.
+    #
+    # So she says what she always says. The year being over is the objective bar's
+    # job to announce and the principal's to act on.
     board = yield get("cord_board")
     lines = counsel(board)
 

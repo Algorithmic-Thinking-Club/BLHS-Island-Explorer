@@ -57,7 +57,7 @@ from vine import (  # noqa: A004 (open is the engine's word)
 from board import on_the_wall
 
 from lines import (
-    ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, EXPLORE, FACE,
+    ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, FACE,
     FILL_IT_IN, FOLLOW, LOOK_AT_WALL,
     LOOK_AROUND, PRINCIPAL, SCHEDULE_IS_YOURS, SOMEBODY, STAMP_IT, TALK_TO_HER,
     THE_MAW_IS_YOURS, THOR, WALL, WALL_IS_YOURS, WELCOME, WELL_DONE,
@@ -623,7 +623,31 @@ def the_handover():
 
     # ---- 3: the bars come down on the wide shot -----------------------------
     yield movie(False)
-    yield objective(EXPLORE)
+    # ---- AND THE FILM KEEPS THE PANEL UNTIL IT IS FINISHED ------------------
+    #
+    # `movie(False)` DROPS the island's word, so the frame the bars come down on
+    # is the frame the YEAR starts talking again, and the year has something to
+    # say now: "Go to AP Human Geography. Open My Year." Measured on a cold run
+    # 2026-09-08, twice: that sentence arrived over the top of the principal
+    # mid-handover, a run that obeyed it opened the class while he was still
+    # speaking, the film's last line was queued behind the panel, and the corner
+    # never arrived at all.
+    #
+    # So the step is said again on the far side of the bars coming down. It is
+    # the same word the beat opened with, and it is handed back for good at the
+    # bottom of this function, on the frame the film is actually over.
+    yield objective(LOOK_AROUND)
+    #
+    # It used to pin "Explore. Talk to anyone. Open the Guide." here and again on
+    # every load of the room, and the island's word outranks the year's, so that
+    # sentence sat on the bar for the whole rest of the session. Measured on a
+    # cold run 2026-09-08: the handover ended, a class was owed, and the bar told
+    # him to explore a hall he had just been walked round, for six minutes.
+    #
+    # Ash's ruling the same day is what fills the gap: *"after the handover the
+    # objective bar says 'Go to <first class>. Open My Year.'"* That is the YEAR's
+    # sentence (`src/game/run/objective.ts`, the `class` clause), so the film's
+    # last act is to stop talking and let the year say it.
     yield say(THE_MAW_IS_YOURS, who=PRINCIPAL, portrait=FACE)
 
     # ---- 4: and the corner arrives, one plaque at a time, in silence --------
@@ -645,6 +669,13 @@ def the_handover():
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
+    # AND ONLY NOW. Handing the panel back before the last line let the year's
+    # own sentence ("Go to AP Human Geography. Open My Year.") arrive over the top
+    # of a man who was still speaking, and a run that obeyed it opened the class
+    # while the film was mid-word. Measured on a cold run 2026-09-08: the
+    # handover never finished and the corner never arrived. A film keeps the
+    # panel until it is done, and this is the frame it is done on.
+    yield objective(None)
     yield set_flag(HANDED_OVER)
     yield log("handover", {})
 
@@ -799,33 +830,24 @@ def opening(walk):
     if WALL_SHOWN not in flags:
         yield from the_wall()
 
-    # ---- AND WITH NOTHING TO SAIL TO, THE YEAR ENDS HERE --------------------
+    # ---- AND THE INTRODUCTION ENDS AT THE HANDOVER, ALWAYS -----------------
     #
-    # ASH, 2026-09-08: *"Imagine a freshman joins this game. They have no idea
-    # what the fuck to do. its just so lost."* The handover was the whole of the
-    # answer to that, and with no island on the roster the handover ends a film by
-    # giving a student a room with nothing left in it: three corner buttons, a
-    # wall he has just been shown, and an objective bar reading "Explore. Talk to
-    # anyone." over a hall of five stations that have all been visited.
+    # ASH, 2026-09-08, ruling: *"The intro film ends at the handover and never
+    # runs into the ending; remove the zero-island shortcut that runs the closing
+    # right after the wall."*
     #
-    # BRIEF-CLOSE-THE-LOOP section 2: *"If the year has nothing to sail to, the
-    # opening runs straight into the closing: the counselor comes to him after the
-    # wall, the cord, the yearbook card, and then section 3. No free roam, no
-    # 'Explore', no handover plaques at all in that case. Free roam exists only
-    # when the year has at least one island to sail to."*
+    # THE SHORTCUT WAS MINE AND IT WAS WRONG. BRIEF-CLOSE-THE-LOOP section 2 said
+    # that with nothing to sail to the opening should run straight into the
+    # closing, so that nobody is left in a finished room. Built and played, that
+    # is one film in which the principal walks you round, the counselor hands you
+    # a cord, and year one is over before you have touched anything: *"So year one
+    # just ended in the intro cutscene. I was very specific, that the ending
+    # cutscene and intro are separate."*
     #
-    # ONE CONDITION AND IT IS THE SEQUENCER'S OWN. `get("phase")` answers
-    # "yearbook" exactly when the stamp and Advisory are done and there is nothing
-    # left to sail to, and "voyage" when there is. So this asks the same question
-    # the objective arrow asks, on the same save, and the day one island is
-    # playable the phase says "voyage", this branch stops firing, and the handover
-    # runs on its own with the bar reading "Sail to <island>". Not one line here
-    # changes on that day.
-    done = yield from year_is_done()
-    if done:
-        yield from closing_beats()
-        return
-
+    # The empty room it was avoiding is not empty any more, which is what made the
+    # shortcut unnecessary rather than merely unwanted: the two picked classes are
+    # the middle of the year now (`src/game/run/objective.ts`, the `class`
+    # clause), so the handover hands over a room with something left to do in it.
     yield from the_handover()
 
 
@@ -833,14 +855,14 @@ def opening(walk):
 
 
 def closing_beats():
-    """The counselor, the cord, the page, and out. NO CONGRATULATION AT THE FRONT.
+    """The counselor, the cord, the page, and out.
 
-    The tail of the closing, reached two ways. `closing()` below runs it after the
-    principal has come to find him, which is a student who left the room and came
-    back. The OPENING runs it straight off the wall beat when the year has nothing
-    to sail to (section 2), and there the principal is already standing beside him
-    and has been all morning: a man who walks up to congratulate somebody he is
-    mid-sentence with is the teleport Ash saw on rail-5.
+    ONE CALLER NOW. It was two while the opening could run straight into the
+    ending; Ash ruled that out on 2026-09-08 and the opening ends at the handover
+    whatever the roster holds. It stays a function because it is the half of the
+    closing that is about the YEAR rather than about the man who came to find you,
+    and a reader looking for "what happens at the end" should find it in one
+    place.
     """
     year = yield get("year")
     flags = yield get("flags")
@@ -894,10 +916,7 @@ def closing():
 
     # ---- and the counselor, the cord, the page, and out --------------------
     #
-    # ONE COPY OF THE TAIL, shared with the road the opening takes when the year
-    # has nothing to sail to (`closing_beats`, and section 2 at its callsite).
-    # Two copies of "the cord, the page, and the door out" is two places for the
-    # end of the game to drift apart.
+    # the cord, the page, and the door out
     yield from closing_beats()
 
 
