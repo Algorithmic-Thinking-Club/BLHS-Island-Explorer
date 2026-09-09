@@ -102,22 +102,27 @@ def sailing_out():
     """
     year = yield get("year")
 
-    # ---- the camera pulls out to the whole island --------------------------
+    # ---- HE SAILS HOME, WHICH IS THE WHOLE OF THIS BEAT --------------------
     #
-    # THE SHIP DOES NOT SAIL OUT, AND THAT IS THE ONE LINE OF THE BRIEF THIS DOES
-    # NOT BUILD. Section 3 asks for *"the ship sails OUT on her own, the same shot
-    # as leaving the beach"*. Measured on the published hub v15: `route` refuses
-    # it, in the engine's own words, *"the_hub_approach is one-way, so it cannot
-    # be run backwards"*, and there is no hull on the water to sail anyway,
-    # because stepping ashore drops it. A departure needs a second authored line
-    # in MAPVIS going the other way, which is Ash's hands and not this session's.
+    # ASH, 2026-09-09: *"Thor gets teleported to the dock, still in cutscene
+    # mode. Then he hops on the boat smoothly, and the boat slowly sails normally
+    # back out into the ocean. Then title screen comes back."*
     #
-    # WHAT IS LEFT IS STILL THE SHOT. `view("island")` is the same wide frame the
-    # arrival card played over on the way in, so the year opens and closes on one
-    # picture of the whole place, and the bars are still up from the Maw.
-    yield view("island")
+    # THE COMMENT THAT USED TO BE HERE SAID THIS COULD NOT BE BUILT, and it was
+    # right about the road it tried: `route` refuses the hub's own approach line
+    # backwards, and there is no hull on the water once a student has stepped
+    # ashore. It was wrong that the departure therefore needed Ash's hands in
+    # MAPVIS. Nothing about leaving a dock needs a drawn line: the berth is in the
+    # world document, the ocean's depth is in the painting, and the engine can
+    # read both. `end_run()` performs the whole shot now, on any island with water
+    # under it, and this island says one word.
+    #
+    # WHAT `end_run` DOES, so that a member reading this knows what they get: the
+    # camera travels to the boat, the student is put on the dock behind it while
+    # nobody is looking there, a beat, he gets in, and she leaves at half a helm
+    # on the heading with the most open water away from the island. Then black,
+    # then the title.
     yield log("year_one_over", {"year": year})
-    yield wait(2600)
 
     # ---- to black, and the title -------------------------------------------
     #

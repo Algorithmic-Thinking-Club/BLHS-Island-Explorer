@@ -50,8 +50,8 @@ camera comes back, the principal is his own again, the bars come down in
 which is the game he had before. Pressing that thing puts him back on the film.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
-    actor_face, actor_move, actor_release, as_a_cutscene, enter, get, guide_to,
-    lead_to, log,
+    actor_face, actor_move, actor_release, as_a_cutscene, choose, enter, get,
+    guide_to, lead_to, log,
     movie, objective, open, place, play, say, set_flag, show, view, wait, walk_to,
 )
 
@@ -61,8 +61,9 @@ from lines import (
     ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, FACE,
     FILL_IT_IN, FOLLOW, LOOK_AT_WALL,
     LOOK_AROUND, PRINCIPAL, SCHEDULE_IS_YOURS, SOMEBODY, STAMP_IT, TALK_TO_HER,
+    GO_HOME_PROMPT, SAIL_HOME,
     THE_MAW_IS_YOURS, THOR, WALL, WALL_IS_YOURS, WELCOME, WELL_DONE,
-    WELL_DONE_BARE, WELL_DONE_GRADED,
+    WELL_DONE_BARE, WELL_DONE_GRADED, YEAR_ONE_DONE, YEAR_ONE_DONE_BARE,
 )
 
 # THE FLAG THE REST OF THE GAME READS, AND IT IS A BARE NAME.
@@ -588,7 +589,21 @@ def the_handover():
     yield view("island")
     yield wait(1600)
 
-    # ---- 3: the bars come down on the wide shot -----------------------------
+    # ---- 3: the last line of the film, said while the frame is still up ----
+    #
+    # ASH, 2026-09-09: *"as soon as the intro cutscene ends and the black
+    # rectangles go away, the tutorial has to play. I had to click for the button
+    # tutorial to play."*
+    #
+    # THE ORDER WAS THE WHOLE OF THAT. The bars came down, and THEN the man said
+    # one more thing, and a student had to dismiss it before anything happened.
+    # From the chair: the film ends, nothing, a click, a tutorial. The line is the
+    # film's last beat, so it belongs inside the film's own frame; the bars coming
+    # down ARE the handover, and nothing may stand between them and the thing that
+    # explains what he has just been handed.
+    yield say(THE_MAW_IS_YOURS, who=PRINCIPAL, portrait=FACE)
+
+    # ---- 4: the bars come down on the wide shot ----------------------------
     yield movie(False)
     # ---- AND THE FILM KEEPS THE PANEL UNTIL IT IS FINISHED ------------------
     #
@@ -615,9 +630,8 @@ def the_handover():
     # objective bar says 'Go to <first class>. Open My Year.'"* That is the YEAR's
     # sentence (`src/game/run/objective.ts`, the `class` clause), so the film's
     # last act is to stop talking and let the year say it.
-    yield say(THE_MAW_IS_YOURS, who=PRINCIPAL, portrait=FACE)
 
-    # ---- 4: and the corner arrives, one plaque at a time, in silence --------
+    # ---- 5: and the corner arrives, one plaque at a time, in silence --------
     #
     # NOTHING IS SAID ABOUT THEM. Section 1: *"the three corner plaques pop in one
     # at a time with nothing said about them. Each plaque explains itself the
@@ -629,11 +643,11 @@ def the_handover():
     # flourish per flag, and the two flags land on the same frame if nothing
     # separates them, which is a single flicker rather than a corner filling up.
     yield set_flag(HANDBOOK)
-    yield wait(900)
-    yield set_flag(CHART)
     yield wait(700)
+    yield set_flag(CHART)
+    yield wait(500)
 
-    # ---- 5: and then somebody points at each of them --------------------------
+    # ---- 6: and then somebody points at each of them --------------------------
     #
     # ASH, 2026-09-08 item 7: *"The intro's handover gets a tutorial: after the
     # wide shot and the line, each of the three plaques and the help button lights
@@ -730,6 +744,20 @@ def well_done(handle, picks):
     if chose:
         return WELL_DONE % (who, name_list(chose))
     return WELL_DONE_BARE % who
+
+
+def well_done_now(handle):
+    """What he says once the page has turned, which is the only true moment for it.
+
+    ASH, 2026-09-09: *"Principal Panther should clearly congratulate him with a
+    dialogue for finishing year one."* One sentence, his own name in it if he
+    typed one, and nothing about a year two, because this file does not know
+    whether there is one and the title screen does.
+    """
+    name = (handle or "").strip()
+    if not name or name == SOMEBODY:
+        return YEAR_ONE_DONE_BARE
+    return YEAR_ONE_DONE % name
 
 
 def year_is_done():
@@ -862,6 +890,40 @@ def closing_beats():
         if not closed:
             yield from step_off()
             return
+
+    # ---- HE CONGRATULATES HIM, AND THEN THERE IS ONE BUTTON ---------------
+    #
+    # ASH, 2026-09-09: *"after Thor sees what he earns, it should be far
+    # different. Principal Panther should clearly congratulate him with a dialogue
+    # for finishing year one. Then a big button should pop on the screen, 'Sail
+    # Home'."*
+    #
+    # THE ORDER IS THE POINT. The film said its one warm sentence at the very
+    # START, before the wall and before the cord, and it was a readout: a list of
+    # what he had picked. Then the yearbook closed and the film walked out of the
+    # room without ever telling him he had finished anything. This is said on the
+    # far side of the page turning, which is the frame the year is over on.
+    #
+    # HE COMES BACK TO THE STUDENT FIRST. The counselor's beat leaves the two of
+    # them at her desk with the man wherever the walk put him, and a
+    # congratulation delivered from across a hall is not one.
+    handle = yield get("handle")
+    try:
+        yield actor_move(PRINCIPAL, THOR, pace="walk")
+    except Exception as refused:
+        yield log("walk_over_refused", {"why": str(refused)})
+    yield objective(None)
+    yield say(well_done_now(handle), who=PRINCIPAL, portrait=FACE)
+
+    # AND THE LAST PRESS OF THE YEAR IS HIS. `choose` draws its options as buttons
+    # over the box, so one option is one big button and the film waits on it: the
+    # ending stops being a thing that happens TO a student and becomes the last
+    # thing he does. It is caught, because a refused button must never strand
+    # anybody in a finished room.
+    try:
+        yield choose([SAIL_HOME], prompt=GO_HOME_PROMPT)
+    except Exception as refused:
+        yield log("sail_home_refused", {"why": str(refused)})
 
     # AND OUT. `guide_to(None)` and `let_go` first, because `enter` tears this
     # island down and an arrow or a driven body left standing is left standing on

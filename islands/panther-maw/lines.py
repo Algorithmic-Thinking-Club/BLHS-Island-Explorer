@@ -218,3 +218,25 @@ WELL_DONE_BARE = "%s, that is your first year at Bonney Lake."
 
 # what he is called when the student never typed a name
 SOMEBODY = "Panther"
+
+# ---- THE END OF YEAR ONE -----------------------------------------------------
+#
+# ASH, 2026-09-09, after playing the closing: *"after Thor sees what he earns, it
+# should be far different. Principal Panther should clearly congratulate him with
+# a dialogue for finishing year one. Then a big button should pop on the screen,
+# 'Sail Home'."*
+#
+# WHAT WAS THERE was `WELL_DONE`, said at the START of the film, before the wall
+# and before the cord: a sentence listing what he picked, which is a readout and
+# not a congratulation. Then the yearbook closed and the film walked out of the
+# room. Nobody ever said he had finished the year.
+#
+# THIS IS SAID AFTER THE PAGE TURNS, which is the moment it is true.
+YEAR_ONE_DONE = (
+    "%s. That is year one at Bonney Lake, finished. The cord is yours and it stays yours."
+)
+YEAR_ONE_DONE_BARE = "That is year one at Bonney Lake, finished. The cord is yours and it stays yours."
+
+# and the one thing left to do, which is the last press of the year
+SAIL_HOME = "Sail Home"
+GO_HOME_PROMPT = "Your boat is at the dock."
