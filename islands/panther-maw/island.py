@@ -216,15 +216,27 @@ def the_principal():
         yield from rail(walk=False)
         return
 
-    # the ending, for a student who closed the yearbook without turning the page
-    # and walked away. The year's own light is on this desk while it is owed.
+    # ---- THE ENDING, FOR A STUDENT WHO IS ALREADY STANDING IN THE ROOM -----
     #
-    # AND NOT ON THE LOAD THE INTRODUCTION PLAYED ON, the same rule the room
-    # opening keeps. A student who is handed the game and walks straight over to
-    # the man who handed it to him gets a hello, not the whole of the ending
-    # thirty seconds after the bars came down.
+    # ASH, 2026-09-08 item 6: *"Walking into the Maw with the year done starts
+    # the ending film."* That is the OTHER road (`walking_in`), and it is the one
+    # that must never fire on the load the opening played on, because the two
+    # films would run back to back. This road is the press, and it is fenced by
+    # the HANDOVER instead of by the latch.
+    #
+    # WHY THE FENCE MOVED, measured on the live deploy 2026-09-08. The year now
+    # closes at the CHART TABLE: a student presses Go on his last pick standing
+    # ten feet from the man, the bar lights the desk and says "Find the
+    # principal", and with the latch on this road pressing him got a hello. He is
+    # then told to go back to a room he is standing in, and nothing he can do in
+    # that room ends the year. The cold gate sat there for four minutes.
+    #
+    # AND IT CANNOT RUN THE TWO FILMS TOGETHER, which is what Ash actually ruled
+    # out. `HANDED_OVER` is written on the last line of the opening, and between
+    # it and this the student has to have finished every pick on his sheet. The
+    # opening does not finish a pick, so the year cannot be done when it ends.
     done = yield from year_is_done()
-    if done and not _OPENED_HERE:
+    if done and HANDED_OVER in flags:
         yield from ending()
         return
 
