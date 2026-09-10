@@ -95,7 +95,16 @@ HANDBOOK = "handbook:granted"
 
 # beat 4 has no other trace in the run. Everything else the rail does is written
 # somewhere the save already keeps, and looking at a wall is not.
-WALL_SHOWN = "maw:wall_shown"
+# ---- THE WALL IS SHOWN ONCE A YEAR, NOT ONCE A RUN (Ash, 2026-09-09) --------
+#
+# This was a bare `maw:wall_shown` with no year in it, so the beat that walks a
+# student to his trophy case and reads it to him ran in year one and never again.
+# Year two, three and four each finish with a case full of new frames that nobody
+# ever shows him. Every other latch in this file carries its year for exactly
+# this reason (`turned(year)`, `vignette:y%d`).
+def wall_shown(year):
+    """The flag saying this YEAR's wall has been walked to."""
+    return "maw:wall_shown:y%d" % year
 
 # THE FILM HAS PLAYED. Read by `island.py` so the room stops opening on it. The
 # name is the old one on purpose: a run saved under rail-4 carries this string,
@@ -466,7 +475,7 @@ def the_fire(beat):
     return True
 
 
-def the_wall():
+def the_wall(year):
     """BEAT 4. He leads him to the wall and it opens on what he picked.
 
     The panel is the readout: one frame per thing he chose, filled where he has
@@ -484,7 +493,7 @@ def the_wall():
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
     yield open("wall", wait=True)
-    yield set_flag(WALL_SHOWN)
+    yield set_flag(wall_shown(year))
 
 
 def the_counselor(year):
@@ -851,13 +860,15 @@ def opening(walk):
     # ending rather than as an interruption: the man shows you the shelf your
     # year goes on, and then gives you the room.
     #
-    # AND IT IS THE SAME BEAT THE CLOSING OWNS, not a copy. `WALL_SHOWN` is what
+    # AND IT IS THE SAME BEAT THE CLOSING OWNS, not a copy. `wall_shown(year)` is what
     # keeps them one beat: whichever film gets there first draws it, and the
     # other one skips it. A student who steps off the opening at the schedule
     # and comes back through the ending still sees the wall exactly once.
+    # the wall's latch carries the year, so the opening has to know which one
+    year = yield get("year")
     flags = yield get("flags")
-    if WALL_SHOWN not in flags:
-        yield from the_wall()
+    if wall_shown(year) not in flags:
+        yield from the_wall(year)
 
     # ---- AND THE INTRODUCTION ENDS AT THE HANDOVER, ALWAYS -----------------
     #
@@ -996,9 +1007,11 @@ def closing():
     picks = yield get("picks")
     yield say(well_done(handle, picks), who=PRINCIPAL, portrait=FACE)
 
+    # the wall's latch carries the year, so this film has to know which one
+    year = yield get("year")
     flags = yield get("flags")
-    if WALL_SHOWN not in flags:
-        yield from the_wall()
+    if wall_shown(year) not in flags:
+        yield from the_wall(year)
 
     # ---- and the counselor, the cord, the page, and out --------------------
     #
