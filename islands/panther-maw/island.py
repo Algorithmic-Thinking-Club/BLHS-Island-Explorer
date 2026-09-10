@@ -349,7 +349,10 @@ def the_counselor():
     # -1 is not an index. It is nobody having answered, because the player left
     # while the buttons were up, and it must not read as the first button.
     if pick == 0:
-        yield open("handbook")
+        # THE CORDS PAGE, NOT THE ISLANDS ONE (Ash, 2026-09-09). `open("handbook")`
+        # always lands on Islands, so the one beat in this game whose whole subject
+        # is the cords opened the page about islands.
+        yield open("cords")
 
 
 @on_talk("outfitter")
