@@ -167,7 +167,24 @@ SHOW_ME = "Open the Guide"
 NOT_NOW = "Not now"
 
 # THE CLOSING FILM. She has the cord and the yearbook turns the page.
-CORD = "Year one is done. Here is your first cord."
+# ---- THE YEAR IS ASKED, NEVER SPELLED (Ash, 2026-09-09) ---------------------
+#
+# *"I finished year 2, and it says 'year one is done' everywhere."*
+#
+# These three said "year one" as a literal, written in the week when year one was
+# the only year there was. `year_words` is the same table `run/year.ts` keeps on
+# the engine side, and both are short because `end_year` graduates at four.
+YEAR_WORDS = ("zero", "one", "two", "three", "four")
+
+
+def year_word(n):
+    """"two", for a sentence. The engine spells it the same way."""
+    return YEAR_WORDS[n] if 0 <= n < len(YEAR_WORDS) else str(n)
+
+
+CORD = "Year %s is done. Here is your %s cord."
+# and which cord it is, which is a different fact from which year it is
+CORD_ORDINAL = ("", "first", "second", "third", "fourth")
 
 # THERE USED TO BE A SECOND ONE HERE and it is CUT rather than left lying about.
 # "Year one is done. Let's turn the page and see what you earned." was what she
@@ -232,10 +249,10 @@ SOMEBODY = "Panther"
 # room. Nobody ever said he had finished the year.
 #
 # THIS IS SAID AFTER THE PAGE TURNS, which is the moment it is true.
-YEAR_ONE_DONE = (
-    "%s. That is year one at Bonney Lake, finished. The cord is yours and it stays yours."
+YEAR_DONE = (
+    "%s. That is year %s at Bonney Lake, finished. The cord is yours and it stays yours."
 )
-YEAR_ONE_DONE_BARE = "That is year one at Bonney Lake, finished. The cord is yours and it stays yours."
+YEAR_DONE_BARE = "That is year %s at Bonney Lake, finished. The cord is yours and it stays yours."
 
 # and the one thing left to do, which is the last press of the year
 SAIL_HOME = "Sail Home"

@@ -58,12 +58,12 @@ from vine import (  # noqa: A004 (open is the engine's word)
 from board import on_the_wall
 
 from lines import (
-    ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, COUNSELOR, FACE,
+    ADVISORY_IS_MONDAY, ANSWER, COME_BACK, CORD, CORD_ORDINAL, COUNSELOR, FACE,
     FILL_IT_IN, FOLLOW, LOOK_AT_WALL,
     LOOK_AROUND, PRINCIPAL, SCHEDULE_IS_YOURS, SOMEBODY, STAMP_IT, TALK_TO_HER,
     GO_HOME_PROMPT, SAIL_HOME,
     THE_MAW_IS_YOURS, THOR, WALL, WALL_IS_YOURS, WELCOME, WELL_DONE,
-    WELL_DONE_BARE, WELL_DONE_GRADED, YEAR_ONE_DONE, YEAR_ONE_DONE_BARE,
+    WELL_DONE_BARE, WELL_DONE_GRADED, YEAR_DONE, YEAR_DONE_BARE, year_word,
 )
 
 # THE FLAG THE REST OF THE GAME READS, AND IT IS A BARE NAME.
@@ -508,7 +508,14 @@ def the_counselor(year):
     """
     yield from take_him(DESK)
     yield objective(TALK_TO_HER)
-    yield say(CORD, who=COUNSELOR)
+    # THE YEAR AND THE CORD ARE TWO DIFFERENT NUMBERS, and both used to be the
+    # word "one" (Ash, 2026-09-09: *"I finished year 2, and it says 'year one is
+    # done' everywhere"*). A student closing year two hears "Year two is done.
+    # Here is your second cord."
+    yield say(
+        CORD % (year_word(year), CORD_ORDINAL[year] if 0 < year < len(CORD_ORDINAL) else str(year)),
+        who=COUNSELOR,
+    )
     yield open("yearbook", wait=True)
 
     flags = yield get("flags")
@@ -746,18 +753,21 @@ def well_done(handle, picks):
     return WELL_DONE_BARE % who
 
 
-def well_done_now(handle):
+def well_done_now(handle, year):
     """What he says once the page has turned, which is the only true moment for it.
 
     ASH, 2026-09-09: *"Principal Panther should clearly congratulate him with a
     dialogue for finishing year one."* One sentence, his own name in it if he
-    typed one, and nothing about a year two, because this file does not know
+    typed one, and nothing about the NEXT year, because this file does not know
     whether there is one and the title screen does.
+
+    AND IT ASKS WHICH YEAR. It said "year one" as a literal until Ash finished
+    year two and was congratulated for year one.
     """
     name = (handle or "").strip()
     if not name or name == SOMEBODY:
-        return YEAR_ONE_DONE_BARE
-    return YEAR_ONE_DONE % name
+        return YEAR_DONE_BARE % year_word(year)
+    return YEAR_DONE % (name, year_word(year))
 
 
 def year_is_done():
@@ -913,7 +923,7 @@ def closing_beats():
     except Exception as refused:
         yield log("walk_over_refused", {"why": str(refused)})
     yield objective(None)
-    yield say(well_done_now(handle), who=PRINCIPAL, portrait=FACE)
+    yield say(well_done_now(handle, year), who=PRINCIPAL, portrait=FACE)
 
     # AND THE LAST PRESS OF THE YEAR IS HIS. `choose` draws its options as buttons
     # over the box, so one option is one big button and the film waits on it: the
