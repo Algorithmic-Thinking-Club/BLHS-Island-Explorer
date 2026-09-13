@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "programme": "atc",
+  "map": "atc-1",
+  "title": "Algorithmic Thinking Club",
+  "owner": "Ashwath Polali",
+  "entry": "island.py",
+  "modules": ["island.py", "lines.py"],
+  "content": {
+    "what": {
+      "text": "The computer science club at Bonney Lake High. Members build real software the school uses, including this game, and compete through SkillsUSA. In its first year it placed first, second and third at Regionals in Computer Programming, first and third at State, and competed at Nationals.",
+      "source": "Ashwath Polali, who founded the club in September 2025. ATC is not on the official BLHS clubs list, so there is no page to cite."
+    },
+    "when": {
+      "text": "Room 303, after school until three.",
+      "source": "Ashwath Polali, club founder. Which days are not settled yet, so none are claimed here."
+    },
+    "how_to_join": {
+      "text": "Show up after school and fill out a form. There is no tryout and nobody is cut.",
+      "source": "Ashwath Polali, club founder."
+    },
+    "blurb": "the club that builds this game",
+    "sticker": "first-program"
+  }
+}
