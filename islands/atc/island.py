@@ -40,10 +40,14 @@ from lines import (
 # in the line that uses it means renaming the shot is a one-word edit.
 SCREEN = "the_screen"
 
-# HOW LONG THE CAMERA IS GIVEN TO ARRIVE. `framing` comes back the moment it is
-# asked rather than when the move finishes, so without this the screen opens over
-# a camera still travelling and the push-in is never seen.
-PUSH_MS = 900
+# A BREATH AFTER THE CAMERA LANDS, and that is all it is now.
+#
+# `framing` used to answer the instant it was asked, so this number was the whole
+# of the push-in and it was a guess: the camera takes as long as it takes and the
+# screen opened somewhere in the middle of the move. The engine's `framing` waits
+# for its own camera now, so what is left here is a held moment on the machine
+# before the screen takes over, which is a beat rather than a fudge.
+SETTLE_MS = 260
 
 # what this island remembers. The engine puts the programme id in front of both,
 # so these really are "atc:met" and "atc:built:y1" in the save and no other island
@@ -178,13 +182,13 @@ def the_offer():
 def sit_down():
     """The camera goes into the monitor, the screen opens, and it is scored.
 
-    THE WAIT IS NOT DECORATION. `framing` answers the moment it is asked while the
-    camera is still travelling, so opening the screen on the next line would cover
-    the move the whole beat is built on.
+    THE WAIT IS A BEAT AND NOT A FUDGE. `framing` comes back when the camera has
+    arrived, so what the wait buys is a held moment looking at the machine before
+    the screen takes the whole window.
     """
     yield objective("Fix the program.")
     yield framing(SCREEN)
-    yield wait(PUSH_MS)
+    yield wait(SETTLE_MS)
 
     score = yield play(
         "the_program",
