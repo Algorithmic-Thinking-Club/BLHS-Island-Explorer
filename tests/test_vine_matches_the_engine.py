@@ -186,5 +186,37 @@ class TheFormatRulesAgree(unittest.TestCase):
         self.assertEqual(self.number("MAX_MODULES"), manifest.MAX_MODULES)
 
 
+class TheAskablePathsAreTheSameList(unittest.TestCase):
+    """What `get` documents, what the engine answers, and what the pump serves.
+
+    THREE COPIES OF ONE VOCABULARY, and they had already drifted: the docstring
+    was missing `advisory`, the hand-written list in test_the_maw was four paths
+    behind it, and the engine's own switch answered an unlisted path with
+    `undefined` instead of refusing. This is the check that stops it happening
+    again, and it is cheap: three files, one set each.
+    """
+
+    def setUp(self):
+        try:
+            from tests import pump
+        except ImportError:
+            import pump
+        self.pump = pump
+        engine = os.path.join(GAME, "src", "game", "intent-engine.ts")
+        if not os.path.exists(engine):
+            self.skipTest("the engine repo is not next door, so there is nothing to cross")
+        with open(engine, encoding="utf-8") as f:
+            self.ts = f.read()
+
+    def test_the_engine_answers_exactly_what_get_documents(self):
+        m = re.search(r"const READABLE_PATHS: Record<RunPath, true> = \{(.*?)\}", self.ts, re.S)
+        self.assertIsNotNone(m, "intent-engine.ts has no READABLE_PATHS table to cross")
+        theirs = set(re.findall(r"([a-z_]{2,20}): true", m.group(1)))
+        self.assertEqual(theirs, self.pump.askable())
+
+    def test_the_pump_holds_a_value_for_every_path(self):
+        self.assertEqual(set(self.pump.FRESH_RUN), self.pump.askable())
+
+
 if __name__ == "__main__":
     unittest.main()

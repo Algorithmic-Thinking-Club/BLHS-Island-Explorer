@@ -20,6 +20,7 @@ is still the only place your island really runs.
 import inspect
 import json
 import os
+import re
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -169,3 +170,108 @@ def only(seen, kind):
 
 def _module_name(filename):
     return filename[:-3] if filename.endswith(".py") else filename
+
+# ---- ONE RUN STATE, SHARED, because three test files held three different ones -
+#
+# Every island asks the engine about the run, and each of these files used to
+# carry its own little dictionary of answers. The moment an island asked a path
+# that file had not thought of, the test died with a KeyError pointing at the
+# FIXTURE and not at anything wrong with the island. That is how 37 of 148 tests
+# went red without a single island being broken: `test_the_hub` knew `flags` and
+# the hub asks `year`; `test_the_maw` knew seven paths and the founding sequence
+# asks `phase`, `handle` and `picks`.
+#
+# This is exactly the fifteen paths the engine answers, with the values it gives
+# on a save nobody has played yet, so a test starts where a new student starts.
+# Override any of them by keyword.
+#
+# IT MUST NEVER BECOME A defaultdict. The KeyError on an UNKNOWN path is the only
+# check in this repo that catches an island asking a question nobody answers, and
+# the engine itself now refuses one too.
+FRESH_RUN = {
+    "year": 1,
+    "gpa": 0,
+    "tokens": 0,
+    "cords": [],
+    "cord_board": [],
+    "trophies": {"stickers": [], "badges": []},
+    "advisory": None,
+    "flags": [],
+    "planned": False,
+    "islands": {},
+    "handle": None,
+    "graduated": False,
+    "mode": "game",
+    "phase": None,
+    "picks": {"classes": [], "seasons": [], "graded": [], "gpa": None},
+}
+
+
+def answering(refuse=(), choices=(), score=3.4, **state):
+    """An engine that answers every question about the run, and refuses on cue.
+
+    `refuse` is the intent kinds this map cannot do, which come back to the island
+    as the engine's own refusal at the line that yielded. `choices` is what the
+    player presses, in order, and anything past the end of it is the first button.
+    `score` is what a scored beat comes back as. Everything else is a run value:
+    `answering(year=2, flags=["maw:railed"])`.
+
+    A `set_flag` really lands, because an island that writes a flag and then reads
+    it back is the ordinary shape and a fixture that forgot would make it look
+    broken.
+    """
+    unknown = [k for k in state if k not in FRESH_RUN]
+    if unknown:
+        raise KeyError("no such run path: %s" % ", ".join(sorted(unknown)))
+    run = dict(FRESH_RUN)
+    run.update(state)
+    run["flags"] = list(run["flags"])
+    queue = list(choices)
+
+    def answer(intent):
+        kind = intent["kind"]
+        if kind in refuse:
+            raise Refused("%s: this map cannot do that" % kind)
+        if kind == "get":
+            return run[intent["path"]]
+        if kind == "set_flag":
+            name = intent.get("name") or intent.get("flag")
+            if name and name not in run["flags"]:
+                run["flags"].append(name)
+            return None
+        if kind == "choose":
+            return queue.pop(0) if queue else 0
+        if kind == "play":
+            return score
+        return None
+
+    answer.run = run
+    return answer
+
+
+def askable():
+    """Every path `get` documents, read out of vine.py itself.
+
+    DERIVED AND NOT TYPED OUT, because a hand-written copy is how this check
+    rotted: the list in test_the_maw was missing `advisory`, `phase`, `planned`
+    and `picks`, and the comment above it claimed it came from the docstring it
+    had drifted from. The engine refuses an unknown path now too, so this and the
+    engine agree by construction rather than by somebody remembering both.
+
+    What it reads is the docstring's own two-column table: a path, some spaces,
+    then its description.
+    """
+    with open(os.path.join(REPO, "vine.py"), encoding="utf-8") as f:
+        src = f.read()
+    body = re.search(r'def get\(path\):\n    """(.*?)"""', src, re.S)
+    if not body:
+        raise AssertionError("vine.py's get() has no docstring to read the paths out of")
+    out = set()
+    for line in body.group(1).split("\n"):
+        # two spaces is enough: `cord_board` has the longest name and only two
+        m = re.match(r"    ([a-z_]{2,20})  +\S", line)
+        if m:
+            out.add(m.group(1))
+    if len(out) < 12:
+        raise AssertionError("only found %d paths in the docstring: %s" % (len(out), sorted(out)))
+    return out

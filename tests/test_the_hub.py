@@ -22,17 +22,10 @@ def _engine_words():
         return set(re.findall(r'"kind": "([a-z_]+)"', f.read()))
 
 
-def answering(flags=(), refuse=()):
-    """An engine that answers the two questions this island asks."""
-    state = {"flags": list(flags)}
-
-    def answer(intent):
-        if intent["kind"] in refuse:
-            raise pump.Refused("%s: this map cannot do that" % intent["kind"])
-        if intent["kind"] == "get":
-            return state[intent["path"]]
-        return None
-    return answer
+# ONE RUN STATE FOR EVERY TEST FILE, in pump. This one held only `flags`, so the
+# day the island asked `year` all sixteen tests in here died with a KeyError at
+# the fixture. Keeping a local copy is what let that happen.
+answering = pump.answering
 
 
 class TheIslandLoads(unittest.TestCase):
@@ -62,11 +55,20 @@ class TheCrossing(unittest.TestCase):
     def setUp(self):
         pump.load(ISLAND)
 
-    def test_the_crossing_is_written_down_the_moment_it_is_over(self):
-        """Not at the end of the handler: an interrupted arrival must not re-sail."""
+    def test_the_arrival_is_written_down_when_the_whole_piece_is_over(self):
+        """AT THE TUNNEL AND NOWHERE EARLIER, which reverses what this file used
+        to assert. Ash, 2026-09-07: the flag sat one line after the crossing on
+        the argument that a crossing happens once, and the cost was a student who
+        reloaded halfway up the quay getting the flag, no handler, no bars and the
+        tiller in his hands on a boat already tied up. The arrival is the whole
+        piece from the water to the door, so the piece being OVER is the thing
+        written down, and a reload in the middle is a safe replay.
+        """
         kinds = pump.kinds(pump.run("start", answering()))
-        self.assertLess(kinds.index("set_flag"), kinds.index("ashore"))
-        self.assertLess(kinds.index("set_flag"), kinds.index("walk_to"))
+        self.assertGreater(kinds.index("set_flag"), kinds.index("ashore"))
+        self.assertGreater(kinds.index("set_flag"), kinds.index("walk_to"))
+        # once, and only once, or a replay would write a second row
+        self.assertEqual(kinds.count("set_flag"), 1)
 
     def test_the_ship_is_sent_along_the_sail_line_once(self):
         first = pump.run("start", answering())
@@ -133,21 +135,34 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         self.assertLess(kinds.index("view"), kinds.index("route"))
         self.assertLess(kinds.index("route"), kinds.index("view", kinds.index("route")))
 
-    def test_the_card_plays_at_the_wide_shot_and_he_hops_out_after_it(self):
+    def test_he_steps_off_and_then_the_island_is_framed_over_the_card(self):
+        """HE IS ASHORE FIRST AND THE WIDE SHOT COMES AFTER, which is also the
+        reverse of what stood here. The card is not skipped: the engine's own
+        ashore path suppresses it at the moment of stepping off and pays it on the
+        island shot once the camera has settled, so the card still plays over the
+        wide frame. What the old order would have meant is a wide shot of an
+        island with nobody on it yet.
+        """
         kinds = pump.kinds(pump.run("start", answering()))
         wide = kinds.index("view", kinds.index("route"))
-        self.assertLess(wide, kinds.index("ashore"))
+        self.assertLess(kinds.index("ashore"), wide)
         # and the bars are still up over it: the only `movie` in the whole
         # handler is the one that raised them, before anything moved
         self.assertEqual(kinds.count("movie"), 1)
         self.assertLess(kinds.index("movie"), wide)
 
     def test_the_camera_moves_once_from_the_island_to_him(self):
-        """Ash watched a two step shift: full island, half island, then Thor."""
+        """Ash watched a two step shift: full island, half island, then Thor.
+
+        MEASURED FROM THE WIDE SHOT AND NOT FROM STEPPING OFF. The window used to
+        start at `ashore`, which now sits BEFORE the island shot, so it spanned
+        two views by construction and could never hold. The thing it was written
+        to catch is a second pull-in between seeing the island and following him,
+        and that is exactly one shot, still.
+        """
         kinds = pump.kinds(pump.run("start", answering()))
-        after = kinds.index("ashore")
-        # exactly one shot is asked for between stepping off and walking
-        views = [i for i, k in enumerate(kinds) if k == "view" and after < i < kinds.index("walk_to")]
+        wide = kinds.index("view", kinds.index("route"))
+        views = [i for i, k in enumerate(kinds) if k == "view" and wide < i < kinds.index("walk_to")]
         self.assertEqual(len(views), 1)
 
     def test_the_line_nobody_could_say_is_said(self):

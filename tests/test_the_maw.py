@@ -39,39 +39,30 @@ def _engine_words():
 
 
 def answering(flags=(), board=(), trophies=None, advisory=None, mode="game", picks=(), score=3.4,
-              refuse=(), year=1, planned=False):
-    """An engine that answers the questions this island actually asks.
+              refuse=(), year=1, planned=False, **rest):
+    """The shared run state, with this file's own spellings kept.
 
-    `refuse` names words this pretend engine cannot perform. A real refusal is
-    RAISED at the yield that asked for it, which is what `pump.run` does with a
-    thrown value, so this is the shape a member's island really meets.
+    ONE RUN STATE LIVES IN pump NOW. This used to hold seven paths of its own and
+    raise KeyError on anything else, so the day `founding.py` asked `phase` the
+    file lost 21 tests to the fixture rather than to the island: `handle` and
+    `picks` followed it. The names here stay because sixty-two call sites use
+    them, and `picks` means the buttons a player presses, which the engine calls
+    a choose queue and not the year's picks.
     """
-    queue = list(picks)
-    state = {
-        "flags": list(flags),
-        "cord_board": list(board),
-        "trophies": trophies or {"stickers": [], "badges": []},
-        "advisory": advisory,
-        "mode": mode,
-        "year": year,
-        # IS THIS YEAR'S SHEET REALLY STAMPED. The rail asks before it walks him
-        # on: a student who pressed Close for now has not made the decision the
-        # beat exists for, and walking him to the fire with an empty schedule is
-        # the rail losing the one thing it took him to the table for.
-        "planned": planned,
-    }
+    return pump.answering(
+        refuse=refuse, choices=picks, score=score,
+        flags=flags, cord_board=board, trophies=trophies or {"stickers": [], "badges": []},
+        advisory=advisory, mode=mode, year=year, planned=planned, **rest)
 
-    def answer(intent):
-        if intent["kind"] in refuse:
-            raise pump.Refused('%s: this map cannot do that' % intent["kind"])
-        if intent["kind"] == "get":
-            return state[intent["path"]]
-        if intent["kind"] == "choose":
-            return queue.pop(0) if queue else 0
-        if intent["kind"] == "play":
-            return score
-        return None
-    return answer
+
+# WHAT "HE HAS BEEN HERE BEFORE" IS SPELLED AS. The latch the arrival reads is
+# `maw:railed` (founding.py:113, gated at island.py:148 and :215), and
+# `maw:founding` only controls the tunnel beat INSIDE the opening. Six tests here
+# passed the wrong one, so the island replayed its whole introduction and then
+# they asserted it had not happened. Assertions that the founding flag gets
+# WRITTEN are untouched, because that is a different question.
+RAILED = "maw:railed"
+FOUNDING = "maw:founding"
 
 
 def midyear(**kw):
@@ -145,12 +136,12 @@ class EveryWordItUsesIsARealWord(unittest.TestCase):
             ("first arrival, the founding", pump.run("start", answering())),
             ("first arrival, nobody at the desk",
              pump.run("start", answering(refuse=("actor_move",)))),
-            ("later arrival", pump.run("start", answering(flags=["maw:founding"]))),
+            ("later arrival", pump.run("start", answering(flags=["maw:railed"]))),
             ("home, after the page turned", pump.run("start", answering(
-                flags=["maw:founding", "yearbook:y1"]))),
+                flags=["maw:railed", "yearbook:y1"]))),
             ("the founding, from the desk", pump.run("talk:principal_desk", answering())),
             ("the desk again", pump.run("talk:principal_desk",
-                                        answering(flags=["maw:founding"]))),
+                                        answering(flags=["maw:railed"]))),
             ("the counselor, home", pump.run("talk:counselor", answering(advisory=None))),
             ("the fire, owed", pump.run("talk:hearth", answering(advisory="core:y1"))),
             ("the fire, banked", pump.run("talk:hearth", answering(advisory=None))),
@@ -171,9 +162,11 @@ class EveryWordItUsesIsARealWord(unittest.TestCase):
                 self.assertEqual(set(pump.kinds(seen)) - self.words, set())
 
     def test_no_branch_asks_a_question_get_cannot_answer(self):
-        # the closed list, out of vine.py's own docstring for `get`
-        askable = {"year", "gpa", "tokens", "cords", "cord_board", "trophies",
-                   "flags", "islands", "handle", "mode", "graduated", "advisory"}
+        # READ OUT OF vine.py, not copied from it. The list that stood here had
+        # drifted four paths behind the docstring its own comment cited, and six
+        # subtests were failing on `phase` and `planned`, which the engine has
+        # always answered. See pump.askable.
+        askable = pump.askable()
         for label, seen in self.paths():
             with self.subTest(path=label):
                 for g in pump.only(seen, "get"):
@@ -208,7 +201,7 @@ class WalkingIn(unittest.TestCase):
         self.assertIn("maw:founding", [i["flag"] for i in pump.only(first, "set_flag")])
 
     def test_and_never_again(self):
-        later = pump.run("start", answering(flags=["maw:founding"]))
+        later = pump.run("start", answering(flags=["maw:railed"]))
         self.assertEqual(pump.only(later, "say"), [])
 
     def test_the_wall_tells_the_truth_before_anybody_presses_it(self):
@@ -216,7 +209,7 @@ class WalkingIn(unittest.TestCase):
         # frame, and the drawn shelf is a case with things on it, so a first year
         # with nothing earned used to walk in to a full trophy case and watch it
         # vanish when they pressed E. Arrival syncs it, on every load.
-        for flags in ((), ("maw:founding",)):
+        for flags in ((), ("maw:railed",)):
             with self.subTest(flags=flags):
                 empty = pump.run("start", answering(flags=flags))
                 self.assertEqual([i["visible"] for i in pump.only(empty, "show")], [False])
@@ -235,12 +228,12 @@ class WalkingIn(unittest.TestCase):
     def test_home_says_year_two_next_time_once(self):
         # beat 8's last line: the page has turned, and the next time in she says
         # so, and only that once
-        home = pump.run("start", answering(flags=["maw:founding", "yearbook:y1"]))
+        home = pump.run("start", answering(flags=["maw:railed", "yearbook:y1"]))
         said = [i["text"] for i in pump.only(home, "say")]
         self.assertEqual(said, ["Year one is done. Year two, next time."])
         self.assertEqual([i["flag"] for i in pump.only(home, "set_flag")], ["maw:next_time"])
         again = pump.run("start", answering(
-            flags=["maw:founding", "yearbook:y1", "maw:next_time"]))
+            flags=["maw:railed", "yearbook:y1", "maw:next_time"]))
         self.assertEqual(pump.only(again, "say"), [])
 
 
@@ -322,7 +315,7 @@ class TheFoundingEvent(unittest.TestCase):
         self.assertIn("maw:founding", [i["flag"] for i in pump.only(seen, "set_flag")])
 
     def test_a_second_visit_is_one_line_and_no_scene(self):
-        again = pump.run("talk:principal_desk", answering(flags=["maw:founding"]))
+        again = pump.run("talk:principal_desk", answering(flags=["maw:railed"]))
         self.assertEqual(pump.kinds(again), ["get", "say"])
 
 
