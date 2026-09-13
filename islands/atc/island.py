@@ -236,17 +236,29 @@ def sit_down():
     yield framing(SCREEN)
     yield wait(SETTLE_MS)
 
-    score = yield play(
-        "the_program",
-        title="The half-finished program",
-        items=[THE_PROGRAM, HOW_YOU_JOIN],
-    )
-
-    # THE CAMERA COMES BACK WHATEVER HAPPENED. A shot raised and never lowered
-    # leaves a student locked at 6.78 times zoom on a desk with the controls back
-    # in their hands, which looks like the game has broken.
-    yield framing(None)
-    yield objective(None)
+    # THE CAMERA COMES BACK WHATEVER HAPPENED, AND THAT NEEDS A try/finally.
+    #
+    # It used to be two plain lines after `play`, which only run when `play` RETURNS.
+    # `play` can also REFUSE: the engine checks every question before it will draw one,
+    # so a step naming an instruction that does not exist, two questions sharing an id,
+    # or a misspelt kind all arrive here as an exception at this line. And this is the
+    # island a member copies, so a typo in the list below is the most likely thing that
+    # will ever happen to this file.
+    #
+    # Without the finally, that typo left a student at eight times zoom staring at a
+    # desk with the controls back in his hands and "Fix the program." across the top of
+    # the screen, which looks exactly like the game breaking. With it, he gets the room
+    # back and the engine says what was wrong at the member's own line.
+    score = None
+    try:
+        score = yield play(
+            "the_program",
+            title="The half-finished program",
+            items=[THE_PROGRAM, HOW_YOU_JOIN],
+        )
+    finally:
+        yield framing(None)
+        yield objective(None)
 
     # None is the student closing the screen without finishing, which is NOT a
     # zero. A zero is somebody who answered and got everything wrong, and writing
