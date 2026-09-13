@@ -144,6 +144,14 @@ def the_president():
 
     if built(year) in flags:
         yield say(AGAIN, who=HOST)
+        # AND MEETING HIM STILL COUNTS, WHENEVER IT HAPPENS. The machine can be
+        # pressed without ever speaking to him, so a student who walks up to the lit
+        # computer first finishes the program and then finds him afterwards. Without
+        # this line that student left "Meet the club president" unticked for the rest
+        # of the year: the row could only be ticked below, and below is unreachable
+        # once the club is finished. The island sat at one of two for ever and the
+        # way back never appeared.
+        yield task_done("meet")
         return
 
     known = MET in flags
@@ -162,7 +170,8 @@ def the_president():
 
     # TICKED WHERE IT BECOMES TRUE, which is after he has spoken and not before.
     # A row that ticks itself on the way in is a list that lies about how far along
-    # somebody is.
+    # somebody is. Said again at the top of this handler for the student who pressed
+    # the machine before he ever spoke to anybody.
     yield task_done("meet")
 
     yield objective("Follow him to the machine.")
@@ -206,6 +215,11 @@ def the_offer():
     # while the buttons were up, and it must never read as the first button.
     if pick != 0:
         yield say(COME_BACK, who=HOST)
+        # AND THE PANEL GOES BACK TO THE YEAR. "Follow him to the machine." was left
+        # on the glass for ever by a student who followed him to the machine and then
+        # said not right now: a sentence telling him to do the thing he is standing in
+        # front of and has just declined.
+        yield objective(None)
         return
 
     yield from sit_down()
