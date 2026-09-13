@@ -68,7 +68,12 @@ TASKS = [
 # screen opened somewhere in the middle of the move. The engine's `framing` waits
 # for its own camera now, so what is left here is a held moment on the machine
 # before the screen takes over, which is a beat rather than a fudge.
-SETTLE_MS = 260
+# 260 was a blink. Ash, on playing it: "the zoom in shot was meant to go from a 3d
+# view to a smooth 2d view of the computer, then the screen shows up as a panel." The
+# push lands and then the panel arrives almost on the same frame, so there is no shot
+# of the machine to see, only a camera move that is interrupted. Long enough to read
+# the thing the camera has stopped on, short enough that nobody is waiting.
+SETTLE_MS = 850
 
 # what this island remembers. The engine puts the programme id in front of both,
 # so these really are "atc:met" and "atc:built:y1" in the save and no other island
