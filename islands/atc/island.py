@@ -46,10 +46,25 @@ SCREEN = "the_screen"
 PUSH_MS = 900
 
 # what this island remembers. The engine puts the programme id in front of both,
-# so these really are "atc:met" and "atc:built" in the save and no other island
+# so these really are "atc:met" and "atc:built:y1" in the save and no other island
 # can read them or collide with them.
 MET = "met"
-BUILT = "built"
+
+
+def built(year):
+    """Done THIS YEAR, and the year is the whole point.
+
+    A flag lives in the save for the rest of the run and `end_year` does not clear
+    it, so a plain "built" would be set for ever the first time somebody finished
+    this island. A club takes any season and the rank ladder is three years on one
+    track, so a student coming back in year two is the DESIGN and not an edge case:
+    with a run-wide flag they would sail here, press the machine, be told where the
+    form is, and never be able to finish the pick. The year would hang open with
+    nothing on screen saying why.
+
+    The Maw spells its yearbook flag the same way for the same reason.
+    """
+    return "built:y%d" % year
 
 
 @on_start
@@ -62,8 +77,13 @@ def arriving():
     """
     yield log("island_opened", {"island": manifest()["programme"]})
 
+    # THE ARROW FOLLOWS WHAT IS OWED, not whether he has been here before. A
+    # student in their second year has met the president and still has a pick to
+    # finish, so gating this on "have we met" left a returning student standing on
+    # the jetty with nothing pointing anywhere.
+    year = yield get("year")
     flags = yield get("flags")
-    if MET in flags:
+    if built(year) in flags:
         return
 
     # THE ARROW AND THE SENTENCE, AND NOTHING ELSE. He has just climbed a long
@@ -77,28 +97,42 @@ def arriving():
 def the_president():
     """The club president, who is the only person on this island.
 
-    FIRST TIME HE WALKS YOU OVER. `lead_to` sets him off, brings the student along
-    behind him and comes back when they have both stopped, with him turned round.
-    Written as `actor_move` and then `walk_to` it does not work: `actor_move` waits
-    for him to ARRIVE, so the student stands still watching a man cross a terrace
-    and then walks the same floor on his own afterwards.
+    HE WALKS YOU OVER. `lead_to` sets him off, brings the student along behind him
+    and comes back when they have both stopped, with him turned round. Written as
+    `actor_move` and then `walk_to` it does not work: `actor_move` waits for him to
+    ARRIVE, so the student stands still watching a man cross a terrace and then
+    walks the same floor on his own afterwards.
+
+    THREE THINGS HE CAN BE, and the year decides which. Nothing owed this year and
+    he just says hello. A student who has never been here gets his name. A student
+    who was here last year gets the short version and then the same walk, because
+    the year's pick is owed again and the club has to be finished again to close it.
     """
+    year = yield get("year")
     flags = yield get("flags")
-    if MET in flags:
+
+    if built(year) in flags:
         yield say(AGAIN, who=HOST)
-        yield guide_to(DESK)
         return
 
-    yield say(HELLO, who=HOST)
-    # THE FACTS COME BEFORE THE ACTIVITY AND NOT AFTER IT. The scored question at
-    # the end asks how you join, so this is the line that makes it answerable. Said
-    # last, as it used to be, the island would be grading a fact it never gave.
+    known = MET in flags
+    if known:
+        yield say(AGAIN, who=HOST)
+    else:
+        yield say(HELLO, who=HOST)
+        yield set_flag(MET)
+
+    # THE FACTS COME BEFORE THE ACTIVITY AND NOT AFTER IT, every year, including to
+    # somebody who heard them last year. The scored question at the end asks how you
+    # join, so this is the line that makes it answerable, and an island that grades a
+    # fact it did not give this sitting is grading what a student remembered from
+    # September.
     yield say(WHEN_AND_HOW, who=HOST)
-    yield set_flag(MET)
 
     yield objective("Follow him to the machine.")
     yield lead_to(HOST, DESK)
-    yield say(THE_GAME, who=HOST)
+    if not known:
+        yield say(THE_GAME, who=HOST)
     yield from the_offer()
 
 
@@ -116,8 +150,9 @@ def the_medals():
 @on_talk(DESK)
 def the_machine():
     """The machine that is switched on, which is the one you can press."""
+    year = yield get("year")
     flags = yield get("flags")
-    if BUILT in flags:
+    if built(year) in flags:
         yield say(FORM, who=HOST)
         return
     yield from the_offer()
@@ -180,8 +215,9 @@ def sit_down():
         grade=score,
         sticker="first-program",
     )
-    yield set_flag(BUILT)
-    yield log("program_built", {"grade": score})
+    year = yield get("year")
+    yield set_flag(built(year))
+    yield log("program_built", {"grade": score, "year": year})
 
     # THE LAST THING SAID ON THE ISLAND, and there is nothing to press. The student
     # committed a season to ATC on the year sheet before the ship ever sailed, so
