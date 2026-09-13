@@ -27,8 +27,8 @@ anything about ATC.
 """
 from grape import manifest, on_start, on_talk
 from vine import (
-    award, choose, framing, get, guide_to, lead_to, log, objective, play, say,
-    set_flag, wait,
+    award, choose, framing, get, guide_to, island_tasks, lead_to, log, objective,
+    play, say, set_flag, task_done, wait,
 )
 
 from lines import (
@@ -39,6 +39,27 @@ from lines import (
 # the shot somebody dragged onto the desk in MAPVIS. Naming it here rather than
 # in the line that uses it means renaming the shot is a one-word edit.
 SCREEN = "the_screen"
+
+# ---- WHAT THIS ISLAND IS ASKING FOR, AS A LIST --------------------------------
+#
+# `objective` is the one line saying what to do NOW. This is the whole of it, drawn
+# in the sheet under that line, and it is the thing that tells a student how much of
+# your island is left. Ash asked for it by name: islands should always have tasks to
+# do, and finishing them is what finishing the island means.
+#
+# TWO ROWS, BECAUSE THERE ARE TWO THINGS TO DO HERE. Resist the urge to write one
+# row per line of dialogue: a row is a thing a student DOES, and being talked to is
+# not one. When every row is ticked the game offers him the way back to the dock on
+# its own, so the list is also how an island says it is over.
+#
+# The ids are what `task_done` is called with. The names are what a fourteen year
+# old reads, and the notes say WHERE rather than how.
+TASKS = [
+    {"id": "meet", "name": "Meet the club president",
+     "note": "He is at the top of the stair"},
+    {"id": "program", "name": "Fix the half-finished program",
+     "note": "On the computer that is switched on"},
+]
 
 # A BREATH AFTER THE CAMERA LANDS, and that is all it is now.
 #
@@ -80,6 +101,12 @@ def arriving():
     the one sentence at the top of the screen saying what there is to do here.
     """
     yield log("island_opened", {"island": manifest()["programme"]})
+
+    # THE LIST GOES UP EVERY TIME AND THAT IS CORRECT. `island_tasks` replaces
+    # whatever was declared rather than adding to it, and which rows are already
+    # ticked comes back out of the save, so saying it on every load is the plainest
+    # thing to write and also the right thing.
+    yield island_tasks(TASKS)
 
     # THE ARROW FOLLOWS WHAT IS OWED, not whether he has been here before. A
     # student in their second year has met the president and still has a pick to
@@ -132,6 +159,11 @@ def the_president():
     # fact it did not give this sitting is grading what a student remembered from
     # September.
     yield say(WHEN_AND_HOW, who=HOST)
+
+    # TICKED WHERE IT BECOMES TRUE, which is after he has spoken and not before.
+    # A row that ticks itself on the way in is a list that lies about how far along
+    # somebody is.
+    yield task_done("meet")
 
     yield objective("Follow him to the machine.")
     yield lead_to(HOST, DESK)
@@ -209,6 +241,7 @@ def sit_down():
         yield say(COME_BACK, who=HOST)
         return
 
+    yield task_done("program")
     yield say(WELL_DONE, who=HOST)
 
     # ONE ROW ON THE RECORD, and `programme` is read out of the manifest rather
