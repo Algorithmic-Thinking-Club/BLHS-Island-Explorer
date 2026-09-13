@@ -106,6 +106,12 @@ LOOK_AT_WALL = "Look at your trophy wall."
 TALK_TO_HER = "Talk to the counselor."
 # the last step of the introduction, over the wide shot of the room
 LOOK_AROUND = "Look around the Maw."
+# and the last step of the YEAR, over the one button the closing film ends on. The
+# panel used to be handed back to the year two lines before the congratulation, and
+# the year has a sentence ready for a finished run, so the bar said "Year one is
+# done. Look around." across the top of a man congratulating a student and a button
+# saying Sail Home. A film keeps the panel until it is finished.
+SAIL_STEP = "Sail home."
 
 # THERE USED TO BE ONE MORE and it is CUT, 2026-09-08. "Explore. Talk to anyone.
 # Open the Guide." was what the handover pinned, and an island's word outranks the

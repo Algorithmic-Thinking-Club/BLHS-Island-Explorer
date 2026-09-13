@@ -183,10 +183,14 @@ class EveryWordItUsesIsARealWord(unittest.TestCase):
             ("home, after the page turned", pump.run("start", answering(
                 flags=[RAILED, "yearbook:y1"]))),
             # THE CLOSING FILM, WHICH NO ROAD HERE USED TO REACH. It is the only
-            # place `actor_move`, `enter` and the last `choose` are said, so
-            # three checks in this class were passing over words nobody drove.
-            # Pressed rather than walked into, because the load road is fenced by
-            # a module latch and an earlier `start` above has already set it.
+            # place `enter` and the last `choose` are said, so three checks in
+            # this class were passing over words nobody drove. `actor_move` was
+            # the third of them until 2026-09-13, when both of its calls came out:
+            # a walk aimed at the player covers the gap somebody else left and
+            # nothing more, which on the published room was under four pixels and
+            # not one frame of a walk cycle. TheStagingIsWatchable has the whole of
+            # it. Pressed rather than walked into, because the load road is fenced
+            # by a module latch and an earlier `start` above has already set it.
             ("the ending, the page still to turn",
              pump.run("talk:principal_desk", finished(handle="Ash"))),
             ("the ending, the page already turned",
@@ -233,9 +237,10 @@ class EveryWordItUsesIsARealWord(unittest.TestCase):
                 "principal_desk", "outfitter", "trophy_wall", "the_hall",
                 "east_tunnel", "west_tunnel"}
         # AND `thor`, WHICH IS THE ONE PLACE IN THE FILMS THAT IS NOT AN ANCHOR.
-        # `place(PRINCIPAL, THOR)` and `actor_move(PRINCIPAL, THOR)` mean "beside
-        # whoever is standing there", which is how the principal stopped being
-        # bound to the tunnel mouth, and no map can carry that name.
+        # `place(PRINCIPAL, THOR)` means "beside whoever is standing there", which
+        # is how the principal stopped being bound to the tunnel mouth, and no map
+        # can carry that name. It is also `actor_face`'s derived heading, which is
+        # the only heading either film names.
         named = room | {"thor"}
         # `at` IS A PLACE TOO. It was left out, so `place`, the one word the
         # opening uses to put a body anywhere, was the word this check could not
@@ -936,6 +941,206 @@ class TheStudyHolds(unittest.TestCase):
                 self.assertEqual([i.get("text") for i in pump.only(game, "say")],
                                  [i.get("text") for i in pump.only(plain, "say")])
 
+
+class TheStagingIsWatchable(unittest.TestCase):
+    """Where the two of them stand, which way they look, and whether a walk shows.
+
+    ASH, 2026-09-13, after playing: *"Principal panther lost his walking animation
+    btw, and his stops + facings + positions are goofy in the intro and end
+    cutscene."*
+
+    NOTHING WAS WRONG WITH HIS ART OR WITH THE ENGINE, and that is why these
+    checks are worth having. His walk is six frames a heading and the legs advance
+    one frame every nine ground pixels, which is `map.json`'s speed of 54 over the
+    art's six frames a second. So a walk needs fifty four pixels of floor to show
+    one whole cycle, and the two walks in the closing film covered three point nine
+    and four point eight. He stood on frame zero and slid, which from the chair is
+    a man with no walk.
+
+    WHAT A TEST IN HERE CAN AND CANNOT SAY ABOUT THAT. It cannot measure a
+    distance: nothing in this folder knows where the hearth is. What it can do is
+    fence the SHAPE that made the distance zero, which is aiming a walk at the
+    player. `actor_move(x, "thor")` stops a fixed fraction of a body length from
+    wherever the student is standing, so the ground it covers is whatever gap
+    somebody else happened to leave and never a distance the film chose. The words
+    that cross a room are aimed at a PLACE.
+    """
+
+    def setUp(self):
+        pump.load(ISLAND)
+
+    def films(self):
+        """Both films, down the roads that reach every beat of them."""
+        return [
+            ("the opening, walked in",
+             pump.run("start", answering(planned=True, advisory="core:y1"))),
+            ("the opening, everything owed", pump.run("start", answering())),
+            ("the opening, pressed at the desk",
+             pump.run("talk:principal_desk", answering(planned=True, advisory="core:y1"))),
+            ("the closing, the page still to turn",
+             pump.run("talk:principal_desk", finished(handle="Ash"))),
+            ("the closing, the page already turned",
+             pump.run("talk:principal_desk", finished(
+                 handle="Ash", flags=["yearbook:y1", "maw:wall_shown:y1"]))),
+        ]
+
+    def test_no_walk_in_either_film_is_aimed_at_the_player(self):
+        """A body sent to the player stops beside him, so it covers that gap and no more.
+
+        The closing opened with `actor_move(PRINCIPAL, THOR)` and the room's own
+        arrival had already stood him one and a tenth body lengths from the student
+        (`he_steps_in_front`, on every load, so a man whose post sits six pixels
+        from the tunnel mouth is not drawn inside whoever walked in). `actor_move`
+        to the player aims at 0.72 of a body length. The whole walk was the
+        difference: under four pixels, less than half of one frame of six.
+
+        `place` is still allowed to name the player, because `place` is not a walk
+        and that is the whole point of it: it is where a body ALREADY is when a
+        shot opens. What may never happen again is a walk somebody is meant to
+        watch being pointed at a moving target one step away.
+        """
+        for label, seen in self.films():
+            with self.subTest(film=label):
+                for word in ("actor_move", "lead_to"):
+                    aimed = [i for i in pump.only(seen, word) if i.get("to") == "thor"]
+                    self.assertEqual(aimed, [], "%s is aimed at the player" % word)
+
+    def test_the_closing_opens_by_crossing_the_hall(self):
+        """The first thing the ending does is a walk with the room's length in it.
+
+        ASH, 2026-09-08 item 6: *"the principal walking to him."* That is what this
+        keeps, and it is why the word is `lead_to` and the place is the hall:
+        measured on the published room the man covers a hundred and eighty four
+        pixels of floor, which is twenty walk frames and three whole cycles, and
+        `lead_to` ends by turning the two of them to look at each other so the
+        congratulation is said face to face.
+        """
+        for road, flags in (("the page still to turn", []),
+                            ("the page already turned",
+                             ["yearbook:y1", "maw:wall_shown:y1"])):
+            with self.subTest(road=road):
+                seen = pump.run("talk:principal_desk", finished(handle="Ash", flags=flags))
+                walks = [i for i in seen if i["kind"] in ("lead_to", "walk_to", "actor_move")]
+                self.assertTrue(walks, "the ending moves nobody at all")
+                self.assertEqual((walks[0]["kind"], walks[0].get("actor"), walks[0].get("to")),
+                                 ("lead_to", "principal_desk", "the_hall"))
+                # and the panel names the step he is being walked through
+                said = [i["text"] for i in pump.only(seen, "objective")]
+                self.assertEqual(said[0], "Follow the principal.")
+
+    def test_the_congratulation_turns_him_instead_of_shuffling_him(self):
+        """Nobody has moved since her beat, so there is nothing for a walk to cover.
+
+        `take_him` leaves the man one body length from the student with his face
+        already turned to him, and the yearbook panel moves nobody. The walk that
+        used to be on this line measured four point eight pixels, which is half of
+        one walk frame: a man sliding. `actor_face` is what the beat actually needs
+        and it carries no distance to get wrong.
+        """
+        seen = pump.run("talk:principal_desk", finished(
+            handle="Ash", flags=["yearbook:y1", "maw:wall_shown:y1"]))
+        congratulation = max(n for n, i in enumerate(seen)
+                             if i["kind"] == "say" and "finished" in i["text"])
+        turns = [n for n, i in enumerate(seen)
+                 if i["kind"] == "actor_face" and i["facing"] == "thor"]
+        self.assertTrue(turns, "nobody turns to the student before the last line")
+        self.assertTrue([t for t in turns if t < congratulation],
+                        "he is not turned to the boy he is congratulating")
+        self.assertNotIn("actor_move", pump.kinds(seen))
+
+    def test_every_heading_the_films_ask_for_is_derived_and_never_written(self):
+        """A compass point typed in here is a bet on where somebody left a table.
+
+        `actor_face(x, "thor")` asks the scene which way "at him" is, against the
+        map that is loaded, so a station dragged across the Maw in MAPVIS moves the
+        pair of them with it. The engine's own `maw-films.test.ts` fences the same
+        rule by reading the source; this one watches the words go past, so a
+        heading smuggled in through a variable is caught as well as one typed out.
+
+        AND ONE OF THE ROOM'S OWN HEADINGS IS WRONG TODAY, which is what makes the
+        rule worth keeping rather than relaxing. `principal_desk`'s standing spot is
+        36 across and 17 down from the post, so the man is north WEST of whoever
+        stands there, and the anchor says north east: a student who presses him is
+        turned ninety degrees away from him. That is one field in MAPVIS and it
+        cannot be patched from here, because the only heading this file is allowed
+        to name is the derived one.
+        """
+        for label, seen in self.films():
+            with self.subTest(film=label):
+                for turn in pump.only(seen, "actor_face"):
+                    self.assertEqual(turn["facing"], "thor")
+                for word in ("place", "actor_move"):
+                    for i in pump.only(seen, word):
+                        self.assertIsNone(i.get("facing"))
+
+    def test_no_arrow_is_ever_raised_over_a_region_or_a_door(self):
+        """The big mark hangs on the anchor's own pixel, so it can only point at a thing.
+
+        `the_hall`'s own pixel on the published room is inside the hearth's drawn
+        fire, so an arrow raised at the hall would hang over Advisory while a man
+        walks past it, and a student who reads the arrow and nothing else would
+        press the fire. The stations are the only things worth pointing at, and the
+        walk into the middle of the room is guided by the panel and by the man.
+        """
+        stations = {"chart_table", "hearth", "trophy_wall", "counselor"}
+        for label, seen in self.films():
+            with self.subTest(film=label):
+                for arrow in pump.only(seen, "guide_to"):
+                    if arrow["anchor"] is None:
+                        continue
+                    self.assertIn(arrow["anchor"], stations)
+
+    def test_the_arrow_and_the_panel_come_down_on_a_road_nobody_wrote(self):
+        """`as_a_cutscene` promises the bars. `as_a_film` promises the other two.
+
+        Four words in every beat are caught and the screens are not: `open` is a
+        hard refusal when nothing is mounted to hear it, and a refusal is raised at
+        the line that asked and takes the rest of the handler with it. On that road
+        the bars came down on a room with the arrow still standing over the last
+        station and the panel still telling a student to fill in a schedule that
+        nothing was going to open. He can do neither, and both of them are pointing
+        at it.
+        """
+        for label, handler, ans in (
+                ("the opening", "start", answering(refuse=("open",))),
+                ("the closing", "talk:principal_desk",
+                 finished(handle="Ash", refuse=("open",)))):
+            with self.subTest(film=label):
+                # WATCHED THROUGH THE ANSWER, because the refusal really does escape
+                # and `pump.run` raises it rather than handing back what it saw. That
+                # escape is correct: the engine says "island under construction" and
+                # names the line. What the film owes the student on the way out is
+                # the room back, and these are the words that give it back.
+                seen = []
+                def watch(intent, ans=ans, seen=seen):
+                    seen.append(intent)
+                    return ans(intent)
+                with self.assertRaises(RuntimeError):
+                    pump.run(handler, watch)
+                self.assertEqual([i["on"] for i in pump.only(seen, "movie")][-1], False)
+                self.assertIsNone(pump.only(seen, "guide_to")[-1]["anchor"])
+                self.assertIsNone(pump.only(seen, "objective")[-1]["text"])
+
+    def test_the_panel_is_not_handed_back_under_the_last_button_of_the_year(self):
+        """The year has a sentence ready for a finished run and it is not this beat's.
+
+        `objective(None)` used to sit two lines above the congratulation, which
+        drops the island's word while the film is still running, and the year says
+        "Year one is done. Look around." the moment it is dropped. So the last
+        thirty seconds of year one had the bar telling a student to look around a
+        room, over the top of the man congratulating him and a button saying Sail
+        Home. The handover at the other end of the year already learned this and
+        pins its own step across the bars coming down.
+        """
+        seen = pump.run("talk:principal_desk", finished(
+            handle="Ash", flags=["yearbook:y1", "maw:wall_shown:y1"]))
+        at_button = next(n for n, i in enumerate(seen) if i["kind"] == "choose")
+        before = [i["text"] for i in seen[:at_button] if i["kind"] == "objective"]
+        self.assertEqual(before[-1], "Sail home.")
+        self.assertNotIn(None, before)
+        # and it is handed back once the press has happened, before the door out
+        after = [i["text"] for i in seen[at_button:] if i["kind"] == "objective"]
+        self.assertEqual(after[0], None)
 
 if __name__ == "__main__":
     unittest.main()
