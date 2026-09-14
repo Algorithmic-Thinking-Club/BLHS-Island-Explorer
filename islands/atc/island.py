@@ -27,8 +27,8 @@ anything about ATC.
 """
 from grape import manifest, on_start, on_talk
 from vine import (
-    award, choose, framing, get, guide_to, island_tasks, lead_to, log, objective,
-    play, say, set_flag, task_done, wait,
+    actor_face, as_a_cutscene, award, choose, framing, get, guide_to, island_tasks,
+    lead_to, log, objective, play, say, set_flag, sound, task_done, view, wait,
 )
 
 from lines import (
@@ -159,6 +159,23 @@ def the_president():
         yield task_done("meet")
         return
 
+    # ---- THEY LOOK AT EACH OTHER BEFORE EITHER OF THEM SPEAKS -------------
+    #
+    # ASH, after playing: *"his stops + facings + positions are goofy"* and, of the
+    # player, *"thor's facings in cutscenes"*. `actor_face` has existed for both of
+    # them since engine wave 4 and no island had ever called it once, so every
+    # conversation in this game was two people talking past each other at whatever
+    # angle they happened to stop on. It is two lines.
+    #
+    # CAUGHT, BOTH OF THEM. A facing is a nicety and a refusal must never cost a
+    # student the club: an anchor that has moved, art with no such heading, or a body
+    # somebody else is driving all come back here as an exception.
+    try:
+        yield actor_face(HOST, "thor")
+        yield actor_face("thor", HOST)
+    except Exception as refused:
+        yield log("actor_face_refused", {"why": str(refused)})
+
     known = MET in flags
     if known:
         yield say(AGAIN, who=HOST)
@@ -181,6 +198,12 @@ def the_president():
 
     yield objective("Follow him to the machine.")
     yield lead_to(HOST, DESK)
+    # AND HE TURNS ROUND AT THE END OF IT, so the next line is said to a face.
+    try:
+        yield actor_face(HOST, "thor")
+        yield actor_face("thor", HOST)
+    except Exception as refused:
+        yield log("actor_face_refused", {"why": str(refused)})
     if not known:
         yield say(THE_GAME, who=HOST)
     yield from the_offer()
@@ -215,6 +238,14 @@ def the_offer():
     who wanders over to the lit machine on his own gets here by pressing it. Both
     are the same beat and neither should be a different island.
     """
+    # ---- THE ARROW COMES DOWN AT THE MACHINE -----------------------------
+    #
+    # `guide_to(HOST)` is raised on every load with the club still owed, and nothing
+    # ever took it back down: a student standing at the machine being asked whether
+    # he wants a go had a floating arrow and a road of marks across the floor still
+    # pointing at a man two feet away. Both roads into this beat pass through here.
+    yield guide_to(None)
+
     pick = yield choose([YES, NO], prompt=WANT_A_GO)
     # -1 is not an index. It is nobody having answered, because the student left
     # while the buttons were up, and it must never read as the first button.
@@ -238,6 +269,19 @@ def sit_down():
     the screen takes the whole window.
     """
     yield objective("Fix the program.")
+    # ---- HE SITS DOWN, AND THE ROOM GOES AWAY ----------------------------
+    #
+    # ASH: *"the zoom in shot was meant to go from a 3d view to a smooth 2d view of
+    # the computer, then the screen shows up as a panel."*
+    #
+    # Inside the bars, so the corner, the plaque and the arrow all stand down for the
+    # length of it and come back afterwards even if the screen below refuses. The
+    # click is the machine waking: a beat with a sound in it is a beat, and a beat
+    # with nothing in it is a wait.
+    try:
+        yield sound("click")
+    except Exception as refused:
+        yield log("sound_refused", {"why": str(refused)})
     yield framing(SCREEN)
     yield wait(SETTLE_MS)
 
@@ -264,6 +308,10 @@ def sit_down():
     finally:
         yield framing(None)
         yield objective(None)
+        # AND THE ROOM COMES BACK BEFORE ANYBODY SPEAKS IN IT. `framing(None)` hands
+        # the camera back to the follow law, which eases; a line said on the frame
+        # after it is a line said over a camera still travelling.
+        yield view("close", 900)
 
     # None is the student closing the screen without finishing, which is NOT a
     # zero. A zero is somebody who answered and got everything wrong, and writing

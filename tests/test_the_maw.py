@@ -1065,10 +1065,27 @@ class TheStagingIsWatchable(unittest.TestCase):
         cannot be patched from here, because the only heading this file is allowed
         to name is the derived one.
         """
+        THE_EIGHT = {
+            "north", "north-east", "east", "south-east",
+            "south", "south-west", "west", "north-west",
+        }
         for label, seen in self.films():
             with self.subTest(film=label):
                 for turn in pump.only(seen, "actor_face"):
-                    self.assertEqual(turn["facing"], "thor")
+                    # ---- THE RULE IS "NOT A COMPASS POINT", AND IT SAID "THOR" ----
+                    #
+                    # It read `facing == "thor"` because for as long as it has existed
+                    # the only thing anybody turned to look at WAS Thor. Then Ash said
+                    # *"thor's facings in cutscenes"*, the films started turning the
+                    # player to face whoever is speaking to him, and a rule about
+                    # written headings began failing on a derived one.
+                    #
+                    # What the rule has always meant is this: a heading in this file is
+                    # a bet on where somebody left a table in MAPVIS. A NAME is not a
+                    # bet, it is a question the scene answers against the map that is
+                    # loaded, and it moves when the table does.
+                    self.assertNotIn(turn["facing"], THE_EIGHT,
+                                     "a compass point written into a film")
                 for word in ("place", "actor_move"):
                     for i in pump.only(seen, word):
                         self.assertIsNone(i.get("facing"))

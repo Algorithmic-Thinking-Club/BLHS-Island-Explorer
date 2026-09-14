@@ -380,6 +380,11 @@ def take_him(anchor):
     # and the man turns to the boy, who has moved since `lead_to` turned him
     try:
         yield actor_face(PRINCIPAL, "thor")
+        # AND THOR LOOKS BACK. Ash, on playing: "thor's facings in cutscenes". The
+        # engine has had the word since wave 4 and no island had ever turned the
+        # PLAYER with it, so every line in this film was delivered to the side of
+        # a boy's head while he faced whatever direction he last walked in.
+        yield actor_face("thor", PRINCIPAL)
     except Exception as refused:
         yield log("actor_face_refused", {"anchor": anchor, "why": str(refused)})
 
@@ -757,6 +762,7 @@ def take_him_to_the_middle():
         yield log("walk_to_refused", {"anchor": HALL, "why": str(refused)})
     try:
         yield actor_face(PRINCIPAL, "thor")
+        yield actor_face("thor", PRINCIPAL)
     except Exception as refused:
         yield log("actor_face_refused", {"anchor": HALL, "why": str(refused)})
 
@@ -985,6 +991,9 @@ def closing_beats():
     handle = yield get("handle")
     try:
         yield actor_face(PRINCIPAL, "thor")
+        # the last line of the year is said face to face, which is the one beat in
+        # the whole run where that is the entire point
+        yield actor_face("thor", PRINCIPAL)
     except Exception as refused:
         yield log("actor_face_refused", {"actor": PRINCIPAL, "why": str(refused)})
     yield say(well_done_now(handle, year), who=PRINCIPAL, portrait=FACE)
