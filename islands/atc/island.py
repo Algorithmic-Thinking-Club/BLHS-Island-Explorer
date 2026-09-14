@@ -27,7 +27,7 @@ anything about ATC.
 """
 from grape import manifest, on_start, on_talk
 from vine import (
-    actor_face, as_a_cutscene, award, choose, framing, get, guide_to, island_tasks,
+    actor_face, award, choose, framing, get, guide_to, highlight, island_tasks,
     lead_to, log, objective, play, say, set_flag, sound, task_done, view, wait,
 )
 
@@ -238,18 +238,30 @@ def the_offer():
     who wanders over to the lit machine on his own gets here by pressing it. Both
     are the same beat and neither should be a different island.
     """
-    # ---- THE ARROW COMES DOWN AT THE MACHINE -----------------------------
+    # ---- THE ARROW COMES DOWN, AND THE MACHINE LIGHTS UP ------------------
     #
     # `guide_to(HOST)` is raised on every load with the club still owed, and nothing
     # ever took it back down: a student standing at the machine being asked whether
     # he wants a go had a floating arrow and a road of marks across the floor still
     # pointing at a man two feet away. Both roads into this beat pass through here.
+    #
+    # AND THEN THE RIGHT ONE IS LIT. There are eight computers on this terrace and
+    # exactly one of them is switched on. `guide_to` would be the wrong word for that:
+    # it shouts GO THERE and draws a road across a floor he is already standing on.
+    # `highlight` is the quiet half of the same idea and says only WHICH ONE.
     yield guide_to(None)
+    try:
+        yield highlight(DESK)
+    except Exception as refused:
+        yield log("highlight_refused", {"why": str(refused)})
 
     pick = yield choose([YES, NO], prompt=WANT_A_GO)
     # -1 is not an index. It is nobody having answered, because the student left
     # while the buttons were up, and it must never read as the first button.
     if pick != 0:
+        # and the light goes out with the offer, because a lit machine he has just
+        # said no to is the island still asking
+        yield highlight(None)
         yield say(COME_BACK, who=HOST)
         # AND THE PANEL GOES BACK TO THE YEAR. "Follow him to the machine." was left
         # on the glass for ever by a student who followed him to the machine and then
@@ -268,6 +280,7 @@ def sit_down():
     arrived, so what the wait buys is a held moment looking at the machine before
     the screen takes the whole window.
     """
+    yield highlight(None)
     yield objective("Fix the program.")
     # ---- HE SITS DOWN, AND THE ROOM GOES AWAY ----------------------------
     #
