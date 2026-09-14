@@ -43,6 +43,25 @@ WHEN_AND_HOW = "We're in 303 after school until three. There's a form if you wan
 # and what he says on every visit after the first
 AGAIN = "Back again. Grab a machine whenever you want."
 
+# ---- and what he says to somebody doing a SECOND YEAR of the club ------------
+#
+# ASH: *"we can do a club again over years? is it meant to play different stuff?"*
+# It is, and until `get("rank")` existed an island had no way to know which time this
+# was: year two replayed year one word for word, greeting a returning member as a
+# stranger. These are the lines that make the second afternoon its own afternoon.
+SECOND_YEAR = (
+    "You came back. Most people don't. That makes you one of about five "
+    "who've done two years of this."
+)
+# said instead of the beginner's explanation, because he already knows where 303 is
+SECOND_YEAR_HOW = (
+    "You know where we are and you know how it works. So this year you're not "
+    "just fixing my program, you're the one people ask."
+)
+# the machine, on a second year: the same puzzle, a different reason to be at it
+SECOND_YEAR_DESK = "Same broken program. See if it's still hard."
+
+
 
 # ---- stop 2, the medal plinth ------------------------------------------------
 #

@@ -32,7 +32,8 @@ from vine import (
 )
 
 from lines import (
-    AGAIN, COME_BACK, DESK, FORM, HELLO, HOST, MEDALS, NO, THE_GAME, TROPHIES,
+    AGAIN, COME_BACK, DESK, FORM, HELLO, HOST, MEDALS, NO,
+    SECOND_YEAR, SECOND_YEAR_DESK, SECOND_YEAR_HOW, THE_GAME, TROPHIES,
     WANT_A_GO, WELL_DONE, WHEN_AND_HOW, YES,
 )
 
@@ -176,8 +177,21 @@ def the_president():
     except Exception as refused:
         yield log("actor_face_refused", {"why": str(refused)})
 
+    # ---- WHICH TIME IS THIS -----------------------------------------------
+    #
+    # ASH: *"we can do a club again over years? is it meant to play different stuff?"*
+    #
+    # `get("rank")` is about YOUR island and you never name it: it comes back with how
+    # many EARLIER years a student has finished this programme, which years they were,
+    # the best grade they got, and the rung of any ladder the club keeps. A member
+    # writing their own island gets the same question for free.
+    been = yield get("rank")
+    returning = bool(been and been.get("taken"))
+
     known = MET in flags
-    if known:
+    if returning:
+        yield say(SECOND_YEAR, who=HOST)
+    elif known:
         yield say(AGAIN, who=HOST)
     else:
         yield say(HELLO, who=HOST)
@@ -188,7 +202,10 @@ def the_president():
     # join, so this is the line that makes it answerable, and an island that grades a
     # fact it did not give this sitting is grading what a student remembered from
     # September.
-    yield say(WHEN_AND_HOW, who=HOST)
+    # AND HE IS NOT TOLD WHERE 303 IS TWICE. The scored question at the end asks how
+    # you join, so a first-year has to hear it this sitting; somebody on their second
+    # year answered it last year and gets the line that belongs to having come back.
+    yield say(SECOND_YEAR_HOW if returning else WHEN_AND_HOW, who=HOST)
 
     # TICKED WHERE IT BECOMES TRUE, which is after he has spoken and not before.
     # A row that ticks itself on the way in is a list that lies about how far along
@@ -254,6 +271,10 @@ def the_offer():
         yield highlight(DESK)
     except Exception as refused:
         yield log("highlight_refused", {"why": str(refused)})
+
+    been = yield get("rank")
+    if been and been.get("taken"):
+        yield say(SECOND_YEAR_DESK, who=HOST)
 
     pick = yield choose([YES, NO], prompt=WANT_A_GO)
     # -1 is not an index. It is nobody having answered, because the student left

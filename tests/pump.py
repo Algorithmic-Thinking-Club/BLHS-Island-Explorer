@@ -204,6 +204,12 @@ FRESH_RUN = {
     "mode": "game",
     "phase": None,
     "picks": {"classes": [], "seasons": [], "graded": [], "gpa": None},
+    # ---- WHICH TIME THIS IS, for an island that can be taken more than once ----
+    #
+    # `get("rank")` is answered about the island that asked it, so a member never
+    # names their own programme. A fresh run has never finished anything: nought
+    # earlier years, no years, no grade, the bottom rung.
+    "rank": {"taken": 0, "years": [], "best": None, "rung": 0},
 }
 
 
