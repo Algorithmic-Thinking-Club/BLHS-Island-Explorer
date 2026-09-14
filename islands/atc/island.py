@@ -374,6 +374,15 @@ def sit_down():
     # asking whether they want to join would be asking about a decision the game
     # watched them make. What this does instead is name the step the game cannot
     # take for them.
+    # ---- AND THE ISLAND IS THE LAST THING YOU SEE OF IT -------------------
+    #
+    # The camera lets go of the two of them and takes in the terrace, the medals and
+    # the water below while the last line lands. An ending is a shot, and this island
+    # finished on a close-up of a man's shoulder.
+    try:
+        yield view("island", 3200)
+    except Exception as refused:
+        yield log("view_refused", {"why": str(refused)})
     yield say(FORM, who=HOST)
 
 
