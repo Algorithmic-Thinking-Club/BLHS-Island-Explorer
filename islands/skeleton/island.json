@@ -6,7 +6,10 @@
   "season": "Fall",
   "owner": "atc",
   "entry": "island.py",
-  "modules": ["island.py", "questions.py"],
+  "modules": [
+    "island.py",
+    "lines.py"
+  ],
   "content": {
     "what": {
       "text": "A template island. It is not a real thing at Bonney Lake High School and it is not pretending to be one.",

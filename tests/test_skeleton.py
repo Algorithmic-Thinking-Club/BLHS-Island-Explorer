@@ -1,216 +1,158 @@
-"""The skeleton island does what it says, in both arms.
+"""The skeleton island does what it says.
 
 This is also the example of how to test your own island, so it is written to be
-copied. Everything here runs in plain Python with no game and no browser: the
-island is a generator that yields dicts, and a test answers those dicts.
+copied. Everything here runs in plain Python with no game and no browser: an
+island is a set of generators that yield dicts, and a test answers those dicts.
 
-Two of these are not really about the skeleton. TheStudyHolds is about the study,
-it will be true of every island anybody writes, and it is the reason as_plain()
-exists. TheWordsAreFenced walks every path through the file rather than one,
-because a check that only drives the happy path fences nothing.
+It proves your logic and nothing else. Nothing in here performs anything, so a
+green test and a broken island are perfectly compatible. The game is the only
+place your island really runs.
 """
 import unittest
 
 from tests import pump
 
-# THE WORDS A MEMBER'S FIRST COPY MAY USE. The engine understands fifteen; these
-# are the nine the vine's own content already asks for. An island copied from
-# this repo must not contain a word that comes back as a refusal on a beginner's
-# own line, so this is a fence around the template rather than around the API.
-PROVEN = {"say", "choose", "open", "play", "get", "set_flag", "award", "log", "guide_to"}
+ISLAND = "skeleton"
 
-# EVERY PATH THROUGH THE ISLAND, not one. A word smuggled into a branch nobody
-# drives is a word nobody checks, and the plain arm is exactly the branch a
-# member never exercises by hand, because they play the game arm.
-# Add a row when you add a branch.
-PATHS = [
-    ("the game arm, all right", "game", [0, 1, 0]),
-    ("the game arm, all wrong", "game", [0, 0, 1]),
-    ("the game arm, walking away", "game", [1]),
-    ("the plain arm, all right", "plain", [1, 0]),
-    ("the plain arm, all wrong", "plain", [0, 1]),
-    ("no saved run at all", None, [0, 1, 0]),
+# the words the template may use. A word aimed at a name the map does not carry
+# is refused on the line that asked for it, so the island somebody copies first
+# should not contain one. Widen this when your map really has the anchors.
+PROVEN = {"say", "choose", "get", "set_flag", "award", "log", "guide_to",
+          "objective", "island_tasks", "task_done", "play"}
+
+# every road through the island, each with the buttons a player presses and what
+# the activity comes back as. Add a row when you add a branch.
+ROADS = [
+    ("all the way through", {"choices": [0]}),
+    ("says not right now", {"choices": [1]}),
+    ("closes the activity", {"choices": [0], "score": None}),
+    ("comes back to a finished island", {"flags": ["finished:y1"]}),
 ]
-
-
-def answering(mode="game", picks=()):
-    """An engine that says what arm this is and clicks the buttons you name."""
-    queue = list(picks)
-
-    def answer(intent):
-        if intent["kind"] == "get" and intent["path"] == "mode":
-            return mode
-        if intent["kind"] == "choose":
-            return queue.pop(0) if queue else 0
-        return None
-    return answer
-
-
-def walk(mode, picks):
-    """Everything the island asked for down one path."""
-    return pump.run("talk:greeter", answering(mode=mode, picks=picks))
 
 
 class TheIslandLoads(unittest.TestCase):
     def setUp(self):
-        self.manifest = pump.load("skeleton")
+        self.manifest = pump.load(ISLAND)
 
-    def test_registers_the_handlers_the_engine_will_call(self):
+    def test_it_registers_what_the_game_will_call(self):
         self.assertEqual(pump.handlers(), ["start", "talk:greeter"])
 
-    def test_says_who_it_finished_for(self):
-        # read out of the manifest by the island itself, so this cannot drift
-        award = pump.only(walk("game", [0, 1, 0]), "award")[0]
-        self.assertEqual(award["programme"], self.manifest["programme"])
-
-    def test_reads_its_own_manifest(self):
+    def test_it_reads_its_own_manifest(self):
         import grape
         self.assertEqual(grape.manifest()["programme"], self.manifest["programme"])
-        # a copy: editing what you got back cannot change what the engine thinks
+        # a copy, so editing what you got back cannot change what the game thinks
         grape.manifest()["programme"] = "not-yours"
         self.assertEqual(grape.manifest()["programme"], self.manifest["programme"])
 
-
-class TheWordsAreFenced(unittest.TestCase):
-    def setUp(self):
-        pump.load("skeleton")
-
-    def test_every_path_uses_only_words_that_have_been_seen_performing(self):
-        seen = pump.run("start")
-        for name, mode, picks in PATHS:
-            with self.subTest(path=name):
-                self.assertEqual(set(pump.kinds(walk(mode, picks))) - PROVEN, set())
-        self.assertEqual(set(pump.kinds(seen)) - PROVEN, set())
-
-    def test_every_path_ends_with_a_row_on_the_record(self):
-        # an island that finishes without awarding is an island the planner never
-        # sees close, and the study's own dependent variable reads zero
-        for name, mode, picks in PATHS:
-            with self.subTest(path=name):
-                self.assertEqual(len(pump.only(walk(mode, picks), "award")), 1)
+    def test_every_road_uses_only_words_that_have_been_watched_working(self):
+        said = set(pump.kinds(pump.run("start", pump.answering())))
+        for name, state in ROADS:
+            with self.subTest(road=name):
+                said |= set(pump.kinds(pump.run("talk:greeter", pump.answering(**state))))
+        self.assertEqual(said - PROVEN, set())
 
 
-class TheGameArm(unittest.TestCase):
-    def setUp(self):
-        pump.load("skeleton")
-
-    def test_all_right_is_full_marks(self):
-        # stay, then the correct answer to each of the two questions
-        self.assertEqual(pump.only(walk("game", [0, 1, 0]), "award")[0]["grade"], 4.0)
-
-    def test_all_wrong_still_records_a_row(self):
-        # A GRADE OF ZERO IS NOT AN ABSENT GRADE. A member's award has to survive
-        # the student who got everything wrong, or that student has no row at all
-        # and the study loses exactly the people it most needs to see. The key
-        # check comes first: read the value first and a missing key raises a
-        # KeyError before the assertion that was supposed to explain it.
-        award = pump.only(walk("game", [0, 0, 1]), "award")[0]
-        self.assertIn("grade", award)
-        self.assertEqual(award["grade"], 0.0)
-
-    def test_walking_away_is_a_branch_that_ends_early(self):
-        seen = walk("game", [1])
-        # the opening question and nothing after it: the quiz never happened
-        self.assertEqual(len(pump.only(seen, "choose")), 1)
-        self.assertEqual(pump.only(seen, "award")[0]["grade"], 0.0)
-
-    def test_somebody_is_speaking(self):
-        self.assertTrue(all("who" in s for s in pump.only(walk("game", [0, 1, 0]), "say")))
-
-    def test_remembers_the_visit(self):
-        flags = [i["flag"] for i in pump.only(walk("game", [0, 1, 0]), "set_flag")]
-        self.assertEqual(flags, ["met_greeter"])
-        # AND IT IS WRITTEN BARE. The engine puts the island's programme id in
-        # front of it on the way into the save, so an island never writes its own
-        # prefix and two members cannot collide however they name theirs. What
-        # lands in the save here is "skeleton:met_greeter".
-
-
-class ThePlainArm(unittest.TestCase):
-    def setUp(self):
-        pump.load("skeleton")
-
-    def test_nobody_is_speaking(self):
-        self.assertTrue(all("who" not in s for s in pump.only(walk("plain", []), "say")))
-
-    def test_all_right_is_full_marks(self):
-        self.assertEqual(pump.only(walk("plain", [1, 0]), "award")[0]["grade"], 4.0)
-
-    def test_all_wrong_is_zero(self):
-        # the control arm can award everybody full marks and nothing above would
-        # notice, which would put the study's two halves on different scales
-        self.assertEqual(pump.only(walk("plain", [0, 1]), "award")[0]["grade"], 0.0)
-
-    def test_reads_out_everything_as_plain_promised(self):
-        from questions import WhatAGrapeIs
-        said = {s["text"] for s in pump.only(walk("plain", []), "say")}
-        for line in WhatAGrapeIs().as_plain():
-            self.assertIn(line, said)
-
-    def test_does_not_hand_over_the_answers(self):
-        from questions import WhatAGrapeIs
-        quiz = WhatAGrapeIs()
-        plain = "\n".join(quiz.as_plain())
-        for item in quiz.ITEMS:
-            # not the explanation, and not the right option singled out either:
-            # a control arm that gives the answer away measures nothing
-            self.assertNotIn(item["because"], plain)
-            right = item["options"][item["answer"]]
-            self.assertEqual(plain.count(right), 1, "the answer is called out twice")
-
-
-class TheStudyHolds(unittest.TestCase):
-    """The one test every island needs, and this is what it looks like."""
+class TheTaskList(unittest.TestCase):
+    """What the island is asking for, and whether the rows can be ticked."""
 
     def setUp(self):
-        self.manifest = pump.load("skeleton")
+        pump.load(ISLAND)
 
-    def scored(self, mode, picks):
-        """The questions that count, in order, whoever is asking them.
+    def test_the_list_goes_up_on_every_load(self):
+        for state in ({}, {"flags": ["finished:y1"]}):
+            with self.subTest(**state):
+                seen = pump.run("start", pump.answering(**state))
+                rows = pump.only(seen, "island_tasks")
+                self.assertEqual(len(rows), 1)
+                self.assertEqual([t["id"] for t in rows[0]["tasks"]], ["meet", "answer"])
 
-        Read off the island's own items rather than off a position in the list,
-        so a framing question the game arm asks and the plain arm does not is not
-        mistaken for content, and so this keeps working when you add a question.
-        """
-        from questions import WhatAGrapeIs
-        asks = {item["ask"] for item in WhatAGrapeIs.ITEMS}
-        return [(c["prompt"], tuple(c["options"]))
-                for c in pump.only(walk(mode, picks), "choose")
-                if c.get("prompt") in asks]
+    def test_every_row_it_declares_can_actually_be_ticked(self):
+        # a row nobody can tick is an island nobody can finish, and the way back
+        # to the dock never appears
+        declared = {t["id"] for t in
+                    pump.only(pump.run("start", pump.answering()), "island_tasks")[0]["tasks"]}
+        ticked = set()
+        for name, state in ROADS:
+            for i in pump.only(pump.run("talk:greeter", pump.answering(**state)), "task_done"):
+                ticked.add(i["id"])
+        self.assertEqual(declared, ticked)
 
-    def test_asks_the_same_questions_in_both_arms(self):
-        # CONTENT-CONSTANT, MEASURED. The whole study is a comparison between two
-        # ways of teaching ONE thing. If the arms ask different questions, or the
-        # same questions in a different order, the comparison is between two
-        # different lessons and the result means nothing. Nobody eyeballs this
-        # after a member edits one branch and forgets the other.
-        from questions import WhatAGrapeIs
-        game = self.scored("game", [0, 0, 0])
-        plain = self.scored("plain", [0, 0])
-        # asserted before the comparison: two empty lists are equal, and an
-        # island that asks nothing would otherwise pass the study's own test
-        self.assertEqual(len(game), len(WhatAGrapeIs.ITEMS))
-        self.assertEqual(game, plain)
-
-    def test_scores_the_same_way_in_both_arms(self):
-        self.assertEqual(pump.only(walk("game", [0, 1, 0]), "award")[0]["grade"],
-                         pump.only(walk("plain", [1, 0]), "award")[0]["grade"])
-
-    def test_no_run_at_all_falls_back_to_the_game_arm(self):
-        # get() comes back None when there is no saved run, which is what a bare
-        # harness looks like. None is not "plain", and an island must not read it
-        # as one, or every unjoined player silently becomes a control subject.
-        seen = pump.run("talk:greeter", lambda i: 0 if i["kind"] == "choose" else None)
-        self.assertTrue(all("who" in s for s in pump.only(seen, "say")))
+    def test_a_row_ticks_when_it_is_true_and_not_on_the_way_in(self):
+        kinds = pump.kinds(pump.run("talk:greeter", pump.answering(choices=[0])))
+        self.assertLess(kinds.index("say"), kinds.index("task_done"))
 
 
-class TheShapeOfAGrape(unittest.TestCase):
-    """The rules grape.py enforces, checked where a member can read them."""
+class TheActivity(unittest.TestCase):
+    def setUp(self):
+        self.manifest = pump.load(ISLAND)
+
+    def road(self, **state):
+        return pump.run("talk:greeter", pump.answering(**state))
+
+    def test_finishing_writes_one_row_with_the_grade_that_was_earned(self):
+        rows = pump.only(self.road(choices=[0], score=2.5), "award")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["programme"], self.manifest["programme"])
+        self.assertEqual(rows[0]["grade"], 2.5)
+
+    def test_a_grade_of_zero_is_still_a_row(self):
+        # a student who got everything wrong has to have a row, or the transcript
+        # loses exactly the people it most needs to show
+        row = pump.only(self.road(choices=[0], score=0), "award")[0]
+        self.assertIn("grade", row)
+        self.assertEqual(row["grade"], 0)
+
+    def test_saying_not_right_now_never_reaches_the_activity(self):
+        seen = self.road(choices=[1])
+        self.assertEqual(pump.only(seen, "play"), [])
+        self.assertEqual(pump.only(seen, "award"), [])
+        # and the line at the top is handed back rather than left on the glass
+        self.assertIn(None, [i.get("text") for i in pump.only(seen, "objective")])
+
+    def test_closing_the_activity_is_not_a_zero(self):
+        seen = self.road(choices=[0], score=None)
+        self.assertEqual(pump.only(seen, "award"), [])
+        self.assertIn(None, [i.get("text") for i in pump.only(seen, "objective")])
+
+    def test_the_line_at_the_top_comes_back_even_when_the_activity_refuses(self):
+        # `play` refuses rather than returning when a question will not validate,
+        # which is the mistake a member is most likely to make in lines.py
+        trail = []
+        engine = pump.answering(choices=[0])
+
+        def answer(intent):
+            trail.append(intent)
+            if intent["kind"] == "play":
+                raise pump.Refused("that question has two options with the same id")
+            return engine(intent)
+
+        with self.assertRaises(Exception):
+            pump.run("talk:greeter", answer)
+        self.assertIn(None, [i.get("text") for i in trail if i["kind"] == "objective"])
+
+
+class TheYear(unittest.TestCase):
+    """An island can be taken again in a later year, so it has to close twice."""
+
+    def setUp(self):
+        pump.load(ISLAND)
+
+    def test_the_done_flag_carries_the_year(self):
+        seen = pump.run("talk:greeter", pump.answering(year=2, choices=[0]))
+        self.assertEqual([i["flag"] for i in pump.only(seen, "set_flag")], ["finished:y2"])
+
+    def test_a_finished_year_asks_for_nothing(self):
+        seen = pump.run("start", pump.answering(flags=["finished:y1"]))
+        self.assertEqual(pump.only(seen, "guide_to"), [])
+        self.assertEqual(pump.only(seen, "objective"), [])
+
+
+class TheShapeOfAnIsland(unittest.TestCase):
+    """The rules grape.py holds you to, checked where a member can read them."""
 
     def tearDown(self):
-        # these tests fill the registry with fakes; leave it as the next test
-        # file expects to find it
-        pump.load("skeleton")
+        # these fill the registry with fakes; leave it as the next file expects
+        pump.load(ISLAND)
 
     def test_two_handlers_on_one_anchor_is_refused_at_import(self):
         import grape
@@ -233,16 +175,6 @@ class TheShapeOfAGrape(unittest.TestCase):
         with self.assertRaises(ValueError):
             grape.on_talk("")
 
-    def test_a_scored_thing_without_as_plain_says_so_by_name(self):
-        import grape
-
-        class Unwritten(grape.Scored):
-            pass
-
-        with self.assertRaises(NotImplementedError) as caught:
-            Unwritten().as_plain()
-        self.assertIn("Unwritten", str(caught.exception))
-
     def test_a_forgotten_yield_is_caught_and_named(self):
         import grape
         grape._forget()
@@ -257,10 +189,8 @@ class TheShapeOfAGrape(unittest.TestCase):
         self.assertIn("forgot", str(caught.exception))
 
     def test_a_handler_behind_your_own_decorator_is_not_accused(self):
-        # THE ONE THAT CAUGHT US. inspect.isgeneratorfunction says False about a
-        # wrapper that returns a generator, so checking the function instead of
-        # the call told a member with two decorators that their yield was missing,
-        # and named the wrapper rather than their own function.
+        # a wrapper returns a generator without being one, so the check has to be
+        # on what the call gives back rather than on the function
         import grape
         grape._forget()
 
