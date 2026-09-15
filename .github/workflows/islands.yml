@@ -1,0 +1,32 @@
+# Every pull request runs what a member runs before they open one.
+#
+# Nothing here needs the engine. The two checks that compare this repo against it
+# skip themselves when there is no checkout next door, which on GitHub there
+# never is.
+name: islands
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # the oldest python a member might have, so a test that only passes on a
+      # new one fails here rather than on somebody's laptop
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: every island loads, and the manifests are right
+        run: python tools/manifest.py
+
+      - name: the skeleton and the ATC island
+        run: python -m unittest tests.test_skeleton tests.test_the_club -v
+
+      - name: every test in the repo
+        run: python -m unittest -v
