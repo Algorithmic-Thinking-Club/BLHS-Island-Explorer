@@ -101,15 +101,35 @@ tells you to delete it.
 
 ## What I did not do, and why
 
-**The browser proofs did not run.** I captured a baseline at 01:11 before anyone
-started: `atc-walk-proof` 8 pass, `atc-stamp-proof` 6 pass, `grape-proof` 1 pass
-all green, and `atc-island-proof`, `atc-tasks-proof` and `atc-quiz-proof` each
-partly failing **before I touched anything**. When I went to re-run them the
-engine's dev server was answering 500 for every stylesheet, because another
-session is mid-way through removing the plain skin and the token layer. The page
-loads with no styles and every proof dies on it. That is corroboration I could
-not get, not a failure I am hiding: the AST comparison above is the stronger
-proof and it is complete. Re-run them once the engine tree settles.
+**The browser proofs ran in the end, and five of six match.** I captured a
+baseline at 01:11 before anyone started, then re-ran everything after the sweep.
+
+```
+atc-walk-proof     8P/0F  ->   8P/0F    identical
+atc-stamp-proof    6P/0F  ->   6P/0F    identical
+grape-proof        1P/0F  ->   1P/0F    identical
+atc-tasks-proof    4P/6F  ->   4P/6F    identical, same six
+atc-quiz-proof     5P/11F ->  15P/0F    now fully green
+atc-island-proof  16P/8F  ->  10P/14F   six new failures
+```
+
+Three of those were already failing at the baseline, before anything changed.
+They are not mine and they were not green to begin with.
+
+**`atc-island-proof` is a real regression and it is not in this repo.** All six
+new failures cascade from one, "the screen opens inside the monitor frame", and
+once that fails nothing after it can pass. Four things say it is not the island:
+the ATC island's change was comment-only and AST-proven; `atc-quiz-proof` drives
+that exact screen with the same `play` call and is 15 of 15; the island demonstrably
+ran, because the last assertion reports the flag `atc:met` being set by the
+president; and the on-screen text in the failure is the Maw's objective line,
+"Go into the mountain. Advisory is at the fire.", so the harness is not on the map
+it thinks it is. The engine session changed how the objective resolves a room
+earlier tonight, which is where I would look. It has been told, in detail.
+
+That proof also asserted on `window.__station`, which cannot exist any more: the
+engine deleted `src/game/maw/stations.ts` tonight. It needs a pass from the engine
+side regardless of any of this.
 
 **The Maw keeps `as_plain=True`.** `islands/panther-maw/island.py` still passes it
 for one moment. Taking it out is a behaviour change to the worked example a member
