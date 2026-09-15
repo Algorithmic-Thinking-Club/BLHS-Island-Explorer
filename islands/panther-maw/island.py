@@ -54,6 +54,14 @@ from founding import (
     HANDED_OVER, RAILED, dress_the_wall, ending, he_steps_in_front, let_go, rail,
     turned, year_is_done,
 )
+# THE CHART TABLE HAS TWO NAMES IN THIS ROOM AND THEY MEAN DIFFERENT THINGS, which
+# cost a session. `founding.TABLE` is the ANCHOR, the thing at 288,229 that somebody
+# walks to. `lines.TABLE` is a SPEAKER, and it is `THOR`, because the sheet the table
+# shows is read in the student's own voice rather than by a talking table. Importing
+# both under one name is silent: the second import wins, so asking the principal to
+# look at the table turned him to look at the boy instead, which is the exact heading
+# the change was undoing. Aliased, so the two can never be confused again.
+from founding import TABLE as CHART_TABLE
 from lines import (
     ASK, BACK_AGAIN, BANKED, CIRCLE, COUNSELOR, HEARTH, LEFT,
     NOOK, NOT_NOW, NOTHING_YET, OUTFITTER, PRINCIPAL, SHEET,
@@ -132,7 +140,23 @@ def walking_in():
     # crosses the room" check moved him fourteen pixels instead of a hundred,
     # because this line had him. He has no wandering of his own on this map, so
     # letting go leaves him exactly where he was put.
-    yield from he_steps_in_front()
+    #
+    # AND FACING FORWARDS, which is Ash's word for it on 2026-09-14: *"principal
+    # panther is just facing some weird direction. he should always be at the entrance
+    # when coming in / refresh, and should be facing forwards."* Placing somebody with
+    # nothing said about their heading turns them to look at the player, so on a refresh
+    # he was set down in front of the student and turned back towards him, and the
+    # camera got the back of his head. This load is dressing the room rather than talking
+    # to him, so he looks at the chart table instead, which is the table he is about to
+    # send the student to, and the camera gets his face.
+    #
+    # THE TABLE AND NOT A COMPASS POINT, so the day it moves in MAPVIS he turns with it.
+    # Measured on the published room at yScale 0.72: the table is 41 degrees below his
+    # eye line, which is the middle of the south east picture and the one that shows a
+    # face. The hall and the three other stations all come out nearly due east of him,
+    # which is a profile. The films say it their own way, and for them looking at the
+    # student is right, because a film runs on the shot over the student's shoulder.
+    yield from he_steps_in_front(look_at=CHART_TABLE)
     yield from let_go()
 
     # ---- the film, walked --------------------------------------------------

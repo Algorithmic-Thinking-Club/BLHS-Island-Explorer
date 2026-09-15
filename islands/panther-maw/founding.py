@@ -228,7 +228,7 @@ def turned(year):
     return "yearbook:y%d" % year
 
 
-def he_steps_in_front():
+def he_steps_in_front(look_at=None):
     """He appears in front of the student, wherever the student is standing.
 
     ASH, 2026-09-08: *"The principal panther arguably is like a extension of thor.
@@ -267,13 +267,40 @@ def he_steps_in_front():
 
     It still SAYS what refused. Swallowing it silently would be the other half of
     the same mistake.
+
+    AND WHAT HE IS LOOKING AT IS THE CALLER'S TO SAY.
+
+    ASH, 2026-09-14: *"also principal panther is just facing some weird direction. he
+    should always be at the entrance when coming in / refresh, and should be facing
+    forwards."*
+
+    `place` with no `facing` turns a body to look at the player, and that default is
+    right in a film and wrong on a plain load, for a reason that is entirely about where
+    the camera is. A film runs on `view("close")`, which is the shot over the student's
+    own shoulder, so a man turned to the student is a man turned to the lens. A plain
+    load is the overhead room, the lens is above, and the same instruction puts a man
+    between the camera and the student with his back to it. Measured on a refresh: the
+    student spawns at the tunnel facing south east, the principal is set down south east
+    of him and turned north west to look back, and what Ash got was the back of a head.
+
+    So a beat that is about to talk to him leaves this alone. A load that is only
+    dressing the room hands it an anchor to look at instead, and gets a man looking into
+    his own room. `look_at` is a NAME and never a compass point, which is the rule the
+    whole file is held to: a heading typed in here is a bet on where somebody left a
+    table in MAPVIS, and a name is a question the scene answers against the map that is
+    actually loaded.
     """
     try:
         yield place(PRINCIPAL, THOR)
-        return True
     except Exception as refused:
         yield log("place_refused", {"actor": PRINCIPAL, "at": THOR, "why": str(refused)})
         return False
+    if look_at:
+        try:
+            yield actor_face(PRINCIPAL, look_at)
+        except Exception as refused:
+            yield log("actor_face_refused", {"actor": PRINCIPAL, "at": look_at, "why": str(refused)})
+    return True
 
 
 def let_go():
