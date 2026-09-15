@@ -1,8 +1,4 @@
-"""THE PACKAGE FORMAT, written down as the thing that refuses.
-
-An island is a folder with an island.json in it. This file is what "a folder
-with an island.json in it" actually means, and it is here rather than in a
-document because a document does not stop anybody.
+"""Check an island folder against the package format.
 
 Check your own island:
 
@@ -12,15 +8,8 @@ Check everything in the repo:
 
     python tools/manifest.py
 
-Every complaint names the field. A checker that says "invalid manifest" has told
-you nothing; one that says `modules` lists questions.py, which is not in this
-folder has told you what to do next.
-
-The game runs these same rules on what it fetched, in
-AdventureGame/src/vine/py/grape-source.ts, so failing here means failing there.
-Two of them are only checkable on this side, because over HTTP there is no folder
-to look in: a .py file on disk that nobody listed, and a name in `modules` whose
-capitals do not match the file. Both are the kind that only break in the game.
+Every complaint names the field it is about. The game runs these same rules on
+what it fetches, so passing here means passing there.
 """
 import json
 import os
@@ -29,61 +18,39 @@ import sys
 
 # lower case, digits, single hyphens. The same shape the roster's ids are in,
 # and safe as a folder name, a URL segment and a filename on every machine.
-#
-# MATCHED WITH fullmatch AND NEVER match. Python's `$` also matches just before a
-# trailing newline, so `"robotics\n"` passed this and was then refused by the
-# game, whose JavaScript `$` does not. That is the worst direction for a rule to
-# be wrong in: the local checker says yes and the thing that matters says no.
 SLUG = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 
 # what `import questions` can actually spell. A dot, a space or a capital in a
 # filename passes every other check here and then cannot be imported at all.
 STEM = re.compile(r"[a-z_][a-z0-9_]*")
 
-# THE FORMAT VERSION. It is not decoration. Two repositories ship on different
-# days, and the day the format changes this number is how a member finds out
-# their island needs an edit instead of watching it fail strangely.
+# the format version every island.json declares.
 FORMAT = 1
 
 REQUIRED = ("format", "programme", "map", "title", "owner", "entry", "modules", "content")
 OPTIONAL = ("season",)
 SEASONS = ("Fall", "Winter", "Spring")
 
-# P18. What a student needs to know to walk into this thing on a Tuesday, which
-# is not the same as what makes a good island and is the half a builder skips.
+# what a student needs to walk in: what it is, when it meets, how to join.
 FACTS = ("what", "when", "how_to_join")
 CONTENT_OPTIONAL = ("blurb", "sticker", "meets")
 # a blurb is a line in a list, not a paragraph
 BLURB_WORDS = (4, 6)
-# the explicit marker. An absent source is a member who did not think about it;
-# this is a member who did, and the game can render the difference.
+# put this in a source field when you checked and nobody has published the fact.
 UNKNOWN = "unknown"
 
 # the string a person reads. One line, and short enough to sit in a dialogue box
 # or a roster row without pushing anything off the edge.
 TEXT_MAX = 80
 
-# an island is a handful of small text files, and the game fetches all of them at
-# once. The same number is in grape-source.ts.
+# the most .py files one island can list; the game fetches them all at once.
 MAX_MODULES = 24
 
-# the engine writes its own copy of both of these into the runtime before your
-# island is imported. A member shipping one would shadow the real thing with a
-# stale copy and spend an afternoon on it.
+# the engine provides these two, so an island must not ship its own copy.
 ENGINE_OWNED = ("vine.py", "grape.py")
 
-# THE ISLANDS THE VINE ITSELF WROTE, which are in this repo because they are
-# WRITTEN here. Read them; do not edit them.
-#
-# `islands/panther-maw/` is the game's own home base and `islands/castaway/` is
-# the opening on the shore, both written in the same python a member writes.
-# They ship without a row in `islands.json` because a row is a PROGRAMME as well
-# as a binding, and neither of these is a thing you spend a season token on. The
-# engine binds them itself in `src/game/roster/vine-islands.ts` and vendors the
-# files at build time with `scripts/vendor-islands.mjs`.
-#
-# Until 2026-09-05 the comment here said the engine kept these level through
-# `tools/sync.py`. The arrow has turned: this repo is the master now.
+# islands the vine ships itself. read them, do not edit them, and do not add a
+# row in islands.json for one.
 VINE_OWNED = ("panther-maw", "castaway", "the-hub")
 
 # names Python already uses. An island shipping random.py does not get a warning,
@@ -118,13 +85,10 @@ def faults(folder):
         if key not in REQUIRED and key not in OPTIONAL:
             out.append("`%s` is not a field this format has" % key)
     if out:
-        # everything below reads fields; complaining about their contents while
-        # the shape is still wrong buries the one line that matters
+        # the checks below all read fields, so stop while the shape is wrong
         return out
 
-    # `is not int` and not `!= FORMAT`, because in Python True == 1, so a
-    # `"format": true` typo would sail through the one check that exists to stop
-    # a mis-versioned island, and then fail on the engine's `format === 1`
+    # in python True == 1, so a bool has to be refused before the number check
     if isinstance(m["format"], bool) or not isinstance(m["format"], int):
         out.append("`format` is %r, which is not a whole number" % (m["format"],))
     elif m["format"] != FORMAT:
@@ -133,9 +97,7 @@ def faults(folder):
     for key in ("programme", "map"):
         if not isinstance(m[key], str) or not SLUG.fullmatch(m[key]):
             out.append("`%s` is %r, which is not a slug" % (key, m[key]))
-    # THE KEY SPACES STAY DISJOINT. A programme is a thing you do; a map is a
-    # painting. The roster refuses an id that is both, so an island that ships
-    # one is an island that can never be added to the roster.
+    # a programme is a thing you do and a map is a painting, so the two ids differ
     if m["programme"] == m["map"]:
         out.append("`programme` and `map` are both %r; they are different key spaces "
                    "and the roster refuses an id that is in both" % m["map"])
@@ -168,8 +130,6 @@ def _content_faults(c):
             continue
         if not isinstance(f.get("text"), str) or not f["text"].strip():
             out.append("`content.%s.text` is empty" % key)
-        # THE WHOLE POINT OF THE SECTION. A sentence about BLHS with nothing
-        # behind it is a sentence the game tells a student as though it were true.
         if not isinstance(f.get("source"), str) or not f["source"].strip():
             out.append("`content.%s.source` is missing. Cite where the fact came from, "
                        "or put \"%s\", which means you checked and nobody has "
@@ -208,8 +168,6 @@ def _text_faults(m):
         if not isinstance(value, str) or not value.strip():
             out.append("`%s` is empty, and somebody has to be able to read it" % key)
         elif "\n" in value or "\r" in value or "\x00" in value:
-            # `title` lands in a dialogue box and on a roster row with nothing
-            # between the manifest and the render
             out.append("`%s` has a line break or a control character in it, and it is "
                        "rendered as one line" % key)
         elif len(value) > TEXT_MAX:
@@ -272,9 +230,7 @@ def _module_faults(folder, m):
     if not isinstance(entry, str) or entry not in mods:
         out.append("`entry` is %r, which is not one of the modules" % (entry,))
 
-    # A FILE NOBODY LISTED IS A FILE THAT IS NEVER FETCHED. The island imports
-    # it, the import fails inside the game and nowhere else, and the traceback
-    # points at a line that is correct. Cheapest possible thing to catch here.
+    # a .py file nobody listed is never fetched, so the import fails in the game
     for f in sorted(on_disk):
         full = os.path.join(folder, f)
         if os.path.isdir(full):
@@ -304,10 +260,8 @@ def _read(path):
 def registry_faults(repo=None):
     """islands.json against the folders that actually exist.
 
-    THE ROW IS HOW AN ISLAND REACHES THE ROSTER. A member's pull request adds one
-    here, Ash merges it, and `tools/sync.py` carries it into the engine. A row
-    that names a folder nobody wrote, or a folder with no row, is an island the
-    game either cannot find or does not know about, and both are silent.
+    A row here is how an island reaches the roster, so a row naming a folder
+    nobody wrote is an island the game cannot find.
     """
     root = repo or _repo()
     path = os.path.join(root, "islands.json")
@@ -323,7 +277,6 @@ def registry_faults(repo=None):
 
     out = []
     folders = {os.path.basename(f) for f in islands(root)}
-    claimed = set()
     for i, row in enumerate(rows):
         where = (row or {}).get("programme") or "row %d" % (i + 1)
         if not isinstance(row, dict):
@@ -340,7 +293,6 @@ def registry_faults(repo=None):
             out.append("%s: `tags` is a list, empty if none" % where)
         folder = row.get("folder")
         if isinstance(folder, str):
-            claimed.add(folder)
             if folder not in folders:
                 out.append("%s: names the folder %r, which is not in islands/"
                            % (where, folder))
@@ -357,27 +309,16 @@ def registry_faults(repo=None):
 
 
 def unregistered(repo=None):
-    """Folders with no row yet. Not broken: not shipped.
+    """Folders with no row in islands.json yet. Not broken, just not shipped.
 
     An island with no row is one the game cannot see, which is the right state
-    for the skeleton and for yours until you are ready. It is said out loud
-    because the difference between "not registered" and "registered wrong" is
-    invisible from inside the game, and it is NOT a failure, because a member
-    should be able to build for a week before anybody merges anything.
+    for yours until you are ready.
     """
     root = repo or _repo()
     doc = _read(os.path.join(root, "islands.json"))
     rows = doc.get("islands") if isinstance(doc, dict) else []
     claimed = {r.get("folder") for r in rows if isinstance(r, dict)}
-    # AND THE VINE'S OWN ISLANDS ARE NOT UNREGISTERED. They are registered
-    # somewhere a member's pull request does not reach: `vine-islands.ts` in the
-    # engine, a table of maps the game itself owns. It is a second table because
-    # a row in the member roster is a PROGRAMME, and the Panther's Maw is not one.
-    # A row for it would have appeared on the year sheet as a season token a
-    # student could spend on the room they were standing in.
-    #
-    # Saying "the game cannot see it" about the Maw would be false, and the only
-    # thing this line is worth is that it is true.
+    # the vine's own islands are bound inside the engine, so they need no row
     claimed |= set(VINE_OWNED)
     return [os.path.basename(f) for f in islands(root) if os.path.basename(f) not in claimed]
 
@@ -394,9 +335,8 @@ def islands(repo=None):
 def collisions(repo=None):
     """Two islands claiming the same id.
 
-    ONE key space, not one per field. The roster refuses an id that is both a
-    programme and a map, so two islands where one's programme is the other's map
-    are as broken as two islands with the same programme.
+    Programme ids and map ids are one key space, so one island's programme
+    cannot be another island's map.
     """
     out = []
     seen = {}
@@ -405,8 +345,7 @@ def collisions(repo=None):
         if not os.path.isfile(path):
             continue
         m = _read(path)
-        # a manifest faults() has already refused; complaining twice about the
-        # same folder helps nobody, and reading its fields would raise
+        # faults() has already refused this folder, and its fields cannot be read
         if isinstance(m, str):
             continue
         name = os.path.basename(folder)

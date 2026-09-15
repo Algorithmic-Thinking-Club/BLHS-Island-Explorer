@@ -1,11 +1,4 @@
-"""The hub does what it says: the arrival as one piece, and three people on the way up.
-
-BRIEF-ARRIVAL items 1 to 5, tested the way test_the_maw.py tests the room.
-Nothing here performs anything; the island yields dicts and this file answers
-them. What it can prove is the shape: the crossing is asked for exactly once
-per run and its refusal is caught and logged rather than taking the island
-down, and each of the three posts says one line in school words.
-"""
+"""Tests for the hub island: the arrival as one piece and the three dock people."""
 import os
 import re
 import unittest
@@ -22,9 +15,7 @@ def _engine_words():
         return set(re.findall(r'"kind": "([a-z_]+)"', f.read()))
 
 
-# ONE RUN STATE FOR EVERY TEST FILE, in pump. This one held only `flags`, so the
-# day the island asked `year` all sixteen tests in here died with a KeyError at
-# the fixture. Keeping a local copy is what let that happen.
+# one shared run state for every test file, from pump
 answering = pump.answering
 
 
@@ -33,9 +24,7 @@ class TheIslandLoads(unittest.TestCase):
         self.manifest = pump.load(ISLAND)
 
     def test_it_claims_the_three_dock_people_and_the_opening(self):
-        # THE LIST IS EXACT. The three posts are the ones Ash is placing
-        # (docs/ops/ARC-MANIFEST.md). Until the hub is republished with them the
-        # engine says so by name at load and these simply never fire.
+        # the handler list is exact: the opening and the three dock people
         self.assertEqual(pump.handlers(), [
             "start", "talk:dock_one", "talk:dock_three", "talk:dock_two",
         ])
@@ -56,14 +45,7 @@ class TheCrossing(unittest.TestCase):
         pump.load(ISLAND)
 
     def test_the_arrival_is_written_down_when_the_whole_piece_is_over(self):
-        """AT THE TUNNEL AND NOWHERE EARLIER, which reverses what this file used
-        to assert. Ash, 2026-09-07: the flag sat one line after the crossing on
-        the argument that a crossing happens once, and the cost was a student who
-        reloaded halfway up the quay getting the flag, no handler, no bars and the
-        tiller in his hands on a boat already tied up. The arrival is the whole
-        piece from the water to the door, so the piece being OVER is the thing
-        written down, and a reload in the middle is a safe replay.
-        """
+        """The flag is written at the tunnel, so a reload mid arrival replays safely."""
         kinds = pump.kinds(pump.run("start", answering()))
         self.assertGreater(kinds.index("set_flag"), kinds.index("ashore"))
         self.assertGreater(kinds.index("set_flag"), kinds.index("walk_to"))
@@ -85,10 +67,7 @@ class TheCrossing(unittest.TestCase):
         self.assertEqual(pump.only(later, "set_flag"), [])
 
     def test_a_hub_with_no_sail_line_yet_is_logged_and_not_a_crash(self):
-        # the published hub carries no `the_hub_approach` today. The refusal is
-        # raised on the island's own line; caught, it is written down with the
-        # engine's sentence, and the flag is still set so the next load does not
-        # put a student who just walked out of the mountain back on the water.
+        # a missing sail line is logged and the flag still set, so it is not a crash
         seen = pump.run("start", answering(refuse=("route",)))
         logged = [i for i in pump.only(seen, "log") if i["event"] == "route_refused"]
         self.assertEqual(len(logged), 1)
@@ -97,20 +76,13 @@ class TheCrossing(unittest.TestCase):
         self.assertEqual([i["flag"] for i in pump.only(seen, "set_flag")], ["hub:crossed"])
 
     def test_it_says_nothing_until_she_is_tied_up(self):
-        # the arrival card is the engine's and it is paid where he lands; the one
-        # line this island says comes after the crossing, at the wide shot
+        # this island's only line comes after the crossing, at the wide shot
         kinds = pump.kinds(pump.run("start", answering()))
         self.assertLess(kinds.index("route"), kinds.index("say"))
 
 
 class TheArrivalIsOnePiece(unittest.TestCase):
-    """BRIEF-ARRIVAL items 1 to 5, in Ash's order, as the shape of the yields.
-
-    None of this proves it LOOKS right; nothing here draws anything. It proves
-    the order, which is the half a test can hold: the bars go up before the ship
-    moves, the island is framed before they come down, and nobody is asked to do
-    anything until the card has had the screen.
-    """
+    """The arrival plays as one piece: bars up, crossing, framing, then the walk."""
 
     def setUp(self):
         pump.load(ISLAND)
@@ -118,15 +90,12 @@ class TheArrivalIsOnePiece(unittest.TestCase):
     def test_the_crossing_is_inside_the_bars(self):
         kinds = pump.kinds(pump.run("start", answering()))
         self.assertLess(kinds.index("movie"), kinds.index("route"))
-        # up for the crossing, down at the dock, up again for the walk he is
-        # being shown, and down when he is standing at the tunnel
-        # raised once, at the first frame, and never lowered by this island at
-        # all: the frame lasts the whole arrival and the door takes it with it
+        # raised once at the first frame and never lowered by this island
         movies = [i["on"] for i in pump.only(pump.run("start", answering()), "movie")]
         self.assertEqual(movies, [True])
 
     def test_the_crossing_is_close_and_the_pull_out_comes_after_it(self):
-        """Ash's second order: close on the ship, then the dock, then wide."""
+        """The camera goes close on the ship, then the dock, then wide."""
         seen = pump.run("start", answering())
         kinds = pump.kinds(seen)
         views = pump.only(seen, "view")
@@ -136,13 +105,7 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         self.assertLess(kinds.index("route"), kinds.index("view", kinds.index("route")))
 
     def test_he_steps_off_and_then_the_island_is_framed_over_the_card(self):
-        """HE IS ASHORE FIRST AND THE WIDE SHOT COMES AFTER, which is also the
-        reverse of what stood here. The card is not skipped: the engine's own
-        ashore path suppresses it at the moment of stepping off and pays it on the
-        island shot once the camera has settled, so the card still plays over the
-        wide frame. What the old order would have meant is a wide shot of an
-        island with nobody on it yet.
-        """
+        """He steps ashore first, then the wide shot, and the card plays over it."""
         kinds = pump.kinds(pump.run("start", answering()))
         wide = kinds.index("view", kinds.index("route"))
         self.assertLess(kinds.index("ashore"), wide)
@@ -152,14 +115,7 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         self.assertLess(kinds.index("movie"), wide)
 
     def test_the_camera_moves_once_from_the_island_to_him(self):
-        """Ash watched a two step shift: full island, half island, then Thor.
-
-        MEASURED FROM THE WIDE SHOT AND NOT FROM STEPPING OFF. The window used to
-        start at `ashore`, which now sits BEFORE the island shot, so it spanned
-        two views by construction and could never hold. The thing it was written
-        to catch is a second pull-in between seeing the island and following him,
-        and that is exactly one shot, still.
-        """
+        """One camera move between the wide island shot and following him."""
         kinds = pump.kinds(pump.run("start", answering()))
         wide = kinds.index("view", kinds.index("route"))
         views = [i for i, k in enumerate(kinds) if k == "view" and wide < i < kinds.index("walk_to")]
@@ -187,16 +143,13 @@ class TheArrivalIsOnePiece(unittest.TestCase):
         seen = pump.run("start", answering())
         kinds = pump.kinds(seen)
         movies = [i for i, k in enumerate(kinds) if k == "movie"]
-        # one word, before anything moves, and nothing takes it down: the engine
-        # hands the controls back when this handler ends and the door takes the
-        # frame when he walks through it
+        # one movie word, before anything moves, and nothing here takes it down
         self.assertEqual(len(movies), 1)
         self.assertLess(movies[0], kinds.index("route"))
         self.assertLess(movies[0], kinds.index("walk_to"))
 
     def test_a_refused_crossing_still_takes_the_bars_down_and_still_walks(self):
-        # the one that matters: bars raised, the boat refused, and a student left
-        # behind two black bars with no controls would be a dead-looking laptop
+        # a refused crossing still walks him up, so he is never stuck behind bars
         seen = pump.run("start", answering(refuse=("route",)))
         self.assertEqual([i["on"] for i in pump.only(seen, "movie")], [True])
         self.assertEqual([i["anchor"] for i in pump.only(seen, "walk_to")], ["panthers_maw"])
@@ -228,7 +181,7 @@ class TheDock(unittest.TestCase):
         self.assertLess(kinds.index("say"), kinds.index("guide_to"))
 
     def test_every_line_is_short(self):
-        # the literal-words law: one idea, about twelve words
+        # each line stays to one idea, about twelve words
         for who in ("dock_one", "dock_two", "dock_three"):
             for line in pump.only(pump.run("talk:" + who, answering()), "say"):
                 self.assertLessEqual(len(line["text"].split()), 12, line["text"])

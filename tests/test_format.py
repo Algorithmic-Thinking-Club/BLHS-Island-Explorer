@@ -1,11 +1,4 @@
-"""Every island in this repo is loadable, and the rules that decide that hold.
-
-Three parts. The first walks the repo and refuses to let a broken island sit in
-it. The second actually imports every island, because a manifest can be perfect
-about a file that does not parse. The third builds deliberately broken manifests
-in a scratch folder and checks each one is caught, since a validator nobody has
-ever seen say no is a validator that might only ever say yes.
-"""
+"""Checks every island in the repo loads, imports, and obeys the manifest rules."""
 import json
 import os
 import shutil
@@ -29,10 +22,7 @@ class EveryIslandInTheRepo(unittest.TestCase):
         self.assertEqual(manifest.collisions(), [])
 
     def test_each_one_actually_imports(self):
-        # A CORRECT MANIFEST ABOUT A FILE THAT DOES NOT PARSE passes everything
-        # above. So does one whose island.py imports a module it does not ship.
-        # Both of those are green manifests and dead islands, and importing is
-        # the only thing that tells them apart.
+        # a manifest can be correct about a file that does not parse, so import it
         for folder in manifest.islands():
             island = os.path.basename(folder)
             with self.subTest(island=island):
@@ -42,9 +32,8 @@ class EveryIslandInTheRepo(unittest.TestCase):
                                 "call into it" % island)
 
     def test_every_handler_in_every_island_is_a_generator(self):
-        # THE FORGOTTEN YIELD, CAUGHT FOR EVERYBODY. A member who never copies
-        # the skeleton's own tests still gets this one, because it walks the
-        # repo. A handler with no yield in it does nothing and says nothing.
+        # the forgotten yield, caught for everybody: this walks the whole repo,
+        # so a member who never copied the skeleton's tests still gets it
         import inspect
         import grape
         for folder in manifest.islands():
@@ -127,7 +116,7 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         self.assertIn("has to be an object", self.only(manifest.faults(self.folder)))
 
     def test_a_byte_order_mark_is_read_rather_than_refused(self):
-        # every Windows editor will put one there, and it is not the member's bug
+        # a Windows editor can save island.json with a BOM, and the loader reads it
         self.touch("island.py")
         with open(os.path.join(self.folder, "island.json"), "w", encoding="utf-8-sig") as f:
             json.dump(self.GOOD, f)
@@ -141,7 +130,6 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         self.assertTrue(any("folder name" in p for p in problems), problems)
 
     def test_the_content_section_is_required(self):
-        # P18. The half a builder skips, so it gets skipped out loud.
         self.touch("island.py")
         self.assertIn("`content`", self.only(self.write(content=self.GONE)))
 
@@ -150,7 +138,7 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         bare = dict(self.GOOD["content"])
         bare["what"] = {"text": "BLHS opened in 2005."}
         self.assertIn("content.what.source", self.only(self.write(content=bare)))
-        # "unknown" is a decision a member made, and it passes
+        # "unknown" is a valid source and passes
         said = dict(self.GOOD["content"])
         said["what"] = {"text": "Nobody has published this.", "source": "unknown"}
         self.assertEqual(self.write(content=said), [])
@@ -172,8 +160,7 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         self.assertIn("`owner`", self.only(self.write(owner=self.GONE)))
 
     def test_a_field_nobody_has_heard_of_is_named(self):
-        # a typo in a key is otherwise completely silent: the value is simply
-        # never read and the island behaves as though it was never written
+        # a mistyped key is otherwise silent, since nothing ever reads it
         self.touch("island.py")
         self.assertIn("`sesaon`", self.only(self.write(sesaon="Fall")))
 
@@ -184,8 +171,7 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         self.assertIn("format 1", self.only(self.write(format=2)))
 
     def test_a_format_that_is_not_a_number_at_all(self):
-        # True == 1 in Python, so a boolean sails through a bare `!= 1` and then
-        # fails on the engine's `=== 1`, which is the one place nobody is looking
+        # True == 1 in Python, so a boolean has to be refused by type
         self.touch("island.py")
         for value in (True, 1.0, "1", None):
             with self.subTest(format=value):
@@ -239,13 +225,12 @@ class TheRulesActuallyRefuse(unittest.TestCase):
         self.assertIn("questions.py", self.only(problems))
 
     def test_a_file_on_disk_that_nobody_listed(self):
-        # the one that only breaks inside the game, which is the worst place
+        # a file the manifest does not list is never fetched
         self.touch("island.py", "questions.py")
         self.assertIn("never fetches it", self.only(self.write()))
 
     def test_a_subfolder_inside_an_island(self):
-        # re-running the copy command nests a whole island inside another one,
-        # and every file in it is unfetchable and invisible
+        # a nested island folder is unfetchable, so an island stays one flat folder
         self.touch("island.py")
         os.makedirs(os.path.join(self.folder, "content"))
         self.assertIn("one flat folder", self.only(self.write()))
@@ -288,7 +273,7 @@ class TheRulesActuallyRefuse(unittest.TestCase):
 
 
 class TwoIslandsInOneRepo(unittest.TestCase):
-    """collisions() had no test at all, so gutting it left the suite green."""
+    """Two islands in one repo may not share a programme or map id."""
 
     def setUp(self):
         self.repo = tempfile.mkdtemp()
@@ -320,8 +305,7 @@ class TwoIslandsInOneRepo(unittest.TestCase):
         self.assertTrue(manifest.collisions(self.repo))
 
     def test_one_islands_programme_is_anothers_map(self):
-        # ONE key space to the roster, so this is as broken as the case above and
-        # a per-field check would have called it fine
+        # programme ids and map ids share one key space in the roster
         self.island("a", "chess", "chess-room")
         self.island("b", "pep", "chess")
         self.assertTrue(manifest.collisions(self.repo))

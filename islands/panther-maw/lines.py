@@ -1,33 +1,10 @@
 """Everything anybody says in the Maw, in one place.
 
-An island is a folder and this is the first reason why. What the room SAYS is
-content, and WHEN it says it is control flow, and the day somebody wants to
-change one without reading the other they will be glad these were apart.
+A speaker is an anchor name, and the dialogue box prints the label whoever
+placed that anchor typed in MAPVIS, not the string here. THOR is the reserved
+name for the player, so the box prints the name the student chose.
 
-The names below are also the answer to a question you will hit in your own
-island: who is talking. A speaker is an ANCHOR NAME, and the box prints the
-label whoever placed that anchor typed in MAPVIS, never this string. So the
-counselor's plate reads "The Counselor" because that is the label on her post,
-and renaming that label cannot break a line of this file.
-
-Two names are not anchors. THOR is the reserved word for the player, and the box
-puts the name the student chose at setup on the plate. TABLE is THOR on purpose:
-the chart table is furniture, furniture does not talk, and the anchor carries no
-label anyway, so naming it as the speaker would print the raw identifier
-`chart_table` at the exact spot a person's name goes.
-
-HOW LONG A LINE MAY BE, AND HOW MANY. One idea, about twelve words, and ONE LINE
-PER BEAT. That second half is BRIEF-MAW-RAIL and it is stricter than what was
-here: year one walks a student between five places, and at each one exactly one
-person says exactly one thing before the thing happens. Ash played the version
-with three lines a beat: "a bunch of words, a bunch of instructions that open to
-read more words. A student doesn't know what the hell is going on."
-
-That rule is not a style preference, it is the literal-words law: a student who
-skips every line in this room must still end up understanding where the table
-is, because the light on the floor taught them and the text only confirmed it.
-And every line says the school thing first. Advisory is Advisory, the yearbook is
-the yearbook, the cords are your cords.
+Keep a line to one idea, about twelve words, and one line per beat.
 """
 
 # ---- who is speaking ---------------------------------------------------------
@@ -40,41 +17,22 @@ WALL = "trophy_wall"
 OUTFITTER = "outfitter"
 TABLE = THOR
 
-# the one drawn face in the game so far. It is the `principal-pro` character
-# MAPVIS drew for this very room, cropped, and Ash locked it: do not draw
-# another one. A line with no portrait shows a plate with no face, which is what
-# nearly every line in this game is.
+# the only drawn portrait. pass it as `portrait=FACE` on a say. a line with no
+# portrait shows a plate with no face, which is most lines in this game.
 FACE = "principal"
 
 
 # ---- the principal, and the five lines of the rail ---------------------------
 #
-# ONE LINE PER STOP AND THE LINE IS THE WHY. BRIEF-MAW-RAIL-2, Ash after playing
-# rail-1: *"Everything in the cutscene should be clear and easy to follow and
-# make sense WHY it is happening. I have no idea what is going on: a fire, click
-# two classes, it makes no sense. And if you think more text is the answer, we
-# are doomed."*
-#
-# So the answer is not more words, it is the RIGHT words and fewer of them. The
-# principal walks ahead and the student follows him, which is what an orientation
-# is, and at each stop he turns round and says the one sentence that says why
-# this thing is happening to you. Never an instruction: the light on the floor
-# and the screen that opens are the instruction.
-#
-# These five are word for word from the brief and nothing may be added beside
-# them. The two lines about the corner buttons that used to ride along on beats 2
-# and 3 are CUT: the corner is hidden for the whole cutscene now and appears when
-# the bars come down, so a sentence handing it over was a sentence about a button
-# that was not on the screen.
+# the principal walks ahead and stops at five places. at each stop he says one
+# sentence saying why the stop is happening, never what to press.
 
 # BEAT 1, at the tunnel mouth, after he has walked over to you.
 WELCOME = "Welcome to Bonney Lake High. Come with me."
 
 # BEAT 2, at the table, before the schedule opens.
 SCHEDULE_IS_YOURS = "Your schedule. Every Panther fills one in."
-# said ONLY when he closed the schedule without stamping it, so the rail can
-# offer it again rather than walking him on with an empty sheet. It is not a
-# sixth line: nobody on the road ever hears it.
+# said when he closes the schedule without stamping, so the rail can offer it again.
 STAMP_IT = "Fill both Elective periods, pick one club or sport, then stamp it."
 
 # BEAT 3, at the fire, before Advisory.
@@ -89,16 +47,10 @@ WALL_IS_YOURS = "What you earn goes up here."
 BACK_AGAIN = "Everything you need is on the walls. Take a look around."
 
 
-# ---- THE PANEL AT THE TOP OF THE SCREEN --------------------------------------
+# ---- the objective panel at the top of the screen ----------------------------
 #
-# BRIEF-MAW-RAIL-3 A, Ash after playing rail-2: a panel at the top centre says
-# the current objective at EVERY moment, in a cutscene and out of one. Outside a
-# scene the engine writes it off the year itself; inside this one the year is
-# describing a step the student is being walked past, so the rail says it.
-#
-# ONE SHORT IMPERATIVE AND NOTHING ELSE. A verb and its target. These are not
-# dialogue: nobody says them, they are the sign over the door of the thing that
-# is happening, and a student who reads nothing else on the screen reads this.
+# one short imperative each, a verb and its target. nobody says these out loud;
+# they name the step the student is on.
 FOLLOW = "Follow the principal."
 FILL_IT_IN = "Fill your schedule."
 ANSWER = "Answer Advisory."
@@ -106,58 +58,17 @@ LOOK_AT_WALL = "Look at your trophy wall."
 TALK_TO_HER = "Talk to the counselor."
 # the last step of the introduction, over the wide shot of the room
 LOOK_AROUND = "Look around the Maw."
-# and the last step of the YEAR, over the one button the closing film ends on. The
-# panel used to be handed back to the year two lines before the congratulation, and
-# the year has a sentence ready for a finished run, so the bar said "Year one is
-# done. Look around." across the top of a man congratulating a student and a button
-# saying Sail Home. A film keeps the panel until it is finished.
+# the last step of the year, over the button the closing film ends on
 SAIL_STEP = "Sail home."
 
-# THERE USED TO BE ONE MORE and it is CUT, 2026-09-08. "Explore. Talk to anyone.
-# Open the Guide." was what the handover pinned, and an island's word outranks the
-# year's, so it sat on the bar for the rest of the session over a year that still
-# had two classes owing. Ash ruled the middle of year one is those two classes and
-# the bar names them, which is `src/game/run/objective.ts`'s job; the film's last
-# act is to hand the panel back rather than to have the last word.
 
-
-# ---- THE HANDOVER, which is the last thing the opening film does -------------
+# ---- the end of the introduction, one line over a wide shot ------------------
 #
-# BRIEF-INTRO-FILM section 4, Ash 2026-09-07, word for word: *"the bars come
-# down, the corner appears one plaque at a time with one line each said by the
-# principal, 'My Year is what you picked. The Guide is every club and class at
-# Bonney Lake. The Map is where you sail.'"*
-#
-# These three are the only place in the game where the principal explains a
-# control, and they are allowed to be that because the control is arriving on
-# screen while he says it. Nothing here describes a thing that is not visibly
-# swinging down into the corner as it is read.
-# ---- THE END OF THE INTRODUCTION, WHICH IS ONE LINE OVER A WIDE SHOT --------
-#
-# ASH, 2026-09-08, AFTER PLAYING RAIL-7: *"the cutscene abruptly goes away. no
-# clean introduction cutscene ending. just a few dialogues saying 'Map, Guide, My
-# year' that a freshman wont even connect, until they realize its talking about
-# those three random buttons at the top."*
-#
-# THE THREE SENTENCES ARE CUT. They were his own words from BRIEF-INTRO-FILM and
-# they did not survive being played: a man in a cave naming three controls in the
-# opposite corner of the screen, with nothing moving while he says them, is a
-# tutorial written as dialogue, which is the one thing this game keeps ruling
-# out. BRIEF-CLOSE-THE-LOOP section 1 replaces them with a picture and one line,
-# and each plaque explains itself the first time it is pressed instead.
-#
-# THE LINE ITSELF IS THE BRIEF'S, word for word, and it does two things at once:
-# it hands the room over, and it says where the year ends, which is the only
-# thing the student needs to remember once he is walking around on his own.
+# it hands the room over and says where the year ends.
 THE_MAW_IS_YOURS = "The Maw is yours. Find me when your year is done."
 
 
-
 # ---- the fire ----------------------------------------------------------------
-#
-# NOTHING IS SAID AFTER THE QUESTIONS ANY MORE. The reward pop names what was
-# finished and what it was worth, over the map, and that is the result. A line
-# here as well was the same fact said twice.
 
 CIRCLE = "Advisory is starting. Answer the questions."
 BANKED = "Advisory is done for this year. Come back next year."
@@ -172,14 +83,9 @@ ASK = "Ask about the cords?"
 SHOW_ME = "Open the Guide"
 NOT_NOW = "Not now"
 
-# THE CLOSING FILM. She has the cord and the yearbook turns the page.
-# ---- THE YEAR IS ASKED, NEVER SPELLED (Ash, 2026-09-09) ---------------------
+# ---- the closing film, where she hands over the cord -------------------------
 #
-# *"I finished year 2, and it says 'year one is done' everywhere."*
-#
-# These three said "year one" as a literal, written in the week when year one was
-# the only year there was. `year_words` is the same table `run/year.ts` keeps on
-# the engine side, and both are short because `end_year` graduates at four.
+# ask for the year word, never write "year one" into a line.
 YEAR_WORDS = ("zero", "one", "two", "three", "four")
 
 
@@ -191,14 +97,6 @@ def year_word(n):
 CORD = "Year %s is done. Here is your %s cord."
 # and which cord it is, which is a different fact from which year it is
 CORD_ORDINAL = ("", "first", "second", "third", "fourth")
-
-# THERE USED TO BE A SECOND ONE HERE and it is CUT rather than left lying about.
-# "Year one is done. Let's turn the page and see what you earned." was what she
-# said to a student who pressed her with the year finished, and saying it turned
-# the page, which is the flag the closing film's own trigger goes false on: the
-# most likely press in the room deleted the whole ending. She starts the film now
-# (`island.py`), and inside it she says CORD, so the room never had two ways of
-# closing a year and only ever needed one sentence.
 
 
 # ---- the chart table ---------------------------------------------------------
@@ -213,28 +111,15 @@ NOOK = "Pick a new coat color. Nothing here costs anything."
 
 # ---- the trophy wall ---------------------------------------------------------
 
-#
-# NO NUMBER IN EITHER LINE, ON PURPOSE. The wall panel counts frames (Advisory
-# and the classes and the picks), the drape counts things on the wall, and the
-# stickers and badges the run holds are a third count. Thor used to say "no
-# badges on the wall yet" over a panel reading "3 of 6 frames filled"
-# (STATE-OF-THE-GAME confusing 9). The panel is the readout; he introduces it.
+# no number in either line. the wall panel does the counting; these introduce it.
 EMPTY_WALL = "This is my trophy wall. What I earn this year goes up here."
 FULL_WALL = "This is my trophy wall. Let's see what is on it."
 
 
-# ---- THE CLOSING FILM'S OWN LINE, and it is BUILT rather than written --------
+# ---- the principal's congratulation, built from the save ---------------------
 #
-# Ash's shape for the ending, 2026-09-07: the principal *"congratulates him BY
-# NAME on what he actually did (the picks and grades from the save, one line)"*.
-#
-# So there is no sentence here to copy. `well_done` in founding.py assembles one
-# of these three out of `get("handle")` and `get("picks")`, and every word of it
-# is something the student really chose or really earned. A congratulation about
-# somebody else's afternoon is worse than no congratulation at all.
-#
-# They live here with the rest of the content, so changing what he says is still
-# an edit to this file and not to the control flow.
+# `well_done` in founding.py fills one of these three with the student's own
+# name and picks.
 WELL_DONE = "%s, you picked %s."
 WELL_DONE_GRADED = "%s, you picked %s, and Advisory came back %s."
 WELL_DONE_BARE = "%s, that is your first year at Bonney Lake."
@@ -242,19 +127,9 @@ WELL_DONE_BARE = "%s, that is your first year at Bonney Lake."
 # what he is called when the student never typed a name
 SOMEBODY = "Panther"
 
-# ---- THE END OF YEAR ONE -----------------------------------------------------
+# ---- the end of the year -----------------------------------------------------
 #
-# ASH, 2026-09-09, after playing the closing: *"after Thor sees what he earns, it
-# should be far different. Principal Panther should clearly congratulate him with
-# a dialogue for finishing year one. Then a big button should pop on the screen,
-# 'Sail Home'."*
-#
-# WHAT WAS THERE was `WELL_DONE`, said at the START of the film, before the wall
-# and before the cord: a sentence listing what he picked, which is a readout and
-# not a congratulation. Then the yearbook closed and the film walked out of the
-# room. Nobody ever said he had finished the year.
-#
-# THIS IS SAID AFTER THE PAGE TURNS, which is the moment it is true.
+# said after the yearbook page turns.
 YEAR_DONE = (
     "%s. That is year %s at Bonney Lake, finished. The cord is yours and it stays yours."
 )

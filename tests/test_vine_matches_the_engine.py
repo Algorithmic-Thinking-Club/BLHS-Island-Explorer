@@ -1,27 +1,8 @@
-"""The vendored vine.py and grape.py have not drifted from the engine's.
+"""Checks this repo's copies of the engine's python have not drifted.
 
-Both files at the root of this repo are copies of the engine's. The game writes
-its own into the runtime over the top of them, so at runtime the engine always
-wins and a stale copy here cannot reach a player. What it CAN do is waste an
-afternoon: a member writes `say(text, portrait=...)` against a copy that has an
-argument the engine does not, the test here goes green, and the game raises a
-TypeError on a line that looks correct. That happened, on `say`, in this repo's
-first commit.
-
-So both are compared BYTE FOR BYTE. Not a subset and not a signature match: there
-is one of each file and no reason for two, `python tools/sync.py` makes them the
-same, and this fails on a comment as readily as on a rule.
-
-THE NINE-WORD FENCE IS NOT HERE. vine.py carries all fifteen of the engine's
-words, because a member's editor should see what the engine actually has. What is
-fenced to nine is the STARTER SKELETON, so a member's first copy never contains a
-word that comes back as a refusal on their own line, and that fence lives in
-test_skeleton.py where the skeleton is.
-
-On a member's laptop the game repo is not there, and these say so out loud rather
-than passing quietly, because a skip nobody sees is the same as no test.
-
-Point it somewhere else with BLHS_GAME if your checkout is not next door.
+vine.py, grape.py, the vendored islands and islands.json are compared byte for
+byte with the game checkout next door. Run `python tools/sync.py` to fix a
+failure, and set BLHS_GAME if your game checkout is not in a sibling folder.
 """
 import os
 import re
@@ -35,18 +16,10 @@ ENGINE_PY = os.path.join(GAME, "src", "vine", "py")
 
 # every file this repo vendors out of the engine
 VENDORED = ("vine.py", "grape.py")
-# and the one that goes the other way: the roster rows a member's PR adds here,
-# which tools/sync.py carries into the engine when Ash merges
+# the roster rows that cross the other way, from here into the engine
 CROSSES = (("islands.json", os.path.join("src", "game", "roster", "member-islands.json")),)
 
-# THE ISLANDS THE VINE WROTE, whole folders, and the engine's copy is the master.
-#
-# The Panther's Maw is the game's own home base written in the same python a
-# member writes. It ships out of the engine's `public/grapes/`, because that is
-# where a bound island is fetched from, and it is HERE because it is the advanced
-# example somebody reads to understand the machine. Two copies of a four file
-# island drift faster than two copies of one file, and a drifted copy here is a
-# member learning from a version of the room that is not the one they play.
+# whole island folders vendored from the engine, which keeps the master copy
 VENDORED_ISLANDS = (
     ("panther-maw", os.path.join("public", "grapes", "panther-maw")),
     ("castaway", os.path.join("public", "grapes", "castaway")),
@@ -73,13 +46,7 @@ class TheCopiesAreTheSameFiles(unittest.TestCase):
 
 
 class TheVinesOwnIslandsAreTheSameFolders(unittest.TestCase):
-    """Every file, both ways, so neither a stale edit nor a stray module hides.
-
-    Comparing the files the engine has is only half of it. A module left behind
-    HERE after the engine deleted it is a `.py` on disk that no manifest lists,
-    which `tools/manifest.py` refuses, and the member reading the error wrote
-    none of it.
-    """
+    """Compares every file both ways, so a module left behind here shows up too."""
 
     def test_every_file_is_the_same_file(self):
         for folder, theirs_rel in VENDORED_ISLANDS:
@@ -108,14 +75,7 @@ class TheVinesOwnIslandsAreTheSameFolders(unittest.TestCase):
 
 
 class TheRosterRowsCrossed(unittest.TestCase):
-    """islands.json here and member-islands.json in the engine are one file.
-
-    A member's pull request adds a row HERE, because this is the repository a
-    member opens. The engine reads its own copy at boot rather than asking GitHub
-    for a roster on a school network with a bad afternoon, so the row has to
-    cross, and `python tools/sync.py` is the crossing. An unsynced merge is an
-    island the member can see and the game cannot.
-    """
+    """islands.json here and member-islands.json in the engine hold the same rows."""
 
     def test_the_engine_has_the_same_rows(self):
         for ours_name, theirs_rel in CROSSES:
@@ -139,17 +99,7 @@ class TheRegistryMatchesTheFolders(unittest.TestCase):
 
 
 class TheFormatRulesAgree(unittest.TestCase):
-    """The two checkers hold the same lists, or a member gets caught by one only.
-
-    `tools/manifest.py` and the engine's `grape-source.ts` implement one package
-    format twice, on purpose: a member gets the answer on their own laptop in a
-    second instead of in a browser a minute later. That trade is only worth
-    anything while the two agree, and within a day of being written the reserved
-    name lists had drifted by four names. `test.py` failed here and loaded there;
-    `inspect.py` and `driver.py` passed here and were refused there.
-
-    So the constants are compared rather than trusted.
-    """
+    """tools/manifest.py and the engine's grape-source.ts hold the same format rules."""
 
     SOURCE = os.path.join(ENGINE_PY, "grape-source.ts")
 
@@ -187,14 +137,7 @@ class TheFormatRulesAgree(unittest.TestCase):
 
 
 class TheAskablePathsAreTheSameList(unittest.TestCase):
-    """What `get` documents, what the engine answers, and what the pump serves.
-
-    THREE COPIES OF ONE VOCABULARY, and they had already drifted: the docstring
-    was missing `advisory`, the hand-written list in test_the_maw was four paths
-    behind it, and the engine's own switch answered an unlisted path with
-    `undefined` instead of refusing. This is the check that stops it happening
-    again, and it is cheap: three files, one set each.
-    """
+    """The paths get() documents, the engine answers and the pump serves are one list."""
 
     def setUp(self):
         try:

@@ -1,10 +1,4 @@
-"""THE ALGORITHMIC THINKING CLUB, which is the island a member copies.
-
-The Maw is the complicated example and the hub is the opening. This one is the
-TEMPLATE, so a mistake in here is a mistake every member inherits, and the things
-worth testing are the ones a beginner will actually get wrong: a task that can never
-be ticked, a camera left pointing at a desk, a sentence left on the glass.
-"""
+"""Tests for the ATC island, the template a member copies."""
 import unittest
 
 try:
@@ -16,26 +10,17 @@ ISLAND = "atc"
 
 
 def answering(refuse=(), **state):
-    """The shared run state, and one thing about flags worth knowing.
+    """Build the run state a test hands to the island.
 
-    A MEMBER'S ISLAND LIVES IN ITS OWN CORNER OF THE FLAGS. The engine puts your
-    programme id in front of everything you write, and takes it back off everything you
-    read, so an island that says `set_flag("met")` finds `"met"` in `get("flags")` while
-    the save holds `"atc:met"`. That is why this island's own done-flag is spelled
-    `built:y1` with no `atc:` on it.
-
-    The vine's own two islands, the hub and the Maw, run UNSCOPED, which is why their
-    code spells `maw:railed` in full. Yours does not work that way.
-
-    So the flags handed to a test here are the ones your island RECEIVES, without the
-    prefix, because that is what the engine would have given it.
+    Flags are spelled the way your island receives them, with no `atc:` in front,
+    because the engine scopes a member island's flags for you.
     """
     return pump.answering(refuse=refuse, **state)
 
 
 class TheIslandLoads(unittest.TestCase):
     def setUp(self):
-        self.manifest = pump.load(ISLAND)
+        pump.load(ISLAND)
 
     def test_it_claims_the_three_things_a_student_can_press(self):
         got = set(pump.handlers())
@@ -45,12 +30,7 @@ class TheIslandLoads(unittest.TestCase):
 
 
 class TheTaskList(unittest.TestCase):
-    """What the island says it is asking for, and when the rows tick.
-
-    Ash asked for islands to always have tasks to do and for finishing them to be
-    what finishing the island means, so a row that cannot be reached is the island
-    being unfinishable, not a cosmetic slip.
-    """
+    """The tasks the island declares, and when each row ticks."""
 
     def setUp(self):
         pump.load(ISLAND)
@@ -65,14 +45,7 @@ class TheTaskList(unittest.TestCase):
         self.assertEqual(len(pump.only(again, "island_tasks")), 1)
 
     def test_every_row_it_declares_can_actually_be_ticked(self):
-        """THE ONE THAT MADE THE ISLAND UNFINISHABLE.
-
-        The machine can be pressed without ever speaking to the president, so a
-        student who walks up to the lit computer first finishes the program and then
-        finds him afterwards. "meet" used to be ticked in only one branch, and that
-        branch is unreachable once the club is done, so the island sat at one of two
-        for the rest of the year and the way home never appeared.
-        """
+        """Every task the island declares can be ticked on some path through it."""
         declared = {t["id"] for t in pump.only(pump.run("start", answering()), "island_tasks")[0]["tasks"]}
         ticked = set()
         for road, state in (
@@ -106,14 +79,9 @@ class TheScreen(unittest.TestCase):
         self.assertEqual(shots, ["the_screen", None])
 
     def test_the_camera_comes_back_even_when_the_screen_refuses(self):
-        """THE TYPO A MEMBER WILL MAKE.
+        """The shot and the objective come back even when `play` refuses.
 
-        `play` refuses rather than returning when a question will not validate: a step
-        naming an instruction that is not in the list, two questions sharing an id, a
-        misspelt kind. Without a try/finally round the shot, that typo left a student at
-        eight times zoom staring at a desk with the controls back in his hands and "Fix
-        the program." across the top, which reads as the game breaking rather than as
-        somebody's mistake.
+        Wrap the framing in try/finally so a bad question cannot strand the camera.
         """
         trail = []
         run = dict(pump.FRESH_RUN)
@@ -137,9 +105,7 @@ class TheScreen(unittest.TestCase):
         self.assertIn(None, lines, "the panel was left saying fix the program")
 
     def test_declining_hands_the_panel_back(self):
-        """A student who is walked to the machine and says not right now is standing in
-        front of it, so "Follow him to the machine." is a sentence about a thing he has
-        just declined to do. It used to stay on the glass for the rest of the year."""
+        """Declining the machine clears the objective and plays nothing."""
         seen = pump.run("talk:the_desk", answering(choices=[1]))
         lines = [i.get("text") for i in pump.only(seen, "objective")]
         self.assertIn(None, lines)

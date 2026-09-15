@@ -1,53 +1,8 @@
-"""THE FILM, second half: the tunnel mouth to the handover.
+"""The second half of the intro film: the tunnel mouth to the handover.
 
-BRIEF-INTRO-FILM, Ash 2026-09-07, after playing rail-4: *"The cutscene is the
-introduction, for every user: it plays, it ends, and the user is left to play the
-actual game."*
-
-IT IS ONE FILM AND IT DOES NOT START HERE. The bars go up on the beach, the
-frame the student presses Set Sail in, and the hub's own island
-(`islands/the-hub/island.py`) plays the first half of it: the crossing, the
-arrival card over the whole island, and the walk up the quay. The tunnel door
-does not end it either, because the engine carries the frame through a door the
-film walked through. So by the time this file runs, the bars have been up for
-about half a minute and `movie(True)` on the first line is already true.
-
-It ends in exactly one place, `the_handover`, and it ends by handing over the
-three corner buttons one line each and putting one sentence in the panel.
-
-  1  THE TUNNEL     he is already waiting there and says the one line
-  2  THE TABLE      he leads, you follow, your schedule opens, you fill it in
-  3  THE FIRE       he leads, you follow, Advisory is three things by hand
-  4  THE WALL       he leads, you follow, the wall opens on what you picked
-  5  THE COUNSELOR  he leads, she has the cord, the yearbook page turns
-  6  THE HANDOVER   the bars come down, the corner arrives, three lines, done
-
-The first rail walked Thor alone from station to station with a line at each, and
-nobody could tell why he was standing at a fire. So beats 2 to 5 have the one
-thing that makes them make sense: the principal walks AHEAD and the student
-follows him, which is what a freshman orientation IS. The person in charge takes
-you round, stops, turns to face you, and says the one sentence that says why you
-are standing here. Then the thing happens.
-
-AND IT IS WATCHED FROM HIS SHOULDER. `view("close")` is the character point of
-view, twice the shot the room opens at: the room is never all on screen at once
-and the camera rides him the whole way. It is handed back at the handover.
-
-THERE IS NO WAY OUT OF IT EITHER, which Ash ruled after playing: no "Leave this
-for now" on Advisory, no "Close for now" on the schedule, no Escape, no doors and
-no stations. The engine reads the bars being up as the statement that something
-else is directing, so every panel raised inside them loses its dismiss.
-
-IT IS RESUMABLE AT EVERY BEAT, which is the other half of being one handler. It
-does not remember where it got to; it ASKS the run, the same way `objective.ts`
-does, so a student who reloads the tab mid-year is picked up at the beat they
-were standing in rather than walked through four they have already done.
-
-AND IT LETS GO WHEN THE STUDENT DOES. A beat that ends without its decision being
-made goes through `step_off` rather than walking him on with an empty sheet: the
-camera comes back, the principal is his own again, the bars come down in
-`as_a_cutscene`'s own `finally`, and what he gets is the room with one thing lit,
-which is the game he had before. Pressing that thing puts him back on the film.
+The bars are already up when this runs. Six beats, in order: the tunnel, the
+table, the fire, the wall, the counselor, and the handover. Each one asks the
+run what is already done, so a reload picks up at the beat the student is in.
 """
 from vine import (  # noqa: A004 (open is the engine's word)
     actor_face, actor_release, as_a_cutscene, choose, enter, get,
@@ -66,70 +21,28 @@ from lines import (
     WELL_DONE_BARE, WELL_DONE_GRADED, YEAR_DONE, YEAR_DONE_BARE, year_word,
 )
 
-# THE FLAG THE REST OF THE GAME READS, AND IT IS A BARE NAME.
-#
-# `src/game/run/objective.ts` sequences the whole of year one off this exact
-# string, and the light that tells a student what to do next is on this desk
-# until it is written. If it were written under this island's own programme id
-# the founding would play, the flag would land as `the-maw:founding`, and the
-# light would stay on the desk for four years with nothing saying why.
-#
-# It is bare because this island is the VINE'S OWN content and the engine runs it
-# unscoped (`src/game/roster/vine-islands.ts` has the whole argument). YOUR
-# island is scoped, and should be: you write `set_flag("met")` and the save holds
-# `<your programme>:met`, so nobody else's island can collide with yours or read
-# it. Do not copy these lines into a member island. You cannot make them work
-# there and you would not want to.
+# the year-one flag the rest of the game reads. it is bare because the engine
+# runs this island unscoped; your own island's flags are scoped to your
+# programme, so do not copy this shape into one.
 FOUNDING = "maw:founding"
 
-# THE CORNER, HANDED OVER WHEN THE BARS COME DOWN AND NOT BEFORE.
-#
-# `src/game/hud/inventory.ts` fires an arrival flourish on each of the three
-# corner buttons the first time it is really granted, hung on these two flags.
-# They used to be written in beat 1, which is now inside the movie: the corner is
-# hidden for the whole of it, so the one moment those buttons are supposed to
-# arrive was a moment nobody could see. Written at the end instead, on the frame
-# the student gets the room. The strings belong to `inventory.ts`.
+# the two corner buttons, granted at the handover once the bars are down
 CHART = "chart:granted"
 HANDBOOK = "handbook:granted"
 
-# beat 4 has no other trace in the run. Everything else the rail does is written
-# somewhere the save already keeps, and looking at a wall is not.
-# ---- THE WALL IS SHOWN ONCE A YEAR, NOT ONCE A RUN (Ash, 2026-09-09) --------
-#
-# This was a bare `maw:wall_shown` with no year in it, so the beat that walks a
-# student to his trophy case and reads it to him ran in year one and never again.
-# Year two, three and four each finish with a case full of new frames that nobody
-# ever shows him. Every other latch in this file carries its year for exactly
-# this reason (`turned(year)`, `vignette:y%d`).
+# the wall beat leaves no other trace in the run, so it carries its own flag
 def wall_shown(year):
-    """The flag saying this YEAR's wall has been walked to."""
+    """The flag saying this year's wall has been walked to."""
     return "maw:wall_shown:y%d" % year
 
-# THE FILM HAS PLAYED. Read by `island.py` so the room stops opening on it. The
-# name is the old one on purpose: a run saved under rail-4 carries this string,
-# and renaming it would play the whole introduction again at a student who had
-# already sat through it.
+# the film has played. `island.py` reads this so the room stops opening on it.
 RAILED = "maw:railed"
 
-# AND THE ROOM HAS BEEN HANDED OVER: the bars are down, the three corner buttons
-# have arrived and the principal has said what each one is. It is a separate flag
-# from RAILED because RAILED is written one line BEFORE the bars come down, so
-# that the corner is already granted on the frame they lift; a student who
-# reloads between those two lines should hear the handover rather than be left
-# with three buttons nobody introduced.
-#
-# IT REPLACES `maw:next_time`, which recorded that "Year two, next time." had
-# been said. BRIEF-INTRO-FILM section 4: *"No 'Year two' wording anywhere; the
-# intro does not end with a promise about next time."*
+# the room has been handed over: bars down, corner buttons granted, lines said
 HANDED_OVER = "maw:handed_over"
 
 # the spot the tunnel puts a student on, and the one name on this map that means
-# "where you are standing when you have just come in". NOTHING IS PLACED HERE ANY
-# MORE: the principal appears in front of the student rather than at a fixture
-# (`he_steps_in_front`, and Ash's ruling on 2026-09-08 quoted in it). It survives
-# because the log line below records which road beat 1 was reached by, and that
-# is a fact about the tunnel.
+# where the tunnel puts a student down, logged as the road beat 1 came in by
 MEET = "arrive_maw"
 
 # the four places the rail leads him to, in order, and the middle of the room
@@ -140,30 +53,9 @@ FIRE = "hearth"
 WALL = "trophy_wall"
 DESK = "counselor"
 
-# ---- WHERE THE TWO OF THEM STAND: THE MAP SAYS, AND THIS FILE DOES NOT ------
-#
-# ASH, 2026-09-08: *"I am reorganising the Maw in MAPVIS. Read every stand point
-# and position from the published map by anchor name. Hardcode nothing."*
-#
-# What stood here was a table of eight pixel offsets and four compass headings,
-# one row per station, each photographed at 4x off a screenshot of Maw v7. Every
-# one of those numbers was a bet on where a table is, and the tables are being
-# moved this week. A film that says `(-20, -2)` about the schedule is a film that
-# breaks silently the next time somebody drags it: nothing throws, the two of
-# them just stand in the wrong place again and only Ash's eyes find out.
-#
-# So the numbers are gone and the beat asks for the SHAPE instead. A station has
-# one mark, the standing spot its author drew for the student, and the student
-# takes it. The principal wants to be beside him, and which pixel that is depends
-# on where the mark is, which side of it is floor, and which way they walked in.
-# The scene knows all three and this file knows none of them, so `lead_to` with
-# no offset works it out: one body length square to the approach, on the side
-# with room, and further from the furniture of the two. Then `actor_face` with
-# the heading "thor" turns the man to look at the boy, wherever the boy ended up.
-#
-# THE TEST FOR THIS IS THE ABSENCE OF DIGITS. `maw-films.test.ts` reads this file
-# and fails on a coordinate pair anywhere in the rail, which is the only way to
-# stop the next screenshot-driven session from pasting four more of them in.
+# ---- every stand point comes from the map by anchor name, never a number ----
+# `lead_to` with no offset and `actor_face(x, "thor")` are worked out against
+# the map that is loaded, so a table dragged in MAPVIS moves the pair of them.
 
 # how many times the rail will offer the same screen again before it lets go. A
 # student who closes the schedule twice has told you something.
@@ -171,39 +63,9 @@ OFFERS = 3
 
 
 def dress_the_wall(count):
-    """The case is furniture. It is on the wall, and it stays on the wall.
+    """Puts the trophy case on the wall. `count` is logged and decides nothing.
 
-    ASH, 2026-09-07, AFTER PLAYING RAIL-5: *"The 'what you earn goes up here'
-    asset is still nonexistent."* It was, and nothing in the engine was wrong.
-    The published Maw v6 binds `trophy_wall` to the placement `the_trophy_wall`,
-    the asset row carries that name, `assets/trophy-shelf.png` is 64x80 and
-    serves 200 off the platform, and `show` found all of it. This function then
-    hid it, on the first frame of the room, on every load, because `count` is the
-    number of stickers and badges the run is holding and NOTHING IN YEAR ONE
-    AWARDS EITHER: Advisory writes a grade and a credit and no trophy, so the
-    count is zero from the title screen to the handover and the case was never
-    once drawn.
-
-    THE OLD RULE WAS THE WRONG RULE and it is worth writing down rather than
-    quietly deleting. It came from a real complaint: a first-year student with
-    nothing earned walked in to a case that LOOKED full, because the painting has
-    things on its shelves. The answer taken was to hide the case, which trades a
-    case that overstates for a wall with a hole in it, and a hole is worse. A
-    trophy case in a school is empty in September and is still a trophy case; a
-    student is supposed to see it, want it filled, and read what is in it off the
-    panel. That is the whole of "what you earn goes up here" and it needs the
-    case ON THE WALL to say it.
-
-    SO THE COUNT NO LONGER DECIDES ANYTHING HERE, and the panel is where the
-    honest number lives: `open("wall")` draws one frame per thing picked this
-    year, filled where it is filled and empty where it is not, and `wall_line`
-    says whether there is anything up there yet. The argument is kept because
-    every caller has it to hand and the logged line is worth having.
-
-    Guarded for the same reason the walk is: `show` is a hard refusal on a room
-    whose `trophy_wall` is not bound to a placement, and a bundle that predates
-    the binding is exactly that. A refusal here would take the founding with it,
-    and the engine has already said the sentence an author needs in the console.
+    A map with no `trophy_wall` binding logs a line instead of stopping the film.
     """
     try:
         yield show(WALL, True)
@@ -212,14 +74,7 @@ def dress_the_wall(count):
 
 
 def vignette(year):
-    """The engine's own year-start card for a year, once it has been seen.
-
-    THE YEAR'S OPENING SPEECH IS BEAT 1, IN PERSON. `src/game/run/YearStart.tsx`
-    mounts a three-line card from Principal Panther the moment the world is quiet
-    and this flag is not set. After his one line and the schedule, that card is a
-    second principal saying three more things before the student is allowed to
-    walk, which is the constant dialogue Ash ruled out.
-    """
+    """The flag saying this year's engine card has been seen."""
     return "vignette:y%d" % year
 
 
@@ -229,66 +84,10 @@ def turned(year):
 
 
 def he_steps_in_front(look_at=None):
-    """He appears in front of the student, wherever the student is standing.
+    """Puts the principal in front of the student, wherever the student is standing.
 
-    ASH, 2026-09-08: *"The principal panther arguably is like a extension of thor.
-    he pops up in front of thor at any time. he isnt bound to the entrance of the
-    maw."*
-
-    That sentence is the whole design of this function and it took three tries to
-    get here. The first version WALKED him over, which crossed the gap between the
-    bridge and the floor and Ash saw a man flying across the edge. The second
-    placed him at `arrive_maw`, the tunnel, which is right for a student who has
-    just come in and wrong for every other moment: a student who finished his year
-    standing at the fire and pressed the principal got a man who materialised
-    across the room and then had to walk back, which is what Ash saw on rail-5 and
-    called teleporting.
-
-    `place(PRINCIPAL, THOR)` has no anchor in it at all. THOR is the player as a
-    PLACE, the same word that already means the player as a speaker, and with no
-    offset the engine puts a body one body length ahead of him on the heading he
-    is facing. So the scene happens where the student is, which is what "an
-    extension of thor" means, and no beat in this file has to know where he is
-    standing when it starts.
-
-    ONE OF THE PLACES THIS ISLAND CATCHES A REFUSAL, AND IT IS DECORATION. A word
-    the engine cannot perform does not come back as a False you can test. It is
-    RAISED at the line that yielded it, and if nothing catches it, it takes the
-    rest of your handler with it. That is the right default for most words: an
-    island whose beat silently never played is the failure the whole vocabulary
-    exists to prevent, and a traceback with your own line number in it is the fix.
-
-    So the question is never "should I catch refusals", it is "is this beat worth
-    the scene". The picture is the beat and the flag is its meaning, and here the
-    flag is the rest of year one. A room cut without a body bound to the principal
-    is real: the game falls back to the copy of this room committed in the engine
-    when it cannot reach the platform, and that copy binds no placements at all.
-    There, he says the line from nowhere and the rail carries on.
-
-    It still SAYS what refused. Swallowing it silently would be the other half of
-    the same mistake.
-
-    AND WHAT HE IS LOOKING AT IS THE CALLER'S TO SAY.
-
-    ASH, 2026-09-14: *"also principal panther is just facing some weird direction. he
-    should always be at the entrance when coming in / refresh, and should be facing
-    forwards."*
-
-    `place` with no `facing` turns a body to look at the player, and that default is
-    right in a film and wrong on a plain load, for a reason that is entirely about where
-    the camera is. A film runs on `view("close")`, which is the shot over the student's
-    own shoulder, so a man turned to the student is a man turned to the lens. A plain
-    load is the overhead room, the lens is above, and the same instruction puts a man
-    between the camera and the student with his back to it. Measured on a refresh: the
-    student spawns at the tunnel facing south east, the principal is set down south east
-    of him and turned north west to look back, and what Ash got was the back of a head.
-
-    So a beat that is about to talk to him leaves this alone. A load that is only
-    dressing the room hands it an anchor to look at instead, and gets a man looking into
-    his own room. `look_at` is a NAME and never a compass point, which is the rule the
-    whole file is held to: a heading typed in here is a bet on where somebody left a
-    table in MAPVIS, and a name is a question the scene answers against the map that is
-    actually loaded.
+    Pass `look_at` an anchor name to turn him towards it; with no name he looks
+    at the student. Comes back False when the map binds no body to him.
     """
     try:
         yield place(PRINCIPAL, THOR)
@@ -304,18 +103,7 @@ def he_steps_in_front(look_at=None):
 
 
 def let_go():
-    """He is his own again, and he stays where the rail left him.
-
-    HE DOES NOT WALK HOME, AND THAT IS A MISSING WORD, NOT A CHOICE. `actor_move`
-    goes to an anchor's stand point, and a bound anchor's stand point travels with
-    the body, so "walk to your own desk" walks him twelve pixels to his own stand
-    offset and stops. Every name bound to him moves with him, the room carries no
-    unbound point at the desk, and a name the room does not carry is refused. So
-    there is no way to say "back to where you started" today; one point anchor at
-    the desk in MAPVIS, or one engine word, would give it.
-
-    Until then he is back at his desk the next time the room loads.
-    """
+    """Hands the principal back to the room, standing where the film left him."""
     try:
         yield actor_release(PRINCIPAL)
     except Exception as refused:
@@ -325,49 +113,8 @@ def let_go():
 def take_him(anchor):
     """The rail's one move: he leads, the student follows, and both stop clean.
 
-    THE ORDER IS THE WHOLE BEAT AND IT IS DELIBERATE. Four words, and the last
-    two are what rail-6 was missing.
-
-    `guide_to` puts the light on the floor, the drawn arrows along the route and
-    the big pointer over the thing at the end of it. `lead_to` walks the
-    principal there with the student two body lengths behind him, to the mark
-    BESIDE the station rather than onto it. `walk_to` closes those two body
-    lengths, so the student finishes standing where the station was drawn to be
-    stood at instead of wherever following happened to leave him. `actor_face`
-    turns the man to the boy, who has moved since the walk turned him.
-
-    IT IS FOUR WORDS AND NOT ONE BECAUSE THE BEAT HAS FOUR THINGS IN IT, and
-    every one of them was wrong on rail-6 in a way a screenshot showed and no
-    test could: two people who both walked to the same spot end up standing in
-    the same spot, and only one of them can win it.
-
-    NO `look_at` ANY MORE. The first rail sent the camera to each station for a
-    second before setting off, and this one is watched from the student's own
-    shoulder the whole way: a second of the camera somewhere he is not is a cut in
-    the middle of a cutscene, and Ash asked for character point of view
-    everywhere. The thing he is walking towards lights up and he walks towards it,
-    and that is the teaching.
-
-    NO `movie` HERE EITHER. The bars are up for the whole rail and this is inside
-    it, which is the difference between this and the first version: they used to
-    go up and come down around each walk, and those seams are what he saw.
-
-    NOT ONE NUMBER IN ANY OF IT. `lead_to` with no offset puts the man beside
-    the student's own mark, on the side of it that has floor, square to the way
-    they walked in. `actor_face(PRINCIPAL, "thor")` turns him to look at the boy
-    wherever the boy ended up. Both are worked out by the scene against the map
-    that is loaded, so a table dragged across the Maw in MAPVIS moves the pair of
-    them with it and nothing here changes.
-
-    AND THE PANEL SAYS WHAT HE IS DOING. BRIEF-MAW-RAIL-3 A: the line at the top
-    of the screen is the student's own step, and for the whole of a led walk his
-    step is following the man in front of him. The year's own sentence would say
-    "Go to the table and pick your year" over a student who is being taken there,
-    which is the game telling him to do the thing it is doing for him.
-
-    EVERY WORD IS CAUGHT. A refusal in the middle of a beat would take the rest of
-    year one with it, and the beat after this one is a screen that can still be
-    filled in from a standstill.
+    Lights the route, walks the principal to the anchor, walks the student onto
+    the station's own standing spot, then turns the two of them face to face.
     """
     yield objective(FOLLOW)
 
@@ -381,24 +128,8 @@ def take_him(anchor):
     except Exception as refused:
         yield log("lead_to_refused", {"anchor": anchor, "why": str(refused)})
 
-    # AND THE LAST TWO BODY LENGTHS ARE THE STUDENT'S OWN. `lead_to` leaves him
-    # a following distance short of wherever the leader stopped, which is a
-    # picture of following and is not a picture of arriving. This walks him onto
-    # the station's own standing spot, the same one every press of E uses, and
-    # the walk turns him the way its author drew the station to be looked at.
-    #
-    # WHICH IS THE MAP'S ANSWER AND NOT THIS FILE'S, AND ONE OF THEM IS WRONG
-    # TODAY. Checked against the published room on 2026-09-13 by measuring the
-    # bearing from each standing spot to the thing it belongs to: the chart table,
-    # the counselor and the trophy wall all point at their own post within one
-    # heading of eight, and the hearth does not. Its spot is 349,212 and the fire
-    # is 355,214, which is east and a little south, and the anchor says north-east,
-    # so a student walked to Advisory stands at the fire looking up and past it.
-    # There is no honest way to fix that from here: an explicit heading written in
-    # this file is a bet on where somebody left a fire, which is the whole reason
-    # the rail carries no coordinates. It is one field in MAPVIS and it is in the
-    # report. The same spot is also a pixel nobody can stand on, so the walk law
-    # snaps the arrival a pixel and a half sideways and prints a line saying it.
+    # and the last two body lengths are the student's own: this puts him on the
+    # station's own standing spot, turned the way its author drew it
     try:
         yield walk_to(anchor)
     except Exception as refused:
@@ -407,10 +138,7 @@ def take_him(anchor):
     # and the man turns to the boy, who has moved since `lead_to` turned him
     try:
         yield actor_face(PRINCIPAL, "thor")
-        # AND THOR LOOKS BACK. Ash, on playing: "thor's facings in cutscenes". The
-        # engine has had the word since wave 4 and no island had ever turned the
-        # PLAYER with it, so every line in this film was delivered to the side of
-        # a boy's head while he faced whatever direction he last walked in.
+        # and the boy looks back
         yield actor_face("thor", PRINCIPAL)
     except Exception as refused:
         yield log("actor_face_refused", {"anchor": anchor, "why": str(refused)})
@@ -419,21 +147,12 @@ def take_him(anchor):
 def step_off():
     """The rail lets go: arrow down, camera back, the principal his own again.
 
-    Every road out of `year_one` runs through here. The BARS are not here and that
-    is the point of `as_a_cutscene`: they come down in its `finally`, so they come
-    down on a road nobody wrote as well as on the four that are written.
+    The bars come down in `as_a_cutscene`'s own `finally`, not here.
     """
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
-    # AND THE PANEL GOES BACK TO THE YEAR, which is what a student who has
-    # stepped off the film is owed: the sentence naming the one thing still lit
-    # in the room. The bars coming down would do this on their own; it is said
-    # out loud because every road out of the film runs through this function.
-    #
-    # THE HANDOVER DOES NOT USE THIS FUNCTION for exactly that reason. It ends
-    # with a sentence of its own and handing the panel back mid-handover would
-    # print the year's errand over the top of it.
+    # and the panel goes back to the year, which names the one thing still lit
     yield objective(None)
 
 
@@ -445,9 +164,7 @@ def the_tunnel(walk):
     yield objective(FOLLOW)
     yield say(WELCOME, who=PRINCIPAL, portrait=FACE)
 
-    # the year has begun, which is what lights the table. Two bare flags and no
-    # `guide_to`: the year's own sequencer reads these and puts its light on the
-    # table, and `take_him` raises the rail's own on top of it a moment later.
+    # the year has begun, which is what lights the table
     year = yield get("year")
     yield set_flag(FOUNDING)
     yield set_flag(vignette(year))
@@ -476,42 +193,23 @@ def the_table():
             break
         yield say(STAMP_IT, who=PRINCIPAL, portrait=FACE)
 
-    # NOTHING IS SAID AFTER THE STAMP. It pops in the world naming what he chose,
-    # which is the answer, and the line that used to be here handed over a corner
-    # button that is not on the screen while the bars are up.
     return planned
 
 
 def the_fire(beat):
     """BEAT 3. He leads him to the fire and Advisory is three things by hand.
 
-    ONE LINE, AND IT IS THE WHY. "This is Advisory. Every Monday starts here" is
-    the whole of what a freshman needs before the questions: it names the real
-    thing and says when it happens. The activity has one short line before each of
-    its three items and pops right or wrong on the spot, and the grade pops over
-    the map instead of opening a card of a hundred words.
-
-    NO `award` HERE, DELIBERATELY, and this is the one place this island breaks
-    the rule your own island must keep. A member's island scores its own content
-    and has to write the row itself. A core beat is the ENGINE'S content: the
-    runner already wrote the grade, the credit, the tags and the facts before this
-    line ran, and awarding again would put a second row for the same year on the
-    transcript and move the GPA twice.
+    No `award` here: the engine writes the grade for its own content. Your
+    island scores its own content, so it writes the row itself.
     """
     yield from take_him(FIRE)
     yield objective(ANSWER)
     yield say(ADVISORY_IS_MONDAY, who=PRINCIPAL, portrait=FACE)
 
-    # BOTH ARMS OF THE STUDY RUN THROUGH THIS ONE WORD, and the arm is not this
-    # island's to choose. Left alone, `play` renders whichever arm the student was
-    # assigned when they joined: the game arm answers with a pop, the plain arm
-    # with the same questions as a form and a printed result. Same items, same
-    # order, same score.
+    # `play` runs the engine's own activity for this beat and hands back a score
     score = yield play(beat)
 
-    # None is the player closing the panel, which is not a zero. A zero is a
-    # student who answered and got everything wrong, and the two must never be
-    # written down as the same thing.
+    # None is the player closing the panel; a zero is a student who answered badly
     if score is None:
         yield say(COME_BACK, who=PRINCIPAL, portrait=FACE)
         return False
@@ -530,11 +228,7 @@ def the_wall(year):
     yield from take_him(WALL)
     yield objective(LOOK_AT_WALL)
     yield say(WALL_IS_YOURS, who=PRINCIPAL, portrait=FACE)
-    # THE CASE IS ON THE WALL BEFORE THE PANEL OPENS, said again here rather
-    # than trusted. The room dressed itself when the map loaded and nothing
-    # since then can have taken the case down, so this is a no-op on every
-    # ordinary road; it stays because it is the one line that would put the
-    # room right if some later beat ever hid something.
+    # the case is put back on the wall before the panel opens
     trophies = yield get("trophies")
     yield from dress_the_wall(on_the_wall(trophies))
     yield open("wall", wait=True)
@@ -544,28 +238,11 @@ def the_wall(year):
 def the_counselor(year):
     """BEAT 5. He leads him to her, the cord, and the page turns.
 
-    THE PRINCIPAL LEADS AND THE COUNSELOR SPEAKS, which is the one beat with two
-    people in it and is right: he has walked the student round all morning and she
-    is the person who closes a year at a school.
-
-    The yearbook is where the page turns, in school words, and where the cord is
-    draped; both of those are the engine's own screens, raised here by name. It
-    comes back True only when the page really turned, because a student who opened
-    the book and closed it again has not finished year one and the film must not
-    say he has.
-
-    AND NOTHING IS SAID AFTER THE PAGE TURNS. There used to be a last line here,
-    "Year two, next time", and it is CUT. BRIEF-INTRO-FILM section 4: *"No 'Year
-    two' wording anywhere; the intro does not end with a promise about next
-    time."* What follows the page is the handover, which is about the three
-    buttons the student is holding rather than about a year nobody has designed.
+    Comes back True only when the page really turned.
     """
     yield from take_him(DESK)
     yield objective(TALK_TO_HER)
-    # THE YEAR AND THE CORD ARE TWO DIFFERENT NUMBERS, and both used to be the
-    # word "one" (Ash, 2026-09-09: *"I finished year 2, and it says 'year one is
-    # done' everywhere"*). A student closing year two hears "Year two is done.
-    # Here is your second cord."
+    # the year and the cord are two different numbers
     yield say(
         CORD % (year_word(year), CORD_ORDINAL[year] if 0 < year < len(CORD_ORDINAL) else str(year)),
         who=COUNSELOR,
@@ -581,152 +258,43 @@ def the_counselor(year):
 
 
 def the_handover():
-    """THE END OF THE FILM: the bars come down and the game becomes his.
+    """The end of the film: the bars come down and the game becomes his.
 
-    BRIEF-INTRO-FILM section 4, in Ash's words: *"the bars come down, the corner
-    appears one plaque at a time with one line each said by the principal, 'My
-    Year is what you picked. The Guide is every club and class at Bonney Lake.
-    The Map is where you sail.' Then the objective bar reads 'Explore. Talk to
-    anyone. Open the Guide.' and the game is his."*
-
-    THE ORDER OF THESE LINES IS THE WHOLE BEAT. `movie(False)` is what puts the
-    corner on the screen at all, because the frame HIDES it rather than dimming
-    it, so the bars have to come off before the first plaque can arrive. Then a
-    flag, then the line about the thing that has just swung down. This is the
-    only place in the game where anybody explains a control, and it is allowed to
-    be, because every control it names is visibly arriving as it is read.
-
-    ONE MOVIE(FALSE) AND IT IS THIS ONE. `as_a_cutscene` says the same word in
-    its own `finally` a beat later, and that is the net rather than the
-    mechanism: this line is what MEANS the introduction is over, and it is the
-    only place on the road the bars come down between Set Sail and here.
-
-    ONE FLAG SHORT OF ONE PLAQUE AT A TIME, said plainly. `src/game/hud/
-    inventory.ts` hangs both My Year and the Guide on `handbook:granted`, so
-    those two arrive together on the first flag and the Map arrives on its own.
-    The lines are still said in Ash's order, each with its own plaque already on
-    the glass; splitting that grant is another session's file.
-
-    AND THE PANEL IS PINNED RATHER THAN HANDED BACK. `objective(None)` gives the
-    sentence to the year, and the year says the same words from here on
-    (`src/game/run/objective.ts`, the terminal clause), so the two agree; this
-    says it out loud anyway because a student who reloads gets the year's copy
-    and a student who does not gets this one, and they must not differ.
+    The order matters. `movie(False)` is what puts the corner buttons on screen
+    at all, so the bars come off before the first one is granted.
     """
     yield set_flag(RAILED)
 
     # ---- 1: he walks the student out into the middle of the room -----------
-    #
-    # ASH, 2026-09-08, AFTER PLAYING RAIL-7: *"literally nothing changed. the
-    # advisory ends. and the cutscene abruptly goes away. no clean introduction
-    # cutscene ending. just a few dialogues saying 'Map, Guide, My year' that a
-    # freshman wont even connect, until they realize its talking about those
-    # three random buttons at the top."*
-    #
-    # He is right and the old ending was mine to answer for. It ended on THREE
-    # SENTENCES ABOUT USER INTERFACE, said by a man in a cave, about controls in
-    # the opposite corner of the screen from his face. Nothing in the frame moved
-    # while he said them.
-    #
-    # BRIEF-CLOSE-THE-LOOP section 1 replaces them with a picture: *"the principal
-    # walks Thor to the middle of the hall, the camera pulls out to the whole
-    # room, the bars drop, ONE line, 'The Maw is yours. Find me when your year is
-    # done.', and the three corner plaques pop in one at a time with nothing said
-    # about them."*
-    #
-    # `the_hall` is the region MAPVIS drew over the middle of the room, and it is
-    # the only name on this map that means "the middle" rather than a thing to
-    # press. A region has no standing spot, so the walk goes to its own pixel,
-    # which is where its author put it.
+    # `the_hall` is the region over the middle of the room. A region has no
+    # standing spot, so the walk goes to its own pixel.
     yield objective(LOOK_AROUND)
     yield from take_him_to_the_middle()
 
-    # ---- 2: the camera lets go of his shoulder and shows him the room -------
-    #
-    # The whole film is watched from `view("close")`, twice the shot the room
-    # opens at, so the student has never once seen the place he is standing in.
-    # This is the reveal, and it is the first thing in the introduction that is
-    # not a sentence.
+    # ---- 2: the camera pulls off his shoulder and shows him the room -------
     yield view("island")
     yield wait(1600)
 
-    # ---- 3: the last line of the film, said while the frame is still up ----
-    #
-    # ASH, 2026-09-09: *"as soon as the intro cutscene ends and the black
-    # rectangles go away, the tutorial has to play. I had to click for the button
-    # tutorial to play."*
-    #
-    # THE ORDER WAS THE WHOLE OF THAT. The bars came down, and THEN the man said
-    # one more thing, and a student had to dismiss it before anything happened.
-    # From the chair: the film ends, nothing, a click, a tutorial. The line is the
-    # film's last beat, so it belongs inside the film's own frame; the bars coming
-    # down ARE the handover, and nothing may stand between them and the thing that
-    # explains what he has just been handed.
+    # ---- 3: the last line of the film, said while the bars are still up ----
     yield say(THE_MAW_IS_YOURS, who=PRINCIPAL, portrait=FACE)
 
     # ---- 4: the bars come down on the wide shot ----------------------------
     yield movie(False)
-    # ---- AND THE FILM KEEPS THE PANEL UNTIL IT IS FINISHED ------------------
-    #
-    # `movie(False)` DROPS the island's word, so the frame the bars come down on
-    # is the frame the YEAR starts talking again, and the year has something to
-    # say now: "Go to AP Human Geography. Open My Year." Measured on a cold run
-    # 2026-09-08, twice: that sentence arrived over the top of the principal
-    # mid-handover, a run that obeyed it opened the class while he was still
-    # speaking, the film's last line was queued behind the panel, and the corner
-    # never arrived at all.
-    #
-    # So the step is said again on the far side of the bars coming down. It is
-    # the same word the beat opened with, and it is handed back for good at the
-    # bottom of this function, on the frame the film is actually over.
+    # `movie(False)` drops the island's word, so the step is said again on the
+    # far side of the bars coming down
     yield objective(LOOK_AROUND)
-    #
-    # It used to pin "Explore. Talk to anyone. Open the Guide." here and again on
-    # every load of the room, and the island's word outranks the year's, so that
-    # sentence sat on the bar for the whole rest of the session. Measured on a
-    # cold run 2026-09-08: the handover ended, a class was owed, and the bar told
-    # him to explore a hall he had just been walked round, for six minutes.
-    #
-    # Ash's ruling the same day is what fills the gap: *"after the handover the
-    # objective bar says 'Go to <first class>. Open My Year.'"* That is the YEAR's
-    # sentence (`src/game/run/objective.ts`, the `class` clause), so the film's
-    # last act is to stop talking and let the year say it.
 
     # ---- 5: and the corner arrives, one plaque at a time, in silence --------
-    #
-    # NOTHING IS SAID ABOUT THEM. Section 1: *"the three corner plaques pop in one
-    # at a time with nothing said about them. Each plaque explains itself the
-    # first time it is pressed."* A control that swings onto the glass on its own
-    # is a control a student presses; three sentences about it are three sentences
-    # a student skips.
-    #
-    # THE WAIT IS WHAT MAKES IT ONE AT A TIME. `inventory.ts` fires an arrival
-    # flourish per flag, and the two flags land on the same frame if nothing
-    # separates them, which is a single flicker rather than a corner filling up.
+    # the wait is what makes it one at a time: two flags on the same frame are
+    # one flicker rather than a corner filling up
     yield set_flag(HANDBOOK)
     yield wait(700)
     yield set_flag(CHART)
     yield wait(500)
 
-    # ---- 6: and then somebody points at each of them --------------------------
-    #
-    # ASH, 2026-09-08 item 7: *"The intro's handover gets a tutorial: after the
-    # wide shot and the line, each of the three plaques and the help button lights
-    # in turn with an animated pointer and one line in a small panel beside it,
-    # under fifteen seconds in total, with a Skip in the corner. Then the bar
-    # names the first pick."*
-    #
-    # Which is the half the plaques arriving on their own could never do. A sign
-    # swinging onto the glass says LOOK; it does not say what the thing is for,
-    # and "each plaque explains itself the first time it is pressed" only helps a
-    # student who presses one. Ash played the version where nobody pointed and
-    # called it three random buttons at the top.
-    #
-    # IT IS ONE WORD AND THE ENGINE OWNS THE REST. The controls are laid out by
-    # the HUD at whatever the window is, so an island cannot be the thing that
-    # knows where they are; `open("tour")` lights them where they really are.
-    # `wait=True` is what makes the bar's first sentence land after it and not
-    # underneath it.
+    # ---- 6: and then somebody points at each of them -----------------------
+    # `open("tour")` lights the real controls wherever the HUD has put them, and
+    # `wait=True` keeps the next line from landing underneath it
     try:
         yield open("tour", wait=True)
     except Exception as refused:
@@ -735,49 +303,17 @@ def the_handover():
     yield guide_to(None)
     yield from let_go()
     yield view("walk")
-    # AND ONLY NOW. Handing the panel back before the last line let the year's
-    # own sentence ("Go to AP Human Geography. Open My Year.") arrive over the top
-    # of a man who was still speaking, and a run that obeyed it opened the class
-    # while the film was mid-word. Measured on a cold run 2026-09-08: the
-    # handover never finished and the corner never arrived. A film keeps the
-    # panel until it is done, and this is the frame it is done on.
+    # and only now: the film keeps the panel until it is finished
     yield objective(None)
     yield set_flag(HANDED_OVER)
     yield log("handover", {})
 
 
 def take_him_to_the_middle():
-    """He leads the student out into the open floor, and lets go of him there.
+    """He leads the student out into the open floor and lets go of him there.
 
-    THE ONE BEAT OF THE FILM WITH NO STATION IN IT. Every other stop is at a
-    thing; this one is at the room, because the last thing the introduction does
-    is give him the room. `the_hall` is a region rather than a post, so nothing
-    lights and there is nothing to press when they arrive, which is the point.
-
-    AND NO ARROW EITHER, which is the one place the rail does not raise one. The
-    big mark hangs over an anchor's own pixel, and this anchor's own pixel is in
-    the middle of the fire, so pointing at it would light Advisory while a man
-    walks past it. The panel says "Look around the Maw" and the man walking is the
-    rest of the guidance.
-
-    WHERE THE STUDENT IS LEFT FACING, said out loud because it is a choice and not
-    an oversight. `walk_to` on an anchor with no authored heading leaves him on the
-    heading he travelled in on, which from the trophy wall is due east, out into
-    the room. That is the right way to be standing for the wide shot that follows:
-    he is looking at the place he has just been given, and the man beside him is
-    turned to him by the line below. Every other stop in the film takes its heading
-    off the station, because at a station you look at the thing.
-
-    THE STOP ITSELF IS NOT RIGHT YET AND IT NEEDS ASH'S HANDS IN MAPVIS, not a
-    number in here. `the_hall`'s own pixel is 355,204 on the published room, which
-    is inside the hearth's drawn fire, so no body can stand on it: the walk law
-    snaps the arrival six pixels away to 349,202 and says so in the console. That
-    spot is eight screen pixels from the hearth's own press ring, which has a
-    radius of twelve, so the handover ends with the student standing inside the
-    fire's reach and the plaque over his head reads "Advisory" the moment the bars
-    come down. The fix is the region's handle moved onto open floor, or a standing
-    spot dropped on it; measured, the most open floor inside its own rectangle is
-    around 392,245, which is forty one pixels clear of every press ring in the room.
+    No arrow: `the_hall`'s own pixel sits in the fire, so pointing at it would
+    light Advisory instead.
     """
     try:
         yield lead_to(PRINCIPAL, HALL, pace="walk")
@@ -806,15 +342,8 @@ def name_list(names):
 def well_done(handle, picks):
     """The principal's congratulation, built out of the save and nothing else.
 
-    Ash's shape for the ending, 2026-09-07: he congratulates the student BY NAME
-    on what he ACTUALLY did. So there is no written sentence that would be true
-    of everybody; there are three shapes in `lines.py` and the run decides which
-    one it has earned.
-
-    `picks` is already masked by the engine (`roster/placeholders`), so a
-    programme nobody has built prints as its Example name here as well and this
-    line can never congratulate a freshman on a football season that does not
-    exist.
+    `picks` is already masked by the engine, so a programme nobody has built
+    prints as its example name.
     """
     who = handle or SOMEBODY
     chose = [c["name"] for c in (picks.get("classes") or [])]
@@ -834,16 +363,7 @@ def well_done(handle, picks):
 
 
 def well_done_now(handle, year):
-    """What he says once the page has turned, which is the only true moment for it.
-
-    ASH, 2026-09-09: *"Principal Panther should clearly congratulate him with a
-    dialogue for finishing year one."* One sentence, his own name in it if he
-    typed one, and nothing about the NEXT year, because this file does not know
-    whether there is one and the title screen does.
-
-    AND IT ASKS WHICH YEAR. It said "year one" as a literal until Ash finished
-    year two and was congratulated for year one.
-    """
+    """What he says once the page has turned, with his own name in it if he typed one."""
     name = (handle or "").strip()
     if not name or name == SOMEBODY:
         return YEAR_DONE_BARE % year_word(year)
@@ -851,52 +371,32 @@ def well_done_now(handle, year):
 
 
 def year_is_done():
-    """Has this year anything left owing. THE CLOSING FILM'S TRIGGER.
+    """True when the year has nothing left owing. The closing film's trigger.
 
-    ASKED OF THE SEQUENCER AND NEVER SPELLED OUT HERE. `get("phase")` is
-    `src/game/run/objective.ts`'s own answer, the same one that decides which
-    station in this room lights up, and "yearbook" is its word for a year with
-    the sheet stamped, the core beat sat and no voyage left to sail.
-
-    THE VERSION THAT WOULD HAVE BEEN WRONG is `get("advisory") is None`, which is
-    what this file could ask before today. It is true the moment the fire is
-    answered, and TODAY that is the end of the year because nothing can be sailed
-    to. The first island a member builds makes it false: a stamped sheet with a
-    season token on it owes a voyage, the phase says "voyage", and an ending
-    written the other way would play in the middle of the student's year with the
-    island he chose still out there unvisited.
+    Asks the sequencer for `get("phase")`, whose word for a finished year is
+    "yearbook".
     """
     phase = yield get("phase")
     return phase == "yearbook"
 
 
-# ---- THE OPENING FILM --------------------------------------------------------
+# ---- the opening film --------------------------------------------------------
 
 
 def opening(walk):
-    """The tunnel, the schedule, Advisory, and then the handover.
+    """The tunnel, the schedule, Advisory, the wall, and then the handover.
 
-    It is the same shape `objective.ts` uses to decide what the one lit thing is,
-    asked of the same facts, and that is on purpose: the sequencer and the film
-    cannot disagree about where a student is in the year because they are reading
-    the same run.
-
-    IT ENDS AT THE HANDOVER AND NOT AT THE YEARBOOK. The wall and the counselor
-    moved out of here into `closing`, which is a film of its own with a trigger of
-    its own. Today those two run back to back with nothing in between, because
-    there are no islands and Advisory is therefore the last thing the year owes;
-    the day the first island lands, the middle of the year appears between them
-    and not one line of this function changes.
+    It asks the run which beats are already done, so a student who reloads picks
+    up where he left off.
     """
     flags = yield get("flags")
     first = FOUNDING not in flags
 
-    # HE IS PLACED BEFORE THE CAMERA MOVES, so there is no frame of him standing
-    # at his desk while the shot travels in.
+    # he is placed before the camera moves
     if first and walk:
         yield from he_steps_in_front()
 
-    # THE SHOT IS THE STUDENT'S OWN SHOULDER for the whole of what follows.
+    # the shot is the student's own shoulder for the whole of what follows
     yield view("close")
 
     if first:
@@ -916,65 +416,25 @@ def opening(walk):
             yield from step_off()
             return
 
-    # ---- AND THE WALL, WHICH IS THE LAST THING BEFORE HE IS LET GO ----------
-    #
-    # ASH, 2026-09-07, AFTER PLAYING RAIL-6: *"The intro cutscene just ends after
-    # Advisory, some random dialogue."* Both halves of that sentence are this
-    # beat missing. The film went from the fire straight to the handover, so the
-    # last thing a student watched was a quiz, and then the bars came down and
-    # three sentences arrived over a game he had just been handed, which is
-    # exactly what random dialogue looks like from the outside.
-    #
-    # BRIEF-MAW-NOW item 2 puts it back in his order: *"After Advisory: the wall,
-    # then the handover, then silence."* The wall is the beat that says what the
-    # year was FOR. It is also the one that makes the handover read as an
-    # ending rather than as an interruption: the man shows you the shelf your
-    # year goes on, and then gives you the room.
-    #
-    # AND IT IS THE SAME BEAT THE CLOSING OWNS, not a copy. `wall_shown(year)` is what
-    # keeps them one beat: whichever film gets there first draws it, and the
-    # other one skips it. A student who steps off the opening at the schedule
-    # and comes back through the ending still sees the wall exactly once.
+    # ---- and the wall, the last beat before he is let go --------------------
+    # the closing film owns the same beat: `wall_shown(year)` keeps them one, so
+    # whichever film gets there first draws it and the other skips it
     # the wall's latch carries the year, so the opening has to know which one
     year = yield get("year")
     flags = yield get("flags")
     if wall_shown(year) not in flags:
         yield from the_wall(year)
 
-    # ---- AND THE INTRODUCTION ENDS AT THE HANDOVER, ALWAYS -----------------
-    #
-    # ASH, 2026-09-08, ruling: *"The intro film ends at the handover and never
-    # runs into the ending; remove the zero-island shortcut that runs the closing
-    # right after the wall."*
-    #
-    # THE SHORTCUT WAS MINE AND IT WAS WRONG. BRIEF-CLOSE-THE-LOOP section 2 said
-    # that with nothing to sail to the opening should run straight into the
-    # closing, so that nobody is left in a finished room. Built and played, that
-    # is one film in which the principal walks you round, the counselor hands you
-    # a cord, and year one is over before you have touched anything: *"So year one
-    # just ended in the intro cutscene. I was very specific, that the ending
-    # cutscene and intro are separate."*
-    #
-    # The empty room it was avoiding is not empty any more, which is what made the
-    # shortcut unnecessary rather than merely unwanted: the two picked classes are
-    # the middle of the year now (`src/game/run/objective.ts`, the `class`
-    # clause), so the handover hands over a room with something left to do in it.
+    # ---- and the introduction ends at the handover, always -----------------
+    # it never runs on into the closing film
     yield from the_handover()
 
 
-# ---- THE CLOSING FILM --------------------------------------------------------
+# ---- the closing film --------------------------------------------------------
 
 
 def closing_beats():
-    """The counselor, the cord, the page, and out.
-
-    ONE CALLER NOW. It was two while the opening could run straight into the
-    ending; Ash ruled that out on 2026-09-08 and the opening ends at the handover
-    whatever the roster holds. It stays a function because it is the half of the
-    closing that is about the YEAR rather than about the man who came to find you,
-    and a reader looking for "what happens at the end" should find it in one
-    place.
-    """
+    """The counselor, the cord, the page, and out."""
     year = yield get("year")
     flags = yield get("flags")
     if turned(year) not in flags:
@@ -983,71 +443,28 @@ def closing_beats():
             yield from step_off()
             return
 
-    # ---- HE CONGRATULATES HIM, AND THEN THERE IS ONE BUTTON ---------------
-    #
-    # ASH, 2026-09-09: *"after Thor sees what he earns, it should be far
-    # different. Principal Panther should clearly congratulate him with a dialogue
-    # for finishing year one. Then a big button should pop on the screen, 'Sail
-    # Home'."*
-    #
-    # THE ORDER IS THE POINT. The film said its one warm sentence at the very
-    # START, before the wall and before the cord, and it was a readout: a list of
-    # what he had picked. Then the yearbook closed and the film walked out of the
-    # room without ever telling him he had finished anything. This is said on the
-    # far side of the page turning, which is the frame the year is over on.
-    #
-    # HE TURNS TO THE STUDENT, AND HE DOES NOT WALK, WHICH IS THE FIX HERE.
-    #
-    # ASH, 2026-09-13, after playing: *"Principal panther lost his walking
-    # animation btw."*
-    #
-    # This line used to be `actor_move(PRINCIPAL, THOR)` and it is where half of
-    # that came from. Nobody has moved since the counselor's beat: `take_him`
-    # leaves the man one body length from the student with `actor_face` already
-    # pointing him at the boy, and the yearbook panel does not move anybody. So
-    # there was nothing for the walk to cover. Measured on the published room, at
-    # the spot her beat really ends on: FOUR POINT EIGHT PIXELS of floor. The walk
-    # art is six frames a heading and the legs advance one frame every nine ground
-    # pixels (`map.json` speed 54 over fps 6), so the man crossed half of one frame
-    # and stood on frame zero the whole way. From the chair that is a man sliding,
-    # which is exactly what a walk cycle that never advances looks like.
-    #
-    # `actor_face` is the honest word for what this beat needs: he is beside the
-    # student and he looks at him. The walk in this film that is MEANT to be seen is
-    # the one at the top of `closing`, and it has the whole hall to cross.
+    # ---- he congratulates him, and then there is one button ----------------
+    # said on the far side of the page turning, which is the frame the year is
+    # over on. he is already beside the student, so he turns rather than walks.
     handle = yield get("handle")
     try:
         yield actor_face(PRINCIPAL, "thor")
-        # the last line of the year is said face to face, which is the one beat in
-        # the whole run where that is the entire point
+        # the last line of the year is said face to face
         yield actor_face("thor", PRINCIPAL)
     except Exception as refused:
         yield log("actor_face_refused", {"actor": PRINCIPAL, "why": str(refused)})
     yield say(well_done_now(handle, year), who=PRINCIPAL, portrait=FACE)
 
-    # AND THE LAST PRESS OF THE YEAR IS HIS. `choose` draws its options as buttons
-    # over the box, so one option is one big button and the film waits on it: the
-    # ending stops being a thing that happens TO a student and becomes the last
-    # thing he does. It is caught, because a refused button must never strand
-    # anybody in a finished room.
-    #
-    # AND THE PANEL NAMES THIS STEP INSTEAD OF BEING HANDED BACK HERE. It used to
-    # say `objective(None)` two lines above the congratulation, which drops the
-    # island's word while the film is still running, and the year has a sentence
-    # ready for a run in this state ("Year one is done. Look around."). So the last
-    # thirty seconds of the year had the bar telling a student to look around a room
-    # over the top of the man congratulating him and a button saying Sail Home. The
-    # handover at the other end of the year already learned this and pins its own
-    # step across the bars coming down; this is the same rule at this end.
+    # the last press of the year is his: one option draws as one big button and
+    # the film waits on it. caught, so a refused button strands nobody.
     yield objective(SAIL_STEP)
     try:
         yield choose([SAIL_HOME], prompt=GO_HOME_PROMPT)
     except Exception as refused:
         yield log("sail_home_refused", {"why": str(refused)})
 
-    # AND OUT. `guide_to(None)`, the panel, and `let_go` first, because `enter`
-    # tears this island down and an arrow, a sentence or a driven body left
-    # standing is left standing on the next map.
+    # and out. the arrow, the panel and the driven body go first, because
+    # `enter` tears this island down and anything left standing stays standing.
     yield guide_to(None)
     yield objective(None)
     yield from let_go()
@@ -1058,70 +475,23 @@ def closing_beats():
 def closing():
     """The ending: one line naming what he did, the wall, the cord, the page.
 
-    Ash's shape, 2026-09-07: *"the principal meets him and congratulates him BY
-    NAME on what he actually did (the picks and grades from the save, one line),
-    the wall shows it, the counselor drapes the cord, the yearbook card, bars
-    down, the end."*
-
-    HE IS STANDING IN FRONT OF THE STUDENT WHEN IT OPENS, because the room's
-    arrival puts him there on every load, and then he walks the length of the hall
-    with the student behind him. Both roads in start the same way: one walked in
-    through the tunnel with the year done and one pressed him standing in the room.
-
-    NOTHING PROMISES A YEAR TWO. The page turning is the ending.
+    He is in front of the student when it opens, then walks the length of the
+    hall with the student behind him.
     """
-    # ---- HE WALKS, AND THE WALK IS THE FIRST SHOT OF THE ENDING -------------
-    #
-    # ASH, 2026-09-08 item 6: *"Make it glorious with what exists: the camera, the
-    # principal walking to him, the wall filling frame by frame with a pop each,
-    # the cord, the yearbook card, the ship sailing out to black."*
-    #
-    # ASH, 2026-09-13, after playing it: *"Principal panther lost his walking
-    # animation btw, and his stops + facings + positions are goofy in the intro and
-    # end cutscene."*
-    #
-    # BOTH OF THOSE ARE THIS LINE AND THE WORD THAT USED TO BE ON IT WAS
-    # `actor_move(PRINCIPAL, THOR)`. Nothing was wrong with his art and nothing was
-    # wrong with the engine. `actor_move` to the player stops 0.72 of a body length
-    # from wherever the student is standing, and the room's own arrival had already
-    # placed him 1.1 body lengths away (`he_steps_in_front`, on every load, so that
-    # a man whose post sits six pixels from the tunnel mouth is not drawn inside
-    # whoever just walked in). Measured on the published room: the whole walk was
-    # THREE POINT NINE PIXELS of floor. The walk art is six frames a heading and the
-    # legs advance one frame every nine ground pixels, so he never left frame zero.
-    # A man who stands on the first frame of his own walk while sliding four pixels
-    # has lost his walking animation, exactly as Ash read it.
-    #
-    # SO THE WORD IS `lead_to` AND THE PLACE IS THE HALL, which is the word the
-    # whole opening film is built out of. The man crosses 184 pixels of floor on the
-    # published room, which is twenty walk frames and three whole cycles, so his
-    # legs are going. The student walks it with him, which is what the first thirty
-    # minutes of the year taught him this man means. And `lead_to` ends by turning
-    # the two of them to look at each other, worked out by the scene against the
-    # map that is loaded, so the congratulation is said face to face instead of over
-    # a shoulder.
-    #
-    # NO ARROW ON THIS ONE, unlike every station walk in `take_him`. The big mark
-    # hangs over the anchor's own pixel and `the_hall`'s own pixel is the fire, so an
-    # arrow here would point at Advisory while a man walks past it. The panel line
-    # below is the guidance for this beat and the man himself is the rest of it.
-    #
-    # The camera goes in FIRST and holds on the student for a beat, so the walk
-    # happens inside a shot rather than under a cut.
+    # ---- he walks, and the walk is the first shot of the ending ------------
+    # `lead_to` to the hall gives him the length of the room to cross, so his
+    # legs are going. no arrow: `the_hall`'s own pixel is the fire. the camera
+    # goes in first and holds a beat, so the walk happens inside a shot.
     yield view("close")
     yield wait(700)
 
-    # THE PANEL SAYS WHAT HE IS DOING, and for the length of the ending that is
-    # following the man who came to find him. FOLLOW rather than a sentence of
-    # its own, because the very next thing after the line is being led to the
-    # wall, and each beat sets its own step after that.
+    # the panel says what he is doing, and for this beat that is following
     yield objective(FOLLOW)
 
     try:
         yield lead_to(PRINCIPAL, HALL, pace="walk")
     except Exception as refused:
-        # a man who cannot cross the room is still a man who has something to
-        # say, so the film falls back to the shape it had and carries on
+        # a man who cannot cross the room still has something to say
         yield log("lead_to_refused", {"anchor": HALL, "why": str(refused)})
         yield from he_steps_in_front()
     yield wait(400)
@@ -1137,8 +507,6 @@ def closing():
         yield from the_wall(year)
 
     # ---- and the counselor, the cord, the page, and out --------------------
-    #
-    # the cord, the page, and the door out
     yield from closing_beats()
 
 
@@ -1146,33 +514,10 @@ def closing():
 
 
 def as_a_film(scene):
-    """`as_a_cutscene`, and the arrow and the panel come down with the bars.
+    """`as_a_cutscene`, and the arrow and the panel come down with the bars too.
 
-    A film in this room takes over three things a student can see: the two black
-    bars, the arrow on the floor, and the one sentence at the top of the screen.
-    `as_a_cutscene` promises the BARS are given back whatever happens, because its
-    `movie(False)` is in a `finally`. It promises nothing about the other two, and
-    they are given back by hand at the bottom of `step_off`, `the_handover` and
-    `closing_beats`, which covers every road anybody wrote.
-
-    IT IS THE ROADS NOBODY WROTE THAT THIS IS FOR. Four words in each beat are
-    caught, and the ones that are not are the screens: `open("planner")` is a hard
-    refusal when nothing is mounted to hear it, and a refusal is raised at the line
-    that asked for it and takes the rest of the handler with it. That road left the
-    bars coming down on a room with the arrow still standing over the last station
-    and the panel still telling a student to fill in a schedule that nobody was
-    going to open. He cannot do either thing, and both of them are pointing at it.
-
-    So the promise is made the same way the bars make theirs, at the one place
-    every road really does pass through. It costs two words on the ordinary road,
-    where both are already down and saying so again changes nothing.
-
-    AND YIELDING FROM INSIDE A `finally` REALLY WORKS HERE, which is the one thing
-    worth checking before you copy this into your own island. It is not a trick:
-    `as_a_cutscene` in `vine.py` is the same shape and it is what takes the bars
-    down on every road in this game, so the runtime a student plays on has been
-    doing it since the day the word was written. The refusal still escapes
-    afterwards and still names your line, which is the whole point of a refusal.
+    `as_a_cutscene` promises only the bars. This puts the arrow and the top line
+    back on every road out, including a refusal.
     """
     try:
         yield from as_a_cutscene(scene)
@@ -1182,30 +527,18 @@ def as_a_film(scene):
 
 
 def rail(walk=True):
-    """THE INTRODUCTION, run inside the bars, which come down whatever happens.
+    """The introduction, run inside the bars, which come down whatever happens.
 
-    `as_a_cutscene` is `movie(True)`, the scene, and `movie(False)` in a `finally`.
-    It is the shape a member should copy for anything a student WATCHES, and it
-    exists because the gap between those two lines is the one place in this API
-    where forgetting leaves somebody behind two black bars with no controls. Here
-    the scene is minutes long with four screens inside it, and any word in it can
-    refuse; the bars still come down.
-
-    IT IS THE SECOND HALF OF ONE FILM AND NOT A FILM OF ITS OWN. The bars went up
-    when the student pressed Set Sail on the beach; the hub's island sailed him
-    in and walked him up the quay inside them, and the engine carried the frame
-    through the tunnel door with him rather than tearing it down with the map. So
-    `movie(True)` on the first line here is already true, and the first time it
-    goes false is `the_handover`.
+    `as_a_cutscene` is `movie(True)`, the scene, and `movie(False)` in a
+    `finally`. Copy that shape for anything a student watches.
     """
     yield from as_a_film(opening(walk))
 
 
 def ending():
-    """THE CLOSING FILM, inside its own frame.
+    """The closing film, inside its own frame.
 
-    Its trigger is `year_is_done()` and both callers are in `island.py`: the room
-    opening with the year finished, which is the road every student takes, and
-    the principal being pressed by one who walked out of the middle of it.
+    Its trigger is `year_is_done()`, and both callers are in `island.py`: the
+    room opening with the year finished, and the principal being pressed.
     """
     yield from as_a_film(closing())
