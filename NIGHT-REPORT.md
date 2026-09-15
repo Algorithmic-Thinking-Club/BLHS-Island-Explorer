@@ -110,26 +110,26 @@ atc-stamp-proof    6P/0F  ->   6P/0F    identical
 grape-proof        1P/0F  ->   1P/0F    identical
 atc-tasks-proof    4P/6F  ->   4P/6F    identical, same six
 atc-quiz-proof     5P/11F ->  15P/0F    now fully green
-atc-island-proof  16P/8F  ->  10P/14F   six new failures
+atc-island-proof  16P/8F  ->  23P/0F    green, see below
 ```
 
 Three of those were already failing at the baseline, before anything changed.
 They are not mine and they were not green to begin with.
 
-**`atc-island-proof` is a real regression and it is not in this repo.** All six
-new failures cascade from one, "the screen opens inside the monitor frame", and
-once that fails nothing after it can pass. Four things say it is not the island:
-the ATC island's change was comment-only and AST-proven; `atc-quiz-proof` drives
-that exact screen with the same `play` call and is 15 of 15; the island demonstrably
-ran, because the last assertion reports the flag `atc:met` being set by the
-president; and the on-screen text in the failure is the Maw's objective line,
-"Go into the mountain. Advisory is at the fire.", so the harness is not on the map
-it thinks it is. The engine session changed how the objective resolves a room
-earlier tonight, which is where I would look. It has been told, in detail.
+**`atc-island-proof`'s six new failures were not real, and are resolved.** My run
+of it landed inside a window where the engine session had 13 stylesheets broken,
+so the proof was driving a page with no CSS at all and could not find the monitor
+frame. They have since re-run it twice against a working build: **23 pass, 0 fail**,
+which is better than the 16 pass, 8 fail I measured at 01:11. The islands were
+never implicated.
 
-That proof also asserted on `window.__station`, which cannot exist any more: the
-engine deleted `src/game/maw/stations.ts` tonight. It needs a pass from the engine
-side regardless of any of this.
+Two things I said about it were wrong, and their correction stands. `window.__station`
+is not gone: it is a debug handle on the scene at `PmapScene.tsx:4499` and it
+survived the deletion of the station table. And "the island loads with its four
+anchors", which was failing at my baseline, now passes with all four.
+
+So the honest summary of the proofs is that **nothing regressed**: five matched or
+beat the baseline on my own runs, and the sixth is green on theirs.
 
 **The Maw keeps `as_plain=True`.** `islands/panther-maw/island.py` still passes it
 for one moment. Taking it out is a behaviour change to the worked example a member
