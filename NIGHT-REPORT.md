@@ -155,6 +155,25 @@ that path is removed. It is a two-line fix here, once.
 **About ninety hardcoded colours** are still in the engine's stylesheets. Not this
 repo, not mine, and it is on the engine session's list.
 
+## It is live
+
+The engine session deployed while I was finishing. The islands in this repo are
+running on https://blhs-island-explorer.vercel.app, built from a clean worktree
+and vendoring this repo at 7100e39.
+
+Checked rather than assumed: `curl .../grapes/atc/island.py` returns the swept
+293-line file, not the 469-line one it replaced.
+
+All six of the proofs that drive these islands pass against the live deploy:
+atc-island 23, atc-quiz 15, atc-tasks 12, atc-walk 8, atc-stamp 6, atc-dock 2.
+
+Sixteen of the engine's twenty-one named proofs are green live. The five that are
+not are harness problems on long cold paths, plus `dimwit`, which is doing its job:
+it reports that the year sheet's placeholder cards are 217x162 while the real
+classes are 242x28, so a player who presses the loudest thing on screen presses an
+island nobody has built. That is not mine and it predates tonight, but it is the
+kind of thing you would want to see before a freshman does.
+
 ## State when I finished
 
 - `python -m unittest` in this repo: **163 tests, all passing**
