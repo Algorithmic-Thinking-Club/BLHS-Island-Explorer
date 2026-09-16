@@ -101,45 +101,45 @@ tells you to delete it.
 
 ## The proofs, and what is left open
 
-**The browser proofs cannot currently be trusted, and that is a harness problem
-rather than an island one.** I ran six, twice, before and after the sweep. Then
-the engine session found that headless Chromium draws with SwiftShader, a CPU
-rasteriser, unless it is launched with `--use-angle=default --enable-gpu
---ignore-gpu-blocklist`. Their own first measurement was wrong by a factor of
-five because of it.
-
-That undercuts the baseline I took at 01:11, when three sessions were also
-hammering the CPU. I had been citing it as evidence and I have stopped.
-
-On a quiet machine, with the engine tree healthy:
+**All six browser proofs are green, and getting there found a harness bug worth
+more than the proofs.** Run by me, on the fixed harness:
 
 ```
-atc-island-proof   01:11 loaded 16P/8F   quiet 23P/0F   agrees with the engine session
-atc-stamp-proof    01:11        6P/0F    quiet  6P/0F   stable
-atc-tasks-proof    01:11        4P/6F    quiet  4P/6F   stable
-atc-quiz-proof     01:11        5P/11F   quiet  0P/16F  also measured 15P/0F
+atc-island-proof  23P/0F      atc-walk-proof    8P/0F
+atc-quiz-proof    15P/0F      atc-stamp-proof   6P/0F
+atc-tasks-proof   12P/0F      grape-proof       1P/0F
 ```
 
-`atc-quiz-proof` has returned 5P/11F, 15P/0F and 0P/16F from three runs of
-identical code. It is a coin, not a test.
+65 assertions, none failing.
 
-Both failing proofs die on the same assertion, "the screen opens", and
-`atc-tasks-proof`'s five failures are that one failure wearing five hats. The
-cause looks mechanical: the ATC island reaches that screen through `framing`,
-which waits for the camera to arrive, then a deliberate `wait(850)`, then `play`.
-`atc-quiz-proof.mjs:44` polls for the screen on a 280ms budget. Under a real GPU
-that is fine; under software rendering the camera move stretches past it. Handed
-to the engine session with the reasoning, before their deploy run signs off on
-proofs that may be flaking the same way.
+**They were not green before, and the reason was never the islands.** Headless
+Chromium draws with SwiftShader, a CPU rasteriser, unless it is launched with
+`--use-angle=default --enable-gpu --ignore-gpu-blocklist`. Under software
+rendering the ATC island's camera move outran the proof's 280ms poll budget, so
+`atc-quiz-proof` reported a screen that never opened and everything downstream
+cascaded. It measured 5P/11F, 15P/0F and 0P/16F on three runs of identical code,
+which is what gave it away. The engine session put the flags into
+`play-harness.mjs` as the default and into the 17 proofs that launch their own
+browser.
 
-**What this does not touch is whether my sweep changed behaviour.** That rests on
-the AST comparison above, which is exact and does not care how fast anything
-draws. The proofs were only ever corroboration.
+**One real bug surfaced, in a proof rather than in an island.**
+`atc-tasks-proof` was leaving the island through `enter("panther-maw")`, and that
+map is not in the published world, so the intent refuses and is right to. A
+student reaches the Maw through the hub's door, which does not go through that
+check. The proof now leaves to `hub`, the journey a student actually makes.
 
-I have left `SETTLE_MS = 850` alone. It is a real held beat on the machine before
-the screen takes the window, it predates tonight, and shortening a deliberate beat
-to make a flaky proof pass would be fixing the wrong thing. If it is too long,
-that is your call after you play it.
+**My 01:11 baseline was worthless and I had been citing it.** It was taken under
+software rendering with three sessions on the CPU. Any conclusion I drew from it
+earlier in this file has been removed rather than softened.
+
+**None of this bore on whether my sweep changed behaviour.** That rests on the AST
+comparison above, which is exact and does not care how fast anything draws. The
+proofs were always corroboration, and they now corroborate.
+
+`SETTLE_MS = 850` in `islands/atc/island.py` was never implicated and I did not
+touch it. It is a real held beat on the machine before the screen takes the
+window. If it is too long, that is your call after you play it, not a fix for a
+harness.
 
 **The Maw keeps `as_plain=True`.** `islands/panther-maw/island.py` still passes it
 for one moment. Taking it out is a behaviour change to the worked example a member
