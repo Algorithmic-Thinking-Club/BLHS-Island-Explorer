@@ -101,35 +101,45 @@ tells you to delete it.
 
 ## The proofs, and what is left open
 
-**The browser proofs ran in the end, and five of six match.** I captured a
-baseline at 01:11 before anyone started, then re-ran everything after the sweep.
+**The browser proofs cannot currently be trusted, and that is a harness problem
+rather than an island one.** I ran six, twice, before and after the sweep. Then
+the engine session found that headless Chromium draws with SwiftShader, a CPU
+rasteriser, unless it is launched with `--use-angle=default --enable-gpu
+--ignore-gpu-blocklist`. Their own first measurement was wrong by a factor of
+five because of it.
+
+That undercuts the baseline I took at 01:11, when three sessions were also
+hammering the CPU. I had been citing it as evidence and I have stopped.
+
+On a quiet machine, with the engine tree healthy:
 
 ```
-atc-walk-proof     8P/0F  ->   8P/0F    identical
-atc-stamp-proof    6P/0F  ->   6P/0F    identical
-grape-proof        1P/0F  ->   1P/0F    identical
-atc-tasks-proof    4P/6F  ->   4P/6F    identical, same six
-atc-quiz-proof     5P/11F ->  15P/0F    now fully green
-atc-island-proof  16P/8F  ->  23P/0F    green, see below
+atc-island-proof   01:11 loaded 16P/8F   quiet 23P/0F   agrees with the engine session
+atc-stamp-proof    01:11        6P/0F    quiet  6P/0F   stable
+atc-tasks-proof    01:11        4P/6F    quiet  4P/6F   stable
+atc-quiz-proof     01:11        5P/11F   quiet  0P/16F  also measured 15P/0F
 ```
 
-Three of those were already failing at the baseline, before anything changed.
-They are not mine and they were not green to begin with.
+`atc-quiz-proof` has returned 5P/11F, 15P/0F and 0P/16F from three runs of
+identical code. It is a coin, not a test.
 
-**`atc-island-proof`'s six new failures were not real, and are resolved.** My run
-of it landed inside a window where the engine session had 13 stylesheets broken,
-so the proof was driving a page with no CSS at all and could not find the monitor
-frame. They have since re-run it twice against a working build: **23 pass, 0 fail**,
-which is better than the 16 pass, 8 fail I measured at 01:11. The islands were
-never implicated.
+Both failing proofs die on the same assertion, "the screen opens", and
+`atc-tasks-proof`'s five failures are that one failure wearing five hats. The
+cause looks mechanical: the ATC island reaches that screen through `framing`,
+which waits for the camera to arrive, then a deliberate `wait(850)`, then `play`.
+`atc-quiz-proof.mjs:44` polls for the screen on a 280ms budget. Under a real GPU
+that is fine; under software rendering the camera move stretches past it. Handed
+to the engine session with the reasoning, before their deploy run signs off on
+proofs that may be flaking the same way.
 
-Two things I said about it were wrong, and their correction stands. `window.__station`
-is not gone: it is a debug handle on the scene at `PmapScene.tsx:4499` and it
-survived the deletion of the station table. And "the island loads with its four
-anchors", which was failing at my baseline, now passes with all four.
+**What this does not touch is whether my sweep changed behaviour.** That rests on
+the AST comparison above, which is exact and does not care how fast anything
+draws. The proofs were only ever corroboration.
 
-So the honest summary of the proofs is that **nothing regressed**: five matched or
-beat the baseline on my own runs, and the sixth is green on theirs.
+I have left `SETTLE_MS = 850` alone. It is a real held beat on the machine before
+the screen takes the window, it predates tonight, and shortening a deliberate beat
+to make a flaky proof pass would be fixing the wrong thing. If it is too long,
+that is your call after you play it.
 
 **The Maw keeps `as_plain=True`.** `islands/panther-maw/island.py` still passes it
 for one moment. Taking it out is a behaviour change to the worked example a member
