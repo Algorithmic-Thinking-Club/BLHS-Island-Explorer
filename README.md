@@ -40,7 +40,7 @@ The player walks to the spot named `greeter`, presses E, and the game calls that
 1. Clone this repository and the engine ([BLHS-Vine](https://github.com/Algorithmic-Thinking-Club/BLHS-Vine)) side by side, and run the engine with `npm run dev`.
 2. Paint your map in [MAPVIS](https://github.com/ashwath-polali/MAPVIS) and name the spots on it. Your Python refers to those names.
 3. Copy `islands/skeleton` to `islands/<your-island>` and write it.
-4. Run `python -m pytest tests` here, and open your island in the game at `http://localhost:5173/?scene=grape`.
+4. Run `python -m unittest -v` here, and add your island's line to `src/game/roster/member-islands.json` in the engine and open it at `http://localhost:5173/?scene=pmap&map=<your map id>`.
 5. Open a pull request. The tests run on it automatically.
 
 ## Help
