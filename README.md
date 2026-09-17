@@ -41,8 +41,8 @@ The game is a separate repo, and it has to sit beside this one.
 
 ```
 cd ..
-git clone https://github.com/Algorithmic-Thinking-Club/BLHS-ADVINE.git
-cd BLHS-ADVINE
+git clone https://github.com/Algorithmic-Thinking-Club/BLHS-Vine.git
+cd BLHS-Vine
 npm install
 npm run dev
 ```
